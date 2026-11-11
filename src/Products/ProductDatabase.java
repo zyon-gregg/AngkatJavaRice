@@ -9,7 +9,17 @@ public class ProductDatabase {
 		
 	}
 	
-	private void addProduct(Product product) {
+	public void addProduct(Product product) {
 		database.put(product.getProductCode(), product);
+	}
+	
+	public void removeProduct(Product product) {
+		if(database.containsValue(product)) {
+			for(String key: this.database.keySet()) {
+				if(database.get(key).equals(product)) {
+					database.remove(key);
+				}
+			}
+		}
 	}
 }
