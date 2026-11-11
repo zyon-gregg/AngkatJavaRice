@@ -21,6 +21,16 @@ public class ProductDatabase {
 					database.remove(key);
 				}
 			}
+		}else{
+			return;
 		}
 	}
+	
+	public void editProduct(Product product, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		if(!product.getProductName().equals(productName)) {
+			product.setProductName(productName);
+		}
+	}
+	
+	
 }
