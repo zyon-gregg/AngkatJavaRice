@@ -1,5 +1,6 @@
 package inventoryManagementSystem;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import Products.Product;
 
@@ -10,9 +11,17 @@ public class InventorySystem {
 	private final static double CRITICAL_LEVEL_IN_KG = 300.00;
 	
 	private final HashMap <String, InventoryOfProduct> inventoryRecords;
+	private final HashMap <String, StockRecordedChange> history;
+	
+	private int nextId = 1; //generating IDs for StockRecordedChange. Remind to save this counter.
 	
 	public InventorySystem() {
 		inventoryRecords = new HashMap<String, InventoryOfProduct>();
+		history = new HashMap<String, StockRecordedChange>();
+	}
+	
+	private String generateID() {
+		return "SC" + String.format("%03d", nextId++);
 	}
 	
 	//inventory record management
@@ -66,11 +75,42 @@ public class InventorySystem {
 		}
 		
 		return listOfInventoryRecords;
+		
+	}
+	
+	//audit features
+	public ArrayList<StockRecordedChange> getAllHistory() { //used for showing. GUI.
+		
+		ArrayList<StockRecordedChange> listOfAllRecords = new ArrayList<>();
+		
+		for (StockRecordedChange currentRecord : history.values()) {
+			listOfAllRecords.add(currentRecord);
+		}
+		
+		return listOfAllRecords;
+		
+	}
+	
+	public ArrayList<StockRecordedChange> getHistoryByProduct(String productId) { //for GUI
+		
+		ArrayList<StockRecordedChange> listOfAllRecords = new ArrayList<>();
+		
+		for (StockRecordedChange currentRecord : history.values()) {
+			
+			if (currentRecord.getProductCode().equals(productId)) {
+				listOfAllRecords.add(currentRecord);
+				
+			}
+			
+		}
+		
+		return listOfAllRecords;
+		
 	}
 	
 	
 	//stock operations
-	public void restockProduct(String productCode, double quantity) { //to call this, you need the product's code AND the requested quantity
+	public void restockProduct(String productCode, double quantity, String nameOfUser, String explanation) {
 		
 		if (inventoryRecords.isEmpty()) {
 			System.out.println("Inventory records does not exist yet. There is no product to restock");
@@ -95,12 +135,31 @@ public class InventorySystem {
 			System.out.println("This amount of requested stock will exceed the maximum capacity of the product.");
 		
 		} else {
-			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates it
+			
+			Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
+			
+			String generatedID = generateID();
+			
+			StockRecordedChange record = new StockRecordedChange(
+					generatedID, 
+					productToBeRecorded, 
+					StockRecordedChange.RESTOCK, 
+					inventoryRecords.get(productCode).getProductStockInKG(), 
+					calculatedStock, 
+					LocalDateTime.now(), 
+					nameOfUser, 
+					explanation );
+			
+			
+			history.put(generatedID, record);
+			
+			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates 
+			
 		}
 				
 	}
 	
-	public void reduceStock(String productCode, double quantity) { //this will be called when a customer reduces a stock. You need a product code and a requested quantity
+	public void reduceStock(String productCode, double quantity, String nameOfUser, String explanation) { //this will be called when a customer reduces a stock. You need a product code and a requested quantity
 		
 		if (inventoryRecords.isEmpty()) {
 			System.out.println("Inventory records does not exist yet. There is no product to reduce");
@@ -125,6 +184,24 @@ public class InventorySystem {
 			System.out.println("Not enough stock to suffice the requested quantity");
 		
 		} else {
+			Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
+			
+			String generatedID = generateID();
+			
+			String changeType = StockRecordedChange.SALE_DEDUCTION;
+			
+			StockRecordedChange record = new StockRecordedChange(
+					generatedID, 
+					productToBeRecorded, 
+					changeType, 
+					inventoryRecords.get(productCode).getProductStockInKG(), 
+					calculatedStock, 
+					LocalDateTime.now(), 
+					nameOfUser, 
+					explanation );
+			
+			
+			history.put(generatedID, record);
 			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates it
 		}
 		
@@ -132,7 +209,7 @@ public class InventorySystem {
 		
 	}
 	
-	public void editStock(String productCode, double quantity) { //manually corrects a stock of a product if needed
+	public void editStock(String productCode, double quantity, String nameOfUser, String explanation) { //manually corrects a stock of a product if needed
 		
 		if (inventoryRecords.isEmpty()) {
 			System.out.println("Inventory records does not exist yet. There is no product to restock");
@@ -155,6 +232,23 @@ public class InventorySystem {
 			System.out.println("Exceeds the max stock of the product");
 			return;
 		}
+		
+		Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
+		
+		String generatedID = generateID();
+		
+		StockRecordedChange record = new StockRecordedChange(
+				generatedID, 
+				productToBeRecorded, 
+				StockRecordedChange.STOCK_ADJUSTMENT, 
+				inventoryRecords.get(productCode).getProductStockInKG(), 
+				quantity, 
+				LocalDateTime.now(), 
+				nameOfUser, 
+				explanation );
+		
+		
+		history.put(generatedID, record);
 		
 		inventoryRecords.get(productCode).setProductStockInKG(quantity);
 		
