@@ -1,4 +1,4 @@
-package Products;
+package productManagementSystem;
 
 import java.util.HashMap;
 

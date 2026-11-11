@@ -1,4 +1,4 @@
-package InventoryManagementSystem;
+package inventoryManagementSystem;
 
 public class InventorySystem {
 	

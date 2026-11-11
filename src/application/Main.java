@@ -1,6 +1,6 @@
-package Application;
+package application;
 
-import InventoryManagementSystem.*;
+import inventoryManagementSystem.*;
 
 public class Main {
 
