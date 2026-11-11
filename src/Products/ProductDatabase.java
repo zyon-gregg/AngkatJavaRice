@@ -1,12 +1,13 @@
-package productManagementSystem;
+package Products;
 
 import java.util.HashMap;
 
 public class ProductDatabase {
+	private String databaseName;
 	private HashMap<String,Product> database = new HashMap<>();
 	
-	ProductDatabase(){
-		
+	ProductDatabase(String databaseName){
+		this.databaseName = databaseName;
 	}
 	
 	public void addProduct(Product product) {

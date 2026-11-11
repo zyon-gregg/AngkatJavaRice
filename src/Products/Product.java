@@ -1,4 +1,4 @@
-package productManagementSystem;
+package Products;
 
 import java.util.HashMap;
 
@@ -9,18 +9,18 @@ public class Product {
 	private static int nextId = 1;
 	private String productCode;
 	private String productName;
+	private String productDescription;
 	private double productCostInKG;
-	private double productStockInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
 	
 	//Constructor
 	
-	Product(HashMap<String,Product> database, String productName, double productCostInKG, double productStockInKG, double productRawPrice, double productEstimatedMarketPrice){
+	Product(HashMap<String,Product> database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice){
 		this.setProductCode(database);
 		this.productName = productName;
+		this.setProductDescription(productDescription);
 		this.productCostInKG = productCostInKG;
-		this.productStockInKG = productStockInKG;
 		this.productRawPrice = productRawPrice;
 		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
 	}
@@ -29,19 +29,13 @@ public class Product {
 	//Methods
 	
 	protected void setProductCode(HashMap<String,Product> database) {
+		
+		//Product Code Format: 00001, 00010, -> 99999 (Can Be Expanded Later if Needed)
+		
 		String formatted = String.format("P%05D",nextId);
 		nextId++;
 		this.productCode = formatted;
 	}
-	
-	public double reduceStock(double itemBoughtInKG) {
-		this.productStockInKG = this.productStockInKG - itemBoughtInKG;
-		return this.productStockInKG;
-	}
-	
-	
-	
-	
 	
 	
 	
@@ -70,14 +64,6 @@ public class Product {
 		this.productCostInKG = productCostInKG;
 	}
 
-	public double getProductStockInKG() {
-		return productStockInKG;
-	}
-
-	public void setProductStockInKG(double productStockInKG) {
-		this.productStockInKG = productStockInKG;
-	}
-
 	public double getProductRawPrice() {
 		return productRawPrice;
 	}
@@ -92,6 +78,16 @@ public class Product {
 
 	public void setProductEstimatedMarketPrice(double productEstimatedMarketPrice) {
 		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
+	}
+
+
+	public String getProductDescription() {
+		return productDescription;
+	}
+
+
+	public void setProductDescription(String productDescription) {
+		this.productDescription = productDescription;
 	}
 	
 }
