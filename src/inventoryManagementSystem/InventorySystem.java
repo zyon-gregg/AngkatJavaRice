@@ -1,10 +1,172 @@
 package inventoryManagementSystem;
 
+import java.util.*;
+import Products.Product;
+
 public class InventorySystem {
 	
-	public void message() {
-		System.out.println("Hello from InventorySystem.java");
+	
+	private final static double MAX_STOCK_IN_KG = 1000.00;
+	private final static double CRITICAL_LEVEL_IN_KG = 300.00;
+	
+	private final HashMap <String, InventoryOfProduct> inventoryRecords;
+	
+	public InventorySystem() {
+		inventoryRecords = new HashMap<String, InventoryOfProduct>();
 	}
+	
+	//inventory record management
+	
+	public void createInventoryRecord(Product product) {
+		
+		if(product == null) {
+			System.out.println("No product to create a stock record with.");
+			return;
+		}
+		
+		String productCode = product.getProductCode();
+		
+		if (!inventoryRecords.containsKey(productCode)) {
+			
+			InventoryOfProduct newInventory = new InventoryOfProduct(product);
+			inventoryRecords.put(productCode, newInventory);
+			
+			
+		} else {
+			System.out.println("This product already has a recorded storage.");
+		}
+		
+		
+	}; 
+	
+	public InventoryOfProduct getProductInventoryByCode(String productCode) { //if you want to get the stock record of a specific product by its code.
+		if (inventoryRecords.isEmpty()) {
+			System.out.println("Inventory records does not exist yet. There is no product to restock");
+			return null;
+		}
+		
+		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
+			System.out.println("The stock record of that product does not exist");
+			return null;
+			
+		}
+		
+		return inventoryRecords.get(productCode);
+
+	}
+	
+	public ArrayList<InventoryOfProduct> getAllInventory() { //this may be needed to show in the GUI (Possibly used for table view
+		
+		ArrayList<InventoryOfProduct> listOfInventoryRecords = new ArrayList<>();
+		
+		//traversing through the hash map
+		
+		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
+			listOfInventoryRecords.add(currentProduct);
+		}
+		
+		return listOfInventoryRecords;
+	}
+	
+	
+	//stock operations
+	public void restockProduct(String productCode, double quantity) { //to call this, you need the product's code AND the requested quantity
+		
+		if (inventoryRecords.isEmpty()) {
+			System.out.println("Inventory records does not exist yet. There is no product to restock");
+			return;
+		}
+		
+		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
+			System.out.println("The stock record of that product does not exist");
+			return;
+			
+		}
+		
+		if (quantity <= 0) {//detects if the requested quantity is negative or 0. This is an invalid input
+			System.out.println("Requested quantity is invalid because it is negative or zero");
+			return;
+			
+		}
+		
+		Double calculatedStock = inventoryRecords.get(productCode).getProductStockInKG() + quantity;
+		
+		if (calculatedStock > MAX_STOCK_IN_KG) {
+			System.out.println("This amount of requested stock will exceed the maximum capacity of the product.");
+		
+		} else {
+			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates it
+		}
+				
+	}
+	
+	public void reduceStock(String productCode, double quantity) { //this will be called when a customer reduces a stock. You need a product code and a requested quantity
+		
+		if (inventoryRecords.isEmpty()) {
+			System.out.println("Inventory records does not exist yet. There is no product to reduce");
+			return;
+		}
+		
+		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
+			System.out.println("The stock record of that product does not exist");
+			return;
+			
+		}
+		
+		if (quantity <= 0) { //Zero is made invalid because that implies nothing is changed.
+			System.out.println("Requested quantity is invalid because it is negative or zero.");
+			return;
+		}
+		
+		
+		Double calculatedStock = inventoryRecords.get(productCode).getProductStockInKG() - quantity;
+		
+		if (calculatedStock < 0) {
+			System.out.println("Not enough stock to suffice the requested quantity");
+		
+		} else {
+			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates it
+		}
+		
+		
+		
+	}
+	
+	public void editStock(String productCode, double quantity) { //manually corrects a stock of a product if needed
+		
+		if (inventoryRecords.isEmpty()) {
+			System.out.println("Inventory records does not exist yet. There is no product to restock");
+			return;
+		}
+		
+		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
+			System.out.println("The stock record of that product does not exist");
+			return;
+			
+		}
+		
+		if (quantity < 0) {//detects if the requested quantity is negative. This is an invalid input
+			System.out.println("Requested quantity is invalid because it is negative.");
+			return;
+			
+		}
+		
+		if (quantity > MAX_STOCK_IN_KG) {
+			System.out.println("Exceeds the max stock of the product");
+			return;
+		}
+		
+		inventoryRecords.get(productCode).setProductStockInKG(quantity);
+		
+	}
+	
+	//stock checking
+	boolean isAvailable() {
+		return true;
+	}
+	
+	//inventory monitoring
+	
 
 
 }

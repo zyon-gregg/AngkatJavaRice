@@ -11,8 +11,6 @@ public class Main {
 		
 		InventorySystem inventorySystem = new InventorySystem();
 		
-		inventorySystem.message();
-		
 
 	}
 

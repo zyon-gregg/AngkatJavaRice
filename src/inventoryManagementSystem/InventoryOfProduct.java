@@ -1,45 +1,54 @@
 package inventoryManagementSystem;
 
 import java.time.*;
-import productManagementSystem.Product;
+import Products.Product;
 
 
 
 public class InventoryOfProduct {
 	
 	//attributes
-	private String productCode;
 	private Product product;
 	private double productStockInKG;
-	private double reorderLevelInKG;
+	//private double maxStock;
+	//private double reorderLevel;
 	private LocalDateTime lastUpdated;
 	
 	public InventoryOfProduct(Product currentProduct) {
-		this.productCode = currentProduct.getProductCode();
-		this.ReorderLevel = 0;
-		this.monthChanged = month;
-		this.dayChanged = day;
-		this.yearChanged = year;
+		this.product = currentProduct;
+		this.productStockInKG = 0;
+		//this.maxStock = 1000.00;
+		//this.reorderLevel = 300.00;
+		this.lastUpdated = LocalDateTime.now();
 	}
 	
-	public String getProductCode() {
-		return ProductCode;
+	public Product getProduct() {
+		return product;
 	}
 	
-	public int getReorderLevel() {
-		return ReorderLevel;
+	public double getProductStockInKG() {
+		return productStockInKG;
 	}
 	
-	public String getMonthChanged() {
-		return monthChanged;
+	void setProductStockInKG(double stock) {
+		this.productStockInKG = stock;
+		
 	}
 	
-	public int getDayChanged() {
-		return dayChanged;
+	/*
+	
+	public double getMaxStock() {
+		return maxStock;
 	}
 	
-	public int getYearChanged() {
-		return yearChanged;
+	public double getReorderLevel() {
+		return reorderLevel;
 	}
-
+	
+	*/
+	
+	public LocalDateTime getLastUpdated() {
+		return lastUpdated;
+	}
+	
 }
