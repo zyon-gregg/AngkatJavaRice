@@ -32,6 +32,7 @@ public class InventoryOfProduct {
 	
 	void setProductStockInKG(double stock) {
 		this.productStockInKG = stock;
+		this.lastUpdated = LocalDateTime.now();
 		
 	}
 	

@@ -161,12 +161,75 @@ public class InventorySystem {
 	}
 	
 	//stock checking
-	boolean isAvailable() {
-		return true;
+	public boolean hasSufficientStock(String productCode, double quantity) {
+		//this could potentially be used for sales system
+		InventoryOfProduct productStock = getProductInventoryByCode(productCode);
+		
+		if (productStock == null) { //checks if a stock record of that product exists
+			return false;
+		}
+		
+		if (quantity <= 0 || quantity > MAX_STOCK_IN_KG) { //checks if the requested quantity is valid
+			return false;
+		}
+		
+		if (quantity <= productStock.getProductStockInKG()) { //checks if the requested quantity can be computed with that product's stock
+			return true;
+		} else {
+			return false;
+		}
+		
+	}
+	
+	public boolean isLowOnStock(String productCode) {
+		
+		InventoryOfProduct productStock = getProductInventoryByCode(productCode);
+		
+		if (productStock == null) {
+			return false;
+		}
+		
+		if (productStock.getProductStockInKG() > 0 && productStock.getProductStockInKG() <= CRITICAL_LEVEL_IN_KG) {
+			return true;
+			
+		} else {
+			return false;
+		}
 	}
 	
 	//inventory monitoring
 	
+	public ArrayList<InventoryOfProduct> getProductsLowOnStock() { //for table view. Viewing of products that are low in stock
+		
 
-
+		ArrayList<InventoryOfProduct> listOfProductsLowOnStock = new ArrayList<>();
+		
+		//traversing through the hash map
+		
+		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
+			
+			if (currentProduct.getProductStockInKG() > 0 && currentProduct.getProductStockInKG() <= CRITICAL_LEVEL_IN_KG) {
+				listOfProductsLowOnStock.add(currentProduct);
+			}
+		}
+		
+		return listOfProductsLowOnStock;
+		
+	}
+	
+	public ArrayList<InventoryOfProduct> getProductsOutOfStock() { //for table view purposes. Viewing of products that are depleted of stock.
+		
+		
+		ArrayList<InventoryOfProduct> listOfDepletedProducts = new ArrayList<>();
+		
+		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
+			if (currentProduct.getProductStockInKG() == 0) {
+				listOfDepletedProducts.add(currentProduct);
+			}
+			
+		}
+		
+		return listOfDepletedProducts;	
+	}
+	
 }
