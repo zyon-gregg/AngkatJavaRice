@@ -38,6 +38,11 @@ public class Product {
 	}
 	
 	
+	public String viewState() {
+		String compiled = this.productCode + "|" + this.productName + "|" + this.productDescription + "|" + this.productCostInKG  + "|" + this.productRawPrice + "|" + this.productEstimatedMarketPrice;
+		return compiled;
+	
+	}
 	
 	//Auto generated Getters and Setters
 	public String getProductName() {

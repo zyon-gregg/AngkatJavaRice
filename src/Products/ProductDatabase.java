@@ -7,7 +7,7 @@ public class ProductDatabase {
 	private HashMap<String,Product> database = new HashMap<>();
 	
 	ProductDatabase(String databaseName){
-		this.databaseName = databaseName;
+		this.setDatabaseName(databaseName);
 	}
 	
 	public void addProduct(Product product) {
@@ -51,16 +51,31 @@ public class ProductDatabase {
 		//Update Table Implementation or Something
 	}
 	
-	public void searchProduct() {
-		
+	public String searchProduct(Product product) {
+		for(String key: database.keySet()) {
+			if(key.equals(product.getProductCode())) {
+				return key;
+			}
+		}
+		return null;
 	}
 	
 	public void viewAllProducts() {
-		
+		for(String key : database.keySet()) {
+			System.out.println(key + " : " + database.get(key).viewState());
+		}
 	}
 	
 	public void removeAllProducts() {
-		
+		database.clear();
+	}
+
+	public String getDatabaseName() {
+		return databaseName;
+	}
+
+	public void setDatabaseName(String databaseName) {
+		this.databaseName = databaseName;
 	}
 	
 	
