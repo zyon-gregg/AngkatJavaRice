@@ -16,15 +16,7 @@ public class ProductDatabase {
 	}
 	
 	public void removeProduct(Product product) {
-		if(database.containsValue(product)) {
-			for(String key: this.database.keySet()) {
-				if(database.get(key).equals(product)) {
-					database.remove(key);
-				}
-			}
-		}else{
-			return;
-		}
+		database.remove(product.getProductCode());
 	}
 	
 	public void editProduct(Product product, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
