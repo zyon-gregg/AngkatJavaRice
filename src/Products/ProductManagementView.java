@@ -137,10 +137,7 @@ public class ProductManagementView extends BorderPane {
 
 	private void handleAdd() {
 		try {
-			database.addProduct(new Product(nameField.getText(), descField.getText(),
-					readNumber(costField, "Cost per kg"),
-					readNumber(rawPriceField, "Raw price"),
-					readNumber(marketPriceField, "Estimated market price")));
+			database.addProduct(new Product(nameField.getText(), descField.getText(), readNumber(costField, "Cost per kg"), readNumber(rawPriceField, "Raw price"), readNumber(marketPriceField, "Estimated market price")));
 			reload();
 			clearForm();
 		} catch (IllegalArgumentException ex) {
