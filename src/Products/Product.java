@@ -32,7 +32,7 @@ public class Product {
 		
 		//Product Code Format: 00001, 00010, -> 99999 (Can Be Expanded Later if Needed)
 		
-		String formatted = String.format("P%05D",nextId);
+		String formatted = String.format("P%05d",nextId);
 		nextId++;
 		this.productCode = formatted;
 	}

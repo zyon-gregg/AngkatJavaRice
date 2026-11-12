@@ -1,5 +1,6 @@
 package Products;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ProductDatabase {
@@ -49,6 +50,10 @@ public class ProductDatabase {
 		}
 		
 		//Update Table Implementation or Something
+	}
+	
+	public ArrayList<Product> getAllProducts() {
+		return new ArrayList<Product>(database.values());
 	}
 	
 	public String searchProduct(Product product) {
