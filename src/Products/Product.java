@@ -16,7 +16,7 @@ public class Product {
 	
 	//Constructor
 	
-	Product(HashMap<String,Product> database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice){
+	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice){
 		this.setProductCode(database);
 		this.productName = productName;
 		this.setProductDescription(productDescription);
@@ -28,7 +28,7 @@ public class Product {
 	
 	//Methods
 	
-	protected void setProductCode(HashMap<String,Product> database) {
+	protected void setProductCode(ProductDatabase database) {
 		
 		//Product Code Format: 00001, 00010, -> 99999 (Can Be Expanded Later if Needed)
 		

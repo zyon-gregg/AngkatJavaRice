@@ -6,7 +6,7 @@ public class ProductDatabase {
 	private String databaseName;
 	private HashMap<String,Product> database = new HashMap<>();
 	
-	ProductDatabase(String databaseName){
+	public ProductDatabase(String databaseName){
 		this.setDatabaseName(databaseName);
 	}
 	
