@@ -15,16 +15,17 @@ public class Product {
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
-	private ArrayList<Source> sources = new ArrayList<>();
+	private Source productSource;
 	//Constructor
 	
-	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice){
+	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice, Source productSource){
 		this.setProductCode(database);
 		this.productName = productName;
 		this.setProductDescription(productDescription);
 		this.productCostInKG = productCostInKG;
 		this.productRawPrice = productRawPrice;
 		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
+		this.setProductSource(productSource);
 	}
 	
 	
@@ -44,14 +45,6 @@ public class Product {
 		String compiled = this.productCode + "|" + this.productName + "|" + this.productDescription + "|" + this.productCostInKG  + "|" + this.productRawPrice + "|" + this.productEstimatedMarketPrice;
 		return compiled;
 	
-	}
-	
-	public void addSource(Source newSource) {
-		this.sources.add(newSource);
-	}
-	
-	public void removeSource(Source removeSource) {
-		this.sources.remove(removeSource);
 	}
 	
 	//Auto generated Getters and Setters
@@ -103,6 +96,16 @@ public class Product {
 
 	public void setProductDescription(String productDescription) {
 		this.productDescription = productDescription;
+	}
+
+
+	public Source getProductSource() {
+		return productSource;
+	}
+
+
+	public void setProductSource(Source productSource) {
+		this.productSource = productSource;
 	}
 	
 }

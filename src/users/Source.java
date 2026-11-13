@@ -1,13 +1,31 @@
 package users;
-import java.util.ArrayList;
+
+
+import java.util.HashMap;
+import java.util.Set;
 
 import Products.Product;
 
 public class Source extends User{
 	
-	private ArrayList<Product> listOfSourceProducts = new ArrayList<>();
+	private HashMap<Product,Double> listOfSourceProductsAndQuantity = new HashMap<>();
 	
-	Source(String username, String password){
-		
+	public Source(String username, String password, String sourceName){
+		super(username,password,sourceName);
+		super.setUserAccessLevel("SOURCE");
 	}
+	
+	public void addProductToSource(Product product, Double quantity) {
+		this.listOfSourceProductsAndQuantity.put(product, quantity);
+	}
+	
+	public Set<Product> returnHashMapKeys(){
+		return this.listOfSourceProductsAndQuantity.keySet();
+	}
+	
+	public void removeProductofSource(Product product) {
+		this.listOfSourceProductsAndQuantity.remove(product);
+	}
+	
+	
 }
