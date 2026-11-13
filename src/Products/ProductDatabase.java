@@ -3,6 +3,9 @@ package Products;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import users.Source;
+import users.SourceDatabase;
+
 public class ProductDatabase {
 	private String databaseName;
 	private HashMap<String,Product> database = new HashMap<>();
@@ -42,6 +45,14 @@ public class ProductDatabase {
 		}
 		
 		//Update Table Implementation or Something
+	}
+	
+	public void addAllSourcesToDatabase(SourceDatabase sourceDB) {
+		for(Source sources: sourceDB.returnSources()) {
+			for(Product product: sources.returnProducts()) {
+				this.addProduct(product);
+			}
+		}
 	}
 	
 	public ArrayList<Product> getAllProducts() {
