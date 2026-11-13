@@ -8,44 +8,35 @@ import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
-/**
- * Entry point. Owns the shared data and opens the screens through SceneManager.
- * Temporary: AngkatSystem and the login screen will replace this wiring later.
- */
 public class Main extends Application {
-//
+
 	private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
 	private final InventorySystem inventory = new InventorySystem();
-//	private SceneManager sceneManager;
-//
-//	@Override
-//	public void start(Stage stage) {
-//		loadSampleData();
-//
-//		sceneManager = new SceneManager(stage, 1150, 600);
-//		showMenu();
-//
-//		stage.setTitle("Angkat - Fish Port Management System");
-//		stage.show();
-//	}
+	private SceneManager sceneManager;
 
-	// ---------- Screens ----------
+	@Override
+	public void start(Stage stage) {
+		loadSampleData();
 
-//	private void showMenu() {
-//		sceneManager.setRoot(new MainMenuView(this::showProducts, this::showInventory));
-//	}
-//
-//	private void showProducts() {
-//		// true = Manager view (can edit), false = Clerk view (read-only)
-//		sceneManager.showWithBackButton(new ProductManagementView(products, true), this::showMenu);
-//	}
-//
-//	private void showInventory() {
-//		syncInventoryRecords();
-//		sceneManager.showWithBackButton(new InventoryGUI(inventory, "manager", true), this::showMenu);
-//	}
-//
-//	// ---------- Data ----------
+		sceneManager = new SceneManager(stage, 1150, 600);
+		showMenu();
+
+		stage.setTitle("Angkat - Fish Port Management System");
+		stage.show();
+	}
+
+	private void showMenu() {
+		sceneManager.setRoot(new MainMenuView(this::showProducts, this::showInventory));
+	}
+
+	private void showProducts() {
+		sceneManager.showWithBackButton(new ProductManagementView(products, true), this::showMenu);
+	}
+
+	private void showInventory() {
+		syncInventoryRecords();
+		sceneManager.showWithBackButton(new InventoryGUI(inventory, "manager", true), this::showMenu);
+	}
 
 	/** Gives every product that has no stock record yet one (starting at 0 kg). */
 	private void syncInventoryRecords() {
