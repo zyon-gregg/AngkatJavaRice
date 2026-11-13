@@ -1,5 +1,7 @@
 package Products;
+import users.Source;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Product {
@@ -13,7 +15,7 @@ public class Product {
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
-	
+	private ArrayList<Source> sources = new ArrayList<>();
 	//Constructor
 	
 	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice){
@@ -42,6 +44,14 @@ public class Product {
 		String compiled = this.productCode + "|" + this.productName + "|" + this.productDescription + "|" + this.productCostInKG  + "|" + this.productRawPrice + "|" + this.productEstimatedMarketPrice;
 		return compiled;
 	
+	}
+	
+	public void addSource(Source newSource) {
+		this.sources.add(newSource);
+	}
+	
+	public void removeSource(Source removeSource) {
+		this.sources.remove(removeSource);
 	}
 	
 	//Auto generated Getters and Setters
