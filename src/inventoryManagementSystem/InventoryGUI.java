@@ -1,48 +1,247 @@
 package inventoryManagementSystem;
 
+import javafx.collections.FXCollections;
+import javafx.beans.property.ReadOnlyStringWrapper;
+
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+import java.time.format.DateTimeFormatter;
+
 public class InventoryGUI {
-	
-	//Igii, pwede mo na dito icode yung GUI
-	
-	//If I were to recommend the GUI layout
-	
-	//I think there should be a way to check sinong nagaaaccess ng inventory gui. This needs to know kung manager ba or clerk ang nagaccess para may limitations tayo.
-	
-	//Display ng total inventory records
-	//Display ng total number of products that are low on stock
-	// Display ng number of products that are out of stock.
-	
-	//Meron ako netong 3 ^  na helper functions. You may inspect the code sa InventorySystem.java
-	
-	//Then pwede ka magadd ng table view. Columns may include yung product code, name, current stock (in kg), last updated
-	
-	//just call lang getAllinventory(). This returns an array list for your table view hehe.
-	
-	//I suggest may parang field or window for restock. Pwede ka mag use ng text field to get text inputs from user
-	//selects a product (by product Id), enter niya quantity, username ni employee, explanation.
-	//then call lang InventorySystem.restockProduct(insert parameters)
-	//restocking can only be done by managers
-	
-	//you can also add a field or window for adjust stock
-	//bale select siya ng product, enter the stock quantity na gustong ipaedit, username ng user, explanation
-	//then just call InventorySyste.editStock(insert parameters)
-	
-	//So either manager and clerk ang magaccess nitong inventory GUI. Make sure na bawal mag restock or adjust stock si clerk. Si manager lang pwede.
-	//Thus you may need to find a way how our gui can know if manager or clerk type ang user.
-	
-	//Pwede mo rin idisplay products that are low on stock or out of stock. May helper functions ako para dito that returns an array list. Decide how will you display it (could be table view or other)
-	//InventorySystem.getProductsLowOnStock() and InventorySystem.getProductsOutOfStock();
-	
-	//Oh, also display rin yung stock history. Our stock history shows kung anong nangyari in our inventory
-	//Parang audit window ganun.
-	//Meron na rin akong helpers for that para madisplay mo sila
-	//InventorySystem.getAllHistory and InventorySystem.getHistoryByProduct();
-	
-	//ADDITIONAL NOTES:
-	//No modifying ng stock quantities through the setter ng inventoryOfProduct. I already provided functions sa InventorySystem. Pareview nalang.
-	//Refresh the window after a succesful stock operation
-	//pwede ka magdisplay ng alert window na nagiindicate na success or error.
+
+    // Window components
+    private Stage stage;
+    private Scene scene;
+    private BorderPane root;
+
+    // Backend
+    private InventorySystem inventorySystem;
+
+    // Tables
+    private TableView<InventoryOfProduct> inventoryTable;
+    private TableView<StockRecordedChange> historyTable;
+
+    // Buttons
+    private Button restockButton;
+    private Button adjustButton;
+    private Button refreshButton;
+
+    // Date format
+    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    public InventoryGUI(InventorySystem inventorySystem) {
+        this.inventorySystem = inventorySystem;
+        this.stage = new Stage();
+        this.root = new BorderPane();
+        this.scene = new Scene(root, 1100, 750);
+    }
+
+    // Sets the components of the Stage
+    public void setStageComponents() {
+
+        VBox mainContainer = new VBox(10);
+        mainContainer.setPadding(new Insets(15));
+
+        Label inventoryTitle = new Label("Inventory Management");
+
+        refreshButton = new Button("Refresh");
+
+        HBox header = new HBox(10);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        header.getChildren().addAll(inventoryTitle,spacer,refreshButton);
+
+        restockButton = new Button("Restock Product");
+        adjustButton = new Button("Adjust Stock");
+
+        HBox operationButtons = new HBox(
+                10,
+                restockButton,
+                adjustButton
+        );
+
+        inventoryTable = createInventoryTable();
 
 
+        Label historyTitle = new Label("Stock Movement History");
 
+        historyTable = createHistoryTable();
+
+  
+        inventoryTable.setPrefHeight(250);
+        historyTable.setPrefHeight(250);
+
+        VBox.setVgrow(inventoryTable, Priority.ALWAYS);
+        VBox.setVgrow(historyTable, Priority.ALWAYS);
+
+
+        mainContainer.getChildren().addAll(header,operationButtons, inventoryTable, new Separator(), historyTitle, historyTable);
+        
+        refreshButton.setOnAction(e -> refreshTables());
+
+        this.root.setCenter(mainContainer);
+
+        this.stage.setTitle("Angkat - Inventory Management");
+        this.stage.setScene(this.scene);
+
+        refreshTables();
+
+        this.stage.show();
+    }
+
+
+    private TableView<InventoryOfProduct> createInventoryTable() {
+
+        TableView<InventoryOfProduct> table = new TableView<>();
+
+        // Product Code
+        TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");
+        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductCode()));
+        
+        // Product Name
+        TableColumn<InventoryOfProduct, String> productColumn = new TableColumn<>("Product Name");
+        productColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductName()));
+
+        // Current Stock
+        TableColumn<InventoryOfProduct, String> stockColumn = new TableColumn<>("Current Stock (kg)");
+
+        stockColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f",data.getValue().getProductStockInKG())));
+
+        // Stock Status
+        TableColumn<InventoryOfProduct, String> statusColumn = new TableColumn<>("Stock Status");
+        
+        statusColumn.setCellValueFactory(data -> {
+        	InventoryOfProduct record = data.getValue();
+            String productCode =record.getProduct().getProductCode();
+            String status;
+
+            if (record.getProductStockInKG() == 0) {
+                status = "OUT OF STOCK";
+            } else if (inventorySystem.isLowOnStock(productCode)) {
+                status = "LOW STOCK";
+            } else {
+                status = "IN STOCK";
+            }
+
+            return new ReadOnlyStringWrapper(status);
+        });
+
+        // Last Updated
+        TableColumn<InventoryOfProduct, String> updatedColumn = new TableColumn<>("Last Updated");
+
+        updatedColumn.setCellValueFactory(data -> {
+            if (data.getValue().getLastUpdated() == null) {
+                return new ReadOnlyStringWrapper("N/A");
+            }
+
+            return new ReadOnlyStringWrapper(data.getValue().getLastUpdated().format(dateFormat));
+        });
+
+        table.getColumns().addAll(codeColumn, productColumn, stockColumn,statusColumn,updatedColumn);
+
+        table.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
+
+        return table;
+    }
+
+   
+
+    private TableView<StockRecordedChange> createHistoryTable() {
+        TableView<StockRecordedChange> table = new TableView<>();
+
+        // Record ID
+        TableColumn<StockRecordedChange, String> idColumn = new TableColumn<>("Record ID");
+        idColumn.setCellValueFactory(data ->new ReadOnlyStringWrapper(data.getValue().getRecordId()));
+
+        // Product Code
+        TableColumn<StockRecordedChange, String> codeColumn = new TableColumn<>("Product Code");
+        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProductCode()));
+
+        // Change Type
+        TableColumn<StockRecordedChange, String> typeColumn = new TableColumn<>("Change Type");
+        typeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getChangeType()));
+
+        // Previous Stock
+        TableColumn<StockRecordedChange, String> previousColumn = new TableColumn<>("Previous Stock");
+        previousColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f",data.getValue().getPreviousStock())));
+
+        // New Stock
+        TableColumn<StockRecordedChange, String> newColumn = new TableColumn<>("New Stock");
+        newColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f", data.getValue().getNewStock())));
+
+        // Amount Changed
+        TableColumn<StockRecordedChange, String> amountColumn = new TableColumn<>("Amount Changed");
+        amountColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%+.2f",data.getValue().getAmountChanged())));
+
+        // Date and Time
+        TableColumn<StockRecordedChange, String> dateColumn = new TableColumn<>("Date/Time");
+        dateColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getTime() == null ? "N/A" : data.getValue().getTime().format(dateFormat)));
+
+        // Performed By
+        TableColumn<StockRecordedChange, String> userColumn = new TableColumn<>("Performed By");    
+        userColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getPerformedBy()));
+
+        // Explanation
+        TableColumn<StockRecordedChange, String> reasonColumn = new TableColumn<>("Explanation");
+        reasonColumn.setCellValueFactory(data ->new ReadOnlyStringWrapper(data.getValue().getExplanation()));
+
+        table.getColumns().addAll(
+                idColumn,
+                codeColumn,
+                typeColumn,
+                previousColumn,
+                newColumn,
+                amountColumn,
+                dateColumn,
+                userColumn,
+                reasonColumn
+        );
+        
+        table.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
+
+
+        return table;
+    }
+
+   
+    public void refreshTables() {
+        inventoryTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllInventory()));
+        historyTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllHistory()));
+    }
+    
+    //getters
+
+    public Button getRestockButton() {
+        return restockButton;
+    }
+
+    public Button getAdjustButton() {
+        return adjustButton;
+    }
+
+    public Button getRefreshButton() {
+        return refreshButton;
+    }
+
+    public TableView<InventoryOfProduct> getInventoryTable() {
+        return inventoryTable;
+    }
+
+    public TableView<StockRecordedChange> getHistoryTable() {
+        return historyTable;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
 }
