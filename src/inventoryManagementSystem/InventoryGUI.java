@@ -472,7 +472,7 @@ public class InventoryGUI {
                 )
         );
         
-        System.out.print("Github test");
+        System.out.print("Github testing");
 
         selectedProductLabel.setText(
                 "Select a product from the table above."
