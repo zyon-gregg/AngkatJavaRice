@@ -19,7 +19,7 @@ public class Source extends User{
 		this.listOfSourceProductsAndQuantity.put(product, quantity);
 	}
 	
-	public Set<Product> returnHashMapKeys(){
+	public Set<Product> returnProducts(){
 		return this.listOfSourceProductsAndQuantity.keySet();
 	}
 	

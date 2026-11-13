@@ -1,13 +1,16 @@
 package users;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 
 public class SourceDatabase {
 	private String databaseName;
 	private HashMap<String,Source> database = new HashMap<>();
+	
+	
 
-	SourceDatabase(String databaseName){
+	public SourceDatabase(String databaseName){
 		this.setDatabaseName(databaseName);
 	}
 	
@@ -17,6 +20,10 @@ public class SourceDatabase {
 
 	public void removeSourceFromDatabase(Source source) {
 		this.database.remove(source.getName());
+	}
+	
+	public Collection<Source> returnSources(){
+		return this.database.values();
 	}
 
 	public String getDatabaseName() {
