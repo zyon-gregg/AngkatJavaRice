@@ -471,6 +471,8 @@ public class InventoryGUI {
                         inventorySystem.getAllHistory()
                 )
         );
+        
+        System.out.print("Github test");
 
         selectedProductLabel.setText(
                 "Select a product from the table above."
