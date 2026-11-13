@@ -15,7 +15,7 @@ public class Product {
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
-	private Source productSource;
+	private Source productSource = null;
 	//Constructor
 	
 	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice, Source productSource){
@@ -31,6 +31,17 @@ public class Product {
 	
 	//Methods
 	
+	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		this.setProductCode(database);
+		this.productName = productName;
+		this.setProductDescription(productDescription);
+		this.productCostInKG = productCostInKG;
+		this.productRawPrice = productRawPrice;
+		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
+		this.setProductSource(productSource);
+	}
+
+
 	protected void setProductCode(ProductDatabase database) {
 		
 		//Product Code Format: 00001, 00010, -> 99999 (Can Be Expanded Later if Needed)
