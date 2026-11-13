@@ -8,12 +8,11 @@ package Products;
 public class Product {
 
 	// Attributes
-
 	private static int nextId = 1;
 	private String productCode;
 	private String productName;
 	private String productDescription;
-	private String productSource; // where the product comes from (fishing ground, fish pen, supplier)
+	private String productSource; // fishing ground, fish pen, or supplier
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
@@ -101,54 +100,34 @@ public class Product {
 
 	// Getters and Setters (setters validate)
 
-	public String getProductCode() {
-		return productCode;
-	}
+	public String getProductCode() { return productCode; }
 
-	public String getProductName() {
-		return productName;
-	}
-
+	public String getProductName() { return productName; }
 	public void setProductName(String productName) {
 		this.productName = requireText(productName, "Product name");
 	}
 
-	public String getProductDescription() {
-		return productDescription;
-	}
-
+	public String getProductDescription() { return productDescription; }
 	public void setProductDescription(String productDescription) {
 		this.productDescription = productDescription == null ? "" : productDescription.trim();
 	}
 
-	public String getProductSource() {
-		return productSource;
-	}
-
+	public String getProductSource() { return productSource; }
 	public void setProductSource(String productSource) {
 		this.productSource = requireText(productSource, "Source");
 	}
 
-	public double getProductCostInKG() {
-		return productCostInKG;
-	}
-
+	public double getProductCostInKG() { return productCostInKG; }
 	public void setProductCostInKG(double productCostInKG) {
 		this.productCostInKG = requirePositive(productCostInKG, "Cost per kg");
 	}
 
-	public double getProductRawPrice() {
-		return productRawPrice;
-	}
-
+	public double getProductRawPrice() { return productRawPrice; }
 	public void setProductRawPrice(double productRawPrice) {
 		this.productRawPrice = requirePositive(productRawPrice, "Raw price");
 	}
 
-	public double getProductEstimatedMarketPrice() {
-		return productEstimatedMarketPrice;
-	}
-
+	public double getProductEstimatedMarketPrice() { return productEstimatedMarketPrice; }
 	public void setProductEstimatedMarketPrice(double productEstimatedMarketPrice) {
 		this.productEstimatedMarketPrice = requirePositive(productEstimatedMarketPrice, "Estimated market price");
 	}

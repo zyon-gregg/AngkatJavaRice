@@ -160,7 +160,8 @@ public class ProductManagementView extends BorderPane {
 	}
 
 	// ---------- Event handlers ----------
-
+	
+	
 	private void handleAdd() {
 		try {
 			database.addProduct(new Product(nameField.getText(), descField.getText(),
@@ -174,6 +175,7 @@ public class ProductManagementView extends BorderPane {
 			showError(ex.getMessage());
 		}
 	}
+
 
 	private void handleUpdate() {
 		Product selected = table.getSelectionModel().getSelectedItem();
