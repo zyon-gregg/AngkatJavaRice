@@ -1,6 +1,10 @@
 package transaction;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import Products.Product;
 import Products.ProductDatabase;
@@ -81,5 +85,17 @@ public class SalesTransactionSystem {
 		
 		return;
 		
+	}
+	
+	public Collection<Receipt> getAllReceipt() {
+		return this.receiptHashMap.values();
+	}
+	
+	public ArrayList<Receipt> getAllReceiptByID(){
+		ArrayList<Receipt> sortedByID = new ArrayList<>();
+		for(Receipt receipt : this.receiptHashMap.values()) {
+			sortedByID.add(receipt);
+		}
+		return sortedByID;
 	}
 }	
