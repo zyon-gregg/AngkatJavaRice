@@ -1,5 +1,6 @@
 package login;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import users.User;
@@ -7,7 +8,7 @@ import users.User;
 public class LoginManager {
 	
 	private HashMap<String,User> accountsList = new HashMap<>();
-	
+	private ArrayList<User> pending = new ArrayList<>();
 	LoginManager(){
 		
 	}
@@ -33,5 +34,20 @@ public class LoginManager {
 			}
 		}
 		return false;
+	}
+	
+	public void createUser(String username, String password, String name, String accessLevel) {
+		User newUser = new User(username, password, name);
+		newUser.setActivated(false);
+		newUser.setUserAccessLevel(accessLevel);
+		pending.add(newUser);
+	}
+
+	public ArrayList<User> getPending() {
+		return pending;
+	}
+
+	public void setPending(ArrayList<User> pending) {
+		this.pending = pending;
 	}
 }

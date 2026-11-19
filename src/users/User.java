@@ -1,13 +1,14 @@
 package users;
 
-public abstract class User {
+public class User {
 	private String userID;
 	private String userName;
 	private String name;
 	private String password;
 	private String userAccessLevel;
+	private Boolean activated;
 	
-	User(String username, String password, String name){
+	public User(String username, String password, String name){
 		this.setUserName(username);
 		this.setPassword(password);
 		this.setName(name);
@@ -46,6 +47,14 @@ public abstract class User {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public Boolean getActivated() {
+		return activated;
+	}
+
+	public void setActivated(Boolean activated) {
+		this.activated = activated;
 	}
 	
 	

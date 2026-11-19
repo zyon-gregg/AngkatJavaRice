@@ -14,12 +14,6 @@ public class Buyer extends User{
 	Buyer(String username, String password, String name) {
 		super(username, password, name);
 	}
-	
-	public double returnTotalValueProducts() {
-		double summation = 0;
-		
-		return summation;
-	}
 
 	public double getBudget() {
 		return budget;
