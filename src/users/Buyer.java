@@ -3,12 +3,14 @@ package users;
 import java.util.HashMap;
 
 import Products.Product;
+import transaction.Cart;
+import transaction.Receipt;
 
 public class Buyer extends User{
 	
 	private double budget;
-	private HashMap<Product,Double> itemsBought = new HashMap<>();
-	
+	private Cart buyerCart;
+	private Receipt buyerReceipt;
 	Buyer(String username, String password, String name) {
 		super(username, password, name);
 	}
@@ -27,12 +29,21 @@ public class Buyer extends User{
 		this.budget = budget;
 	}
 
-	public HashMap<Product,Double> getItemsBought() {
-		return itemsBought;
+
+	public Cart getBuyerCart() {
+		return buyerCart;
 	}
 
-	public void setItemsBought(HashMap<Product,Double> itemsBought) {
-		this.itemsBought = itemsBought;
+	public void setBuyerCart(Cart buyerCart) {
+		this.buyerCart = buyerCart;
+	}
+
+	public Receipt getBuyerReceipt() {
+		return buyerReceipt;
+	}
+
+	public void setBuyerReceipt(Receipt buyerReceipt) {
+		this.buyerReceipt = buyerReceipt;
 	}
 
 }
