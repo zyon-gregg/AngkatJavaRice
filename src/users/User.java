@@ -1,5 +1,6 @@
 package users;
 
+
 public abstract class User {
 	private String userID;
 	private String userName;
@@ -12,6 +13,9 @@ public abstract class User {
 		this.setPassword(password);
 		this.setName(name);
 	}
+
+	/** The role name used by the GUI, e.g. "manager" or "clerk". */
+	public abstract String getRole();
 	
 	public String getUserName() {
 		return userName;

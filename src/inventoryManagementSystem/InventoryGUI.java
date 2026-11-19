@@ -1,247 +1,205 @@
 package inventoryManagementSystem;
 
-import javafx.collections.FXCollections;
 import javafx.beans.property.ReadOnlyStringWrapper;
-
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
-public class InventoryGUI {
+/**
+ * Inventory screen. It is a BorderPane, so SceneManager can show it inside the main window.
+ * canEdit = true  -> Manager view (restock / adjust buttons visible)
+ * canEdit = false -> Clerk view (read-only)
+ */
+public class InventoryGUI extends BorderPane {
 
-    // Window components
-    private Stage stage;
-    private Scene scene;
-    private BorderPane root;
+    private final InventorySystem inventorySystem;
+    private final String currentUser;
+    private final boolean canEdit;
 
-    // Backend
-    private InventorySystem inventorySystem;
-
-    // Tables
     private TableView<InventoryOfProduct> inventoryTable;
     private TableView<StockRecordedChange> historyTable;
 
-    // Buttons
     private Button restockButton;
     private Button adjustButton;
     private Button refreshButton;
 
-    // Date format
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public InventoryGUI(InventorySystem inventorySystem) {
+    public InventoryGUI(InventorySystem inventorySystem, String currentUser, boolean canEdit) {
         this.inventorySystem = inventorySystem;
-        this.stage = new Stage();
-        this.root = new BorderPane();
-        this.scene = new Scene(root, 1100, 750);
+        this.currentUser = currentUser;
+        this.canEdit = canEdit;
+        buildScreen();
+        refreshTables();
     }
 
-    // Sets the components of the Stage
-    public void setStageComponents() {
-
+    private void buildScreen() {
         VBox mainContainer = new VBox(10);
         mainContainer.setPadding(new Insets(15));
 
         Label inventoryTitle = new Label("Inventory Management");
+        inventoryTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         refreshButton = new Button("Refresh");
-
-        HBox header = new HBox(10);
+        refreshButton.setOnAction(e -> refreshTables());
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        header.getChildren().addAll(inventoryTitle,spacer,refreshButton);
+        HBox header = new HBox(10, inventoryTitle, spacer, refreshButton);
 
         restockButton = new Button("Restock Product");
         adjustButton = new Button("Adjust Stock");
+        restockButton.setOnAction(e -> handleRestock());
+        adjustButton.setOnAction(e -> handleAdjust());
 
-        HBox operationButtons = new HBox(
-                10,
-                restockButton,
-                adjustButton
-        );
+        HBox operationButtons = new HBox(10, restockButton, adjustButton);
+        // Clerks can only view
+        operationButtons.setVisible(canEdit);
+        operationButtons.setManaged(canEdit);
 
         inventoryTable = createInventoryTable();
-
-
-        Label historyTitle = new Label("Stock Movement History");
-
         historyTable = createHistoryTable();
-
-  
         inventoryTable.setPrefHeight(250);
         historyTable.setPrefHeight(250);
-
         VBox.setVgrow(inventoryTable, Priority.ALWAYS);
         VBox.setVgrow(historyTable, Priority.ALWAYS);
 
+        Label historyTitle = new Label("Stock Movement History");
 
-        mainContainer.getChildren().addAll(header,operationButtons, inventoryTable, new Separator(), historyTitle, historyTable);
-        
-        refreshButton.setOnAction(e -> refreshTables());
-
-        this.root.setCenter(mainContainer);
-
-        this.stage.setTitle("Angkat - Inventory Management");
-        this.stage.setScene(this.scene);
-
-        refreshTables();
-
-        this.stage.show();
+        mainContainer.getChildren().addAll(header, operationButtons, inventoryTable,
+                new Separator(), historyTitle, historyTable);
+        setCenter(mainContainer);
     }
 
+    // ---------- Actions ----------
+
+    private void handleRestock() {
+        InventoryOfProduct selected = inventoryTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Select a product in the table first.");
+            return;
+        }
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Restock Product");
+        dialog.setHeaderText("Restock " + selected.getProduct().getProductName());
+        dialog.setContentText("Amount to add (kg):");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) {
+            return;
+        }
+
+        try {
+            double amount = Double.parseDouble(result.get().trim());
+            inventorySystem.restockProduct(selected.getProduct().getProductCode(),
+                    amount, currentUser, "Restock");
+            refreshTables();
+        } catch (NumberFormatException ex) {
+            showError("Please enter a valid number.");
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void handleAdjust() {
+        // TODO: call the adjust method from InventorySystem once its signature is confirmed
+        showError("Adjust Stock is not connected yet.");
+    }
+
+    private void showError(String message) {
+        new Alert(Alert.AlertType.ERROR, message).showAndWait();
+    }
+
+    // ---------- Tables ----------
 
     private TableView<InventoryOfProduct> createInventoryTable() {
-
         TableView<InventoryOfProduct> table = new TableView<>();
 
-        // Product Code
         TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");
-        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductCode()));
-        
-        // Product Name
+        codeColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getProduct().getProductCode()));
+
         TableColumn<InventoryOfProduct, String> productColumn = new TableColumn<>("Product Name");
-        productColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductName()));
+        productColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getProduct().getProductName()));
 
-        // Current Stock
         TableColumn<InventoryOfProduct, String> stockColumn = new TableColumn<>("Current Stock (kg)");
+        stockColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(String.format("%.2f", d.getValue().getProductStockInKG())));
 
-        stockColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f",data.getValue().getProductStockInKG())));
-
-        // Stock Status
         TableColumn<InventoryOfProduct, String> statusColumn = new TableColumn<>("Stock Status");
-        
-        statusColumn.setCellValueFactory(data -> {
-        	InventoryOfProduct record = data.getValue();
-            String productCode =record.getProduct().getProductCode();
+        statusColumn.setCellValueFactory(d -> {
+            InventoryOfProduct record = d.getValue();
+            String code = record.getProduct().getProductCode();
             String status;
-
             if (record.getProductStockInKG() == 0) {
                 status = "OUT OF STOCK";
-            } else if (inventorySystem.isLowOnStock(productCode)) {
+            } else if (inventorySystem.isLowOnStock(code)) {
                 status = "LOW STOCK";
             } else {
                 status = "IN STOCK";
             }
-
             return new ReadOnlyStringWrapper(status);
         });
 
-        // Last Updated
         TableColumn<InventoryOfProduct, String> updatedColumn = new TableColumn<>("Last Updated");
+        updatedColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(
+                d.getValue().getLastUpdated() == null ? "N/A" : d.getValue().getLastUpdated().format(dateFormat)));
 
-        updatedColumn.setCellValueFactory(data -> {
-            if (data.getValue().getLastUpdated() == null) {
-                return new ReadOnlyStringWrapper("N/A");
-            }
-
-            return new ReadOnlyStringWrapper(data.getValue().getLastUpdated().format(dateFormat));
-        });
-
-        table.getColumns().addAll(codeColumn, productColumn, stockColumn,statusColumn,updatedColumn);
-
-        table.setColumnResizePolicy(
-                TableView.CONSTRAINED_RESIZE_POLICY
-        );
-
+        table.getColumns().addAll(codeColumn, productColumn, stockColumn, statusColumn, updatedColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         return table;
     }
-
-   
 
     private TableView<StockRecordedChange> createHistoryTable() {
         TableView<StockRecordedChange> table = new TableView<>();
 
-        // Record ID
         TableColumn<StockRecordedChange, String> idColumn = new TableColumn<>("Record ID");
-        idColumn.setCellValueFactory(data ->new ReadOnlyStringWrapper(data.getValue().getRecordId()));
+        idColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getRecordId()));
 
-        // Product Code
         TableColumn<StockRecordedChange, String> codeColumn = new TableColumn<>("Product Code");
-        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProductCode()));
+        codeColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getProductCode()));
 
-        // Change Type
         TableColumn<StockRecordedChange, String> typeColumn = new TableColumn<>("Change Type");
-        typeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getChangeType()));
+        typeColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getChangeType()));
 
-        // Previous Stock
         TableColumn<StockRecordedChange, String> previousColumn = new TableColumn<>("Previous Stock");
-        previousColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f",data.getValue().getPreviousStock())));
+        previousColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(String.format("%.2f", d.getValue().getPreviousStock())));
 
-        // New Stock
         TableColumn<StockRecordedChange, String> newColumn = new TableColumn<>("New Stock");
-        newColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f", data.getValue().getNewStock())));
+        newColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(String.format("%.2f", d.getValue().getNewStock())));
 
-        // Amount Changed
         TableColumn<StockRecordedChange, String> amountColumn = new TableColumn<>("Amount Changed");
-        amountColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%+.2f",data.getValue().getAmountChanged())));
+        amountColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(String.format("%+.2f", d.getValue().getAmountChanged())));
 
-        // Date and Time
         TableColumn<StockRecordedChange, String> dateColumn = new TableColumn<>("Date/Time");
-        dateColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getTime() == null ? "N/A" : data.getValue().getTime().format(dateFormat)));
+        dateColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(
+                d.getValue().getTime() == null ? "N/A" : d.getValue().getTime().format(dateFormat)));
 
-        // Performed By
-        TableColumn<StockRecordedChange, String> userColumn = new TableColumn<>("Performed By");    
-        userColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getPerformedBy()));
+        TableColumn<StockRecordedChange, String> userColumn = new TableColumn<>("Performed By");
+        userColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getPerformedBy()));
 
-        // Explanation
         TableColumn<StockRecordedChange, String> reasonColumn = new TableColumn<>("Explanation");
-        reasonColumn.setCellValueFactory(data ->new ReadOnlyStringWrapper(data.getValue().getExplanation()));
+        reasonColumn.setCellValueFactory(d -> new ReadOnlyStringWrapper(d.getValue().getExplanation()));
 
-        table.getColumns().addAll(
-                idColumn,
-                codeColumn,
-                typeColumn,
-                previousColumn,
-                newColumn,
-                amountColumn,
-                dateColumn,
-                userColumn,
-                reasonColumn
-        );
-        
-        table.setColumnResizePolicy(
-                TableView.CONSTRAINED_RESIZE_POLICY
-        );
-
-
+        table.getColumns().addAll(idColumn, codeColumn, typeColumn, previousColumn,
+                newColumn, amountColumn, dateColumn, userColumn, reasonColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         return table;
     }
 
-   
     public void refreshTables() {
         inventoryTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllInventory()));
         historyTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllHistory()));
     }
-    
-    //getters
 
-    public Button getRestockButton() {
-        return restockButton;
-    }
+    // ---------- Getters ----------
 
-    public Button getAdjustButton() {
-        return adjustButton;
-    }
-
-    public Button getRefreshButton() {
-        return refreshButton;
-    }
-
-    public TableView<InventoryOfProduct> getInventoryTable() {
-        return inventoryTable;
-    }
-
-    public TableView<StockRecordedChange> getHistoryTable() {
-        return historyTable;
-    }
-
-    public Stage getStage() {
-        return stage;
-    }
+    public Button getRestockButton() { return restockButton; }
+    public Button getAdjustButton() { return adjustButton; }
+    public Button getRefreshButton() { return refreshButton; }
+    public TableView<InventoryOfProduct> getInventoryTable() { return inventoryTable; }
+    public TableView<StockRecordedChange> getHistoryTable() { return historyTable; }
 }
