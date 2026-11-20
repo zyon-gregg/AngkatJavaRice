@@ -21,7 +21,7 @@ public class LoginView extends VBox {
 	private final TextField usernameField = new TextField();
 	private final PasswordField passwordField = new PasswordField();
 	private final Label errorLabel = new Label();
-
+	//Random Comment
 	public LoginView(BiFunction<String, String, String> authenticator, BiConsumer<String, String> onSuccess) {
 		setAlignment(Pos.CENTER);
 		setSpacing(14);
