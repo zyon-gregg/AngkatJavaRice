@@ -414,13 +414,7 @@ public class ClerkDashboard {
         alert.setContentText("You will be returned to the login screen.");
 
         alert.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.OK) {
-                if (onLogout != null) {
-                    onLogout.run();
-                } else {
-                    stage.close();
-                }
-            }
+            stage.close();
         });
     }
 }
