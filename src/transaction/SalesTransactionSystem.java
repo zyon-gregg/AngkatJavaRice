@@ -13,6 +13,7 @@ import inventoryManagementSystem.InventoryOfProduct;
 import inventoryManagementSystem.InventorySystem;
 import users.Buyer;
 import users.BuyerDatabase;
+import users.SourceDatabase;
 import users.User;
 
 public class SalesTransactionSystem {
@@ -21,14 +22,17 @@ public class SalesTransactionSystem {
 	private BuyerDatabase buyers;
 	private ProductDatabase database;
 	private InventorySystem invSystem;
+	private SourceDatabase sources;
 	private static int nextIdCart = 1;
 	private static int nextIdReceipt = 1;
 	private User currentUser;
 
 
-	public SalesTransactionSystem(ProductDatabase products, InventorySystem inventory){
+	public SalesTransactionSystem(ProductDatabase products, InventorySystem inventory, BuyerDatabase buyers, SourceDatabase sources){
 		this.database = products;
 		this.invSystem = inventory;
+		this.buyers = buyers;
+		this.sources = sources;
 	}
 
 	public void setCurrentUser(User user) {

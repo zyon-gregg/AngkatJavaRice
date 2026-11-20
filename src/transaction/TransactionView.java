@@ -117,7 +117,6 @@ public class TransactionView extends BorderPane {
 				new Separator(),
 				new Label("2. Add items"), productBox, stockLabel, kgField, addButton);
 		panel.setPadding(new Insets(15));
-		panel.setPrefWidth(290);
 		return panel;
 	}
 

@@ -14,11 +14,11 @@ public class BuyerDatabase {
 		this.setDatabaseName(databaseName);
 	}
 	
-	public void addSourceToDatabase(Buyer buyer) {
+	public void addBuyerToDatabase(Buyer buyer) {
 		this.database.put(buyer.getName(), buyer);
 	}
 
-	public void removeSourceFromDatabase(Buyer buyer) {
+	public void removeBuyerFromDatabase(Buyer buyer) {
 		this.database.remove(buyer.getName());
 	}
 	

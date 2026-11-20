@@ -12,6 +12,10 @@ import javafx.stage.Stage;
 import transaction.SalesTransactionSystem;
 import transaction.TransactionView;
 import users.Buyer;
+import users.BuyerDatabase;
+import users.Source;
+import users.SourceDatabase;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +25,8 @@ public class Main extends Application {
 
 	private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
 	private final InventorySystem inventory = new InventorySystem();
+	private BuyerDatabase buyers = new BuyerDatabase("Buyers");
+	private SourceDatabase sources = new SourceDatabase("Source");
 	private SceneManager sceneManager;
 
 	// Set after a successful login
@@ -102,10 +108,21 @@ public class Main extends Application {
 		Product tuna = new Product(products,"Tuna", "Yellowfin tuna, sliced", "General Santos", 230.00, 280.00, 320.00);
 		Product galunggong = new Product(products,"Galunggong", "Round scad", "Navotas Fish Port", 110.00, 140.00, 160.00);
 		Product pusit = new Product(products,"Pusit", "Fresh squid", "Palawan", 200.00, 240.00, 280.00);
-
+		
 		for (Product p : new Product[] { bangus, tilapia, tuna, galunggong, pusit }) {
 			products.addProduct(p);
 		}
+		
+		Source AppleFarm = new Source("AppleF","TheFarm","AppleFarms");
+		for (Product p : new Product[] { bangus, tilapia, tuna, galunggong, pusit }) {
+			AppleFarm.addProductToSource(p, 100000.00);
+		}
+		sources.addSourceToDatabase(AppleFarm);
+		
+		buyers.addBuyerToDatabase(new Buyer("Apple","Apple123","Apples",20000));
+		buyers.addBuyerToDatabase(new Buyer("Apple2","Apple1234","Apples",120000));
+		buyers.addBuyerToDatabase(new Buyer("Apple3","Apple12345","Apples",22130000));
+		
 		syncInventoryRecords();
 
 		// Sample stock: Tuna stays at 0 (out of stock), Tilapia and Pusit are low
@@ -115,7 +132,7 @@ public class Main extends Application {
 		inventory.restockProduct(pusit.getProductCode(), 120, "manager", "Opening stock");
 	}
 	
-	private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory);
+	private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory,buyers,sources);
 
 
 	public static void main(String[] args) {
