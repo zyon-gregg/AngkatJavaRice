@@ -8,35 +8,82 @@ import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+
+import transaction.SalesTransactionSystem;
+import transaction.TransactionView;
+import users.Buyer;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
 public class Main extends Application {
 
 	private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
 	private final InventorySystem inventory = new InventorySystem();
 	private SceneManager sceneManager;
 
+	// Set after a successful login
+	private String currentUser = "";
+	private boolean isManager = false;
+
 	@Override
 	public void start(Stage stage) {
 		loadSampleData();
 
 		sceneManager = new SceneManager(stage, 1150, 600);
-		showMenu();
+		showLogin();
 
 		stage.setTitle("Angkat - Fish Port Management System");
 		stage.show();
 	}
 
+	// ---------- Screens ----------
+
+	private void showLogin() {
+		sceneManager.setRoot(new LoginView(this::authenticate, (user, role) -> {
+			currentUser = user;
+			isManager = role.equals("MANAGER");
+			showMenu();
+		}));
+	}
+
 	private void showMenu() {
-		sceneManager.setRoot(new MainMenuView(this::showProducts, this::showInventory));
+		sceneManager.setRoot(new MainMenuView(this::showProducts, this::showInventory, this::showTransactions));
 	}
 
 	private void showProducts() {
-		sceneManager.showWithBackButton(new ProductManagementView(products, true), this::showMenu);
+		sceneManager.showWithBackButton(new ProductManagementView(products, isManager), this::showMenu);
 	}
 
 	private void showInventory() {
 		syncInventoryRecords();
-		sceneManager.showWithBackButton(new InventoryGUI(inventory, "manager", true), this::showMenu);
+		sceneManager.showWithBackButton(new InventoryGUI(inventory, currentUser, isManager), this::showMenu);
 	}
+	private void showTransactions() {
+		syncInventoryRecords();
+		sceneManager.showWithBackButton(new TransactionView(sales, products, getBuyers()), this::showMenu);
+	}
+	
+	/** TODO: return the real buyers from BuyerDatabase. Empty for now, so the buyer dropdown is empty. */
+	private List<Buyer> getBuyers() {
+		return new ArrayList<>();
+	}
+
+	// ---------- Login ----------
+
+	/**
+	 * TEMPORARY login check, so the login screen works without the users package.
+	 * Replace the body with the real user database once that part is ready.
+	 * Returns "MANAGER" or "CLERK", or null if the login is wrong.
+	 */
+	private String authenticate(String username, String password) {
+		if (username.equals("manager") && password.equals("manager123")) return "MANAGER";
+		if (username.equals("clerk") && password.equals("clerk123")) return "CLERK";
+		return null;
+	}
+
+	// ---------- Data ----------
 
 	/** Gives every product that has no stock record yet one (starting at 0 kg). */
 	private void syncInventoryRecords() {
@@ -66,6 +113,9 @@ public class Main extends Application {
 		inventory.restockProduct(galunggong.getProductCode(), 800, "manager", "Opening stock");
 		inventory.restockProduct(pusit.getProductCode(), 120, "manager", "Opening stock");
 	}
+	
+	private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory);
+
 
 	public static void main(String[] args) {
 		launch(args);

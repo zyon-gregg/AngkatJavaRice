@@ -9,7 +9,6 @@ public class SourceDatabase {
 	private HashMap<String,Source> database = new HashMap<>();
 	
 	
-
 	public SourceDatabase(String databaseName){
 		this.setDatabaseName(databaseName);
 	}

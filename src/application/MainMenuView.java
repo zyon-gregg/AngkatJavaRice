@@ -13,7 +13,7 @@ import javafx.scene.layout.VBox;
  */
 public class MainMenuView extends VBox {
 
-	public MainMenuView(Runnable onProducts, Runnable onInventory) {
+	public MainMenuView(Runnable onProducts, Runnable onInventory, Runnable onTransactions) {
 		setAlignment(Pos.CENTER);
 		setSpacing(18);
 		setPadding(new Insets(40));
@@ -26,9 +26,10 @@ public class MainMenuView extends VBox {
 
 		Button productsButton = menuButton("Product Management", onProducts);
 		Button inventoryButton = menuButton("Inventory Management", onInventory);
+		Button transactionsButton = menuButton("Transactions", onTransactions);
 		VBox.setMargin(productsButton, new Insets(24, 0, 0, 0));
 
-		getChildren().addAll(title, subtitle, productsButton, inventoryButton);
+		getChildren().addAll(title, subtitle, productsButton, inventoryButton, transactionsButton);
 	}
 
 	/** Builds every menu button the same way. */
