@@ -17,7 +17,7 @@ import java.util.function.BiFunction;
  * On success it calls onSuccess(username, role).
  */
 public class LoginView extends VBox {
-
+//
 	private final TextField usernameField = new TextField();
 	private final PasswordField passwordField = new PasswordField();
 	private final Label errorLabel = new Label();
