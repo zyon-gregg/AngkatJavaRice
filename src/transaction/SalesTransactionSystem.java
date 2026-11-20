@@ -24,7 +24,7 @@ public class SalesTransactionSystem {
 	private User currentUser;
 	
 	
-	SalesTransactionSystem(ProductDatabase products, InventorySystem inventory){
+	public SalesTransactionSystem(ProductDatabase products, InventorySystem inventory){
 		this.database = products;
 		this.invSystem = inventory;
 	}

@@ -1,4 +1,6 @@
 package application;
+
+import managerDashboard.managerDashboard;
 import Products.Product;
 import Products.ProductDatabase;
 import Products.ProductManagementView;
@@ -59,6 +61,8 @@ public class Main extends Application {
         Button productButton = new Button("Product Management");
 
         Button inventoryButton = new Button("Inventory Management");
+        
+        Button managerDashboardButton = new Button("Manager Dashboard");
 
         // Product Management Window
         productButton.setOnAction(e -> {
@@ -72,6 +76,24 @@ public class Main extends Application {
 
             productStage.show();
         });
+        
+        managerDashboardButton.setOnAction(e ->{
+        	
+        	Stage dashboardStage = new Stage();
+
+        	managerDashboard dashboard = new managerDashboard(
+        	    dashboardStage,
+        	    "Manager Full Name",
+        	    "Manager ID",
+        	    database,
+        	    inventorySystem
+        	);
+
+        	dashboard.show();
+        	
+        	
+        });
+        
 
         // Inventory Management Window
         inventoryButton.setOnAction(e -> {
@@ -86,7 +108,7 @@ public class Main extends Application {
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(30));
 
-        root.getChildren().addAll(productButton, inventoryButton);
+        root.getChildren().addAll(productButton, inventoryButton, managerDashboardButton);
 
         stage.setTitle("Angkat Test");
         stage.setScene(new Scene(root, 400, 300));
