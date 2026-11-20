@@ -50,10 +50,6 @@ public class Product {
 	// Methods
 
 
-	public Product(String string, String string2, String string3, double d, double e, double f) {
-		// TODO Auto-generated constructor stub
-	}
-
 	/** Keeps nextId ahead of any code in use, so IDs stay unique after loading from a file. */
 	private static void syncNextId(String code) {
 		try {
