@@ -66,7 +66,7 @@ public class managerDashboard {
         this.inventorySystem = inventorySystem;
     }
 
-    /** Builds and displays the dashboard window. */
+    //shows the manager dashboard
     public void show() {
         root = new BorderPane();
         contentArea = new StackPane();
@@ -92,8 +92,7 @@ public class managerDashboard {
     // ---------------------------------------------------------------------
 
     private Node createTopBar() {
-        Label managerDetails = new Label(
-                managerName + "   |   ID: " + managerID + "   |   Manager");
+        Label managerDetails = new Label(managerName + "   |   ID: " + managerID + "   |   Manager");
 
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(event -> refreshCurrentPage());
@@ -101,11 +100,7 @@ public class managerDashboard {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox topBar = new HBox(15,
-                pageTitleLabel,
-                spacer,
-                managerDetails,
-                refreshButton);
+        HBox topBar = new HBox(15, pageTitleLabel, spacer, managerDetails, refreshButton);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPadding(new Insets(15, 20, 15, 20));
 
