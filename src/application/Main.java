@@ -8,6 +8,7 @@ import Products.ProductManagementView;
 import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
+import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
 
@@ -36,15 +37,14 @@ public class Main extends Application {
 		sceneManager = new SceneManager(stage, 1150, 600);
 		showLogin();
 
-<<<<<<< HEAD
+
         Button inventoryButton = new Button("Inventory Management");
         
         Button managerDashboardButton = new Button("Manager Dashboard");
-=======
+
 		stage.setTitle("Angkat - Fish Port Management System");
 		stage.show();
 	}
->>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
 
 	// ---------- Screens ----------
 
@@ -64,9 +64,8 @@ public class Main extends Application {
 		sceneManager.showWithBackButton(new ProductManagementView(products, isManager), this::showMenu);
 	}
 
-<<<<<<< HEAD
             productStage.show();
-        });
+    });
         
         managerDashboardButton.setOnAction(e ->{
         	
@@ -105,7 +104,7 @@ public class Main extends Application {
         stage.setScene(new Scene(root, 400, 300));
         stage.show();
 
-=======
+
 	private void showInventory() {
 		syncInventoryRecords();
 		sceneManager.showWithBackButton(new InventoryGUI(inventory, currentUser, isManager), this::showMenu);
@@ -113,7 +112,6 @@ public class Main extends Application {
 	private void showTransactions() {
 		syncInventoryRecords();
 		sceneManager.showWithBackButton(new TransactionView(sales, products, getBuyers()), this::showMenu);
->>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
 	}
 	
 	/** TODO: return the real buyers from BuyerDatabase. Empty for now, so the buyer dropdown is empty. */
