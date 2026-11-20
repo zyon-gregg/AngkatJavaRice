@@ -1,9 +1,7 @@
 package application;
 
-<<<<<<< HEAD
 import managerDashboard.managerDashboard;
-=======
->>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
+
 import Products.Product;
 import Products.ProductDatabase;
 import Products.ProductManagementView;

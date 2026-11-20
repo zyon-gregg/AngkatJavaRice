@@ -389,7 +389,7 @@ public class managerDashboard {
     
     private void openInventoryManagement() {
         InventoryGUI inventoryGUI = new InventoryGUI(inventorySystem);
-        inventoryGUI.setStageComponents();
+        inventoryGUI.buildScreen();
     }
     
     private void showSalesPlaceholder() {
