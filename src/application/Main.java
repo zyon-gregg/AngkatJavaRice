@@ -85,14 +85,9 @@ public class Main extends Application {
 	}
 	private void showTransactions() {
 		syncInventoryRecords();
-		sceneManager.showWithBackButton(new TransactionView(sales, products, getBuyers()), this::showMenu);
+		sceneManager.showWithBackButton(new TransactionView(sales, products, buyers.returnBuyers()), this::showMenu);
 	}
 	
-	/** TODO: return the real buyers from BuyerDatabase. Empty for now, so the buyer dropdown is empty. */
-	private List<Buyer> getBuyers() {
-		return new ArrayList<>();
-	}
-
 	// ---------- Login ----------
 
 	/**
@@ -158,7 +153,7 @@ public class Main extends Application {
 	
 	private void showClerkDashboard() {
 
-	    ClerkDashboard clerkDashboard = new ClerkDashboard(primaryStage, "Clerk", currentUser, products, inventory, sales, getBuyers(), this::showLogin);
+	    ClerkDashboard clerkDashboard = new ClerkDashboard(primaryStage, "Clerk", currentUser, products, inventory, sales, buyers.returnBuyerList(), this::showLogin);
 	    clerkDashboard.show();
 	}
 

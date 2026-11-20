@@ -1,7 +1,9 @@
 package users;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class BuyerDatabase {
 	
@@ -22,8 +24,12 @@ public class BuyerDatabase {
 		this.database.remove(buyer.getName());
 	}
 	
-	public Collection<Buyer> returnSources(){
+	public Collection<Buyer> returnBuyers(){
 		return this.database.values();
+	}
+	
+	public ArrayList<Buyer> returnBuyerList(){
+		return new ArrayList<>(this.database.values());
 	}
 
 	public String getDatabaseName() {
