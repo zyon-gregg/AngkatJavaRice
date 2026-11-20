@@ -37,7 +37,7 @@ public class InventoryGUI extends BorderPane {
         refreshTables();
     }
 
-    private void buildScreen() {
+    public void buildScreen() {
         VBox mainContainer = new VBox(10);
         mainContainer.setPadding(new Insets(15));
 

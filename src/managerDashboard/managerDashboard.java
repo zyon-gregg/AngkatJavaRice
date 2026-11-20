@@ -388,7 +388,7 @@ public class managerDashboard {
     }
     
     private void openInventoryManagement() {
-        InventoryGUI inventoryGUI = new InventoryGUI(inventorySystem);
+        InventoryGUI inventoryGUI = new InventoryGUI(inventorySystem,null,true);
         inventoryGUI.buildScreen();
     }
     
