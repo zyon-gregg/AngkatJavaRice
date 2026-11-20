@@ -16,11 +16,12 @@ public class Product {
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
+	
 
 	// Constructors
 
 	/** Creates a NEW product and auto-generates its code (P00001, P00002, ...). */
-	public Product(String productName, String productDescription, String productSource,
+	public Product(ProductDatabase database, String productName, String productDescription, String productSource,
 			double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
 		this(String.format("P%05d", nextId), productName, productDescription, productSource,
 				productCostInKG, productRawPrice, productEstimatedMarketPrice);
@@ -47,6 +48,11 @@ public class Product {
 	}
 
 	// Methods
+
+
+	public Product(String string, String string2, String string3, double d, double e, double f) {
+		// TODO Auto-generated constructor stub
+	}
 
 	/** Keeps nextId ahead of any code in use, so IDs stay unique after loading from a file. */
 	private static void syncNextId(String code) {

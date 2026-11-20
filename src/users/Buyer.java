@@ -14,15 +14,11 @@ public class Buyer extends User {
 
 	// Order is (username, password, name, budget), like the other users plus a budget
 	public Buyer(String username, String password, String name, double budget) {
-		super();
+		super(username, password, name);
 		setUserAccessLevel("BUYER");
 		setBudget(budget);
 	}
 
-	private void setUserAccessLevel(String string) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	public double getBudget() {
 		return budget;

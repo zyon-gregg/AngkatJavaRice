@@ -6,7 +6,7 @@ import java.util.Set;
 
 import Products.Product;
 
-public class Source{
+public class Source extends User{
 	
 	private HashMap<Product,Double> listOfSourceProductsAndQuantity = new HashMap<>();
 	

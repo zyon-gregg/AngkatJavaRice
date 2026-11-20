@@ -1,11 +1,8 @@
 package users;
 
-<<<<<<< HEAD
 
-public abstract class User {
-=======
 public class User {
->>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
+
 	private String userID;
 	private String userName;
 	private String name;
@@ -20,7 +17,9 @@ public class User {
 	}
 
 	/** The role name used by the GUI, e.g. "manager" or "clerk". */
-	public abstract String getRole();
+	public  String getRole() {
+		return this.userAccessLevel;
+	};
 	
 	public String getUserName() {
 		return userName;

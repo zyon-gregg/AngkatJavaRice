@@ -96,11 +96,11 @@ public class Main extends Application {
 
 	private void loadSampleData() {
 		// Arguments: name, description, source, cost/kg, raw price, estimated market price
-		Product bangus = new Product("Bangus", "Fresh milkfish, whole", "Dagupan fish pens", 120.00, 150.00, 180.00);
-		Product tilapia = new Product("Tilapia", "Fresh tilapia, whole", "Taal Lake fish cages", 80.00, 100.00, 120.00);
-		Product tuna = new Product("Tuna", "Yellowfin tuna, sliced", "General Santos", 230.00, 280.00, 320.00);
-		Product galunggong = new Product("Galunggong", "Round scad", "Navotas Fish Port", 110.00, 140.00, 160.00);
-		Product pusit = new Product("Pusit", "Fresh squid", "Palawan", 200.00, 240.00, 280.00);
+		Product bangus = new Product(products,"Bangus", "Fresh milkfish, whole", "Dagupan fish pens", 120.00, 150.00, 180.00);
+		Product tilapia = new Product(products,"Tilapia", "Fresh tilapia, whole", "Taal Lake fish cages", 80.00, 100.00, 120.00);
+		Product tuna = new Product(products,"Tuna", "Yellowfin tuna, sliced", "General Santos", 230.00, 280.00, 320.00);
+		Product galunggong = new Product(products,"Galunggong", "Round scad", "Navotas Fish Port", 110.00, 140.00, 160.00);
+		Product pusit = new Product(products,"Pusit", "Fresh squid", "Palawan", 200.00, 240.00, 280.00);
 
 		for (Product p : new Product[] { bangus, tilapia, tuna, galunggong, pusit }) {
 			products.addProduct(p);
