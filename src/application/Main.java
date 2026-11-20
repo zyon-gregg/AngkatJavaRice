@@ -5,6 +5,8 @@ import Products.ProductDatabase;
 import Products.ProductManagementView;
 import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventorySystem;
+import clerkDashboard.ClerkDashboard;
+import managerDashboard.managerDashboard;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -28,6 +30,8 @@ public class Main extends Application {
 	private BuyerDatabase buyers = new BuyerDatabase("Buyers");
 	private SourceDatabase sources = new SourceDatabase("Source");
 	private SceneManager sceneManager;
+	
+	private Stage primaryStage;
 
 	// Set after a successful login
 	private String currentUser = "";
@@ -35,6 +39,7 @@ public class Main extends Application {
 
 	@Override
 	public void start(Stage stage) {
+		 this.primaryStage = stage;
 		loadSampleData();
 
 		sceneManager = new SceneManager(stage, 1150, 600);
@@ -47,11 +52,22 @@ public class Main extends Application {
 	// ---------- Screens ----------
 
 	private void showLogin() {
-		sceneManager.setRoot(new LoginView(this::authenticate, (user, role) -> {
-			currentUser = user;
-			isManager = role.equals("MANAGER");
-			showMenu();
-		}));
+
+	    sceneManager.setRoot(new LoginView(this::authenticate, (user, role) -> {
+
+	        currentUser = user;
+
+	        if (role.equals("MANAGER")) {
+
+	            showManagerDashboard();
+
+	        } else if (role.equals("CLERK")) {
+
+	            showClerkDashboard();
+
+	        }
+
+	    }));
 	}
 
 	private void showMenu() {
@@ -133,6 +149,18 @@ public class Main extends Application {
 	}
 	
 	private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory,buyers,sources);
+	
+	private void showManagerDashboard() {
+
+	    managerDashboard managerDashboard = new managerDashboard(primaryStage, "Manager", currentUser, products, inventory);
+	    managerDashboard.show();
+	}
+	
+	private void showClerkDashboard() {
+
+	    ClerkDashboard clerkDashboard = new ClerkDashboard(primaryStage, "Clerk", currentUser, products, inventory, sales, getBuyers(), this::showLogin);
+	    clerkDashboard.show();
+	}
 
 
 	public static void main(String[] args) {

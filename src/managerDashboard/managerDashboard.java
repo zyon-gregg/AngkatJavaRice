@@ -189,7 +189,7 @@ public class managerDashboard {
         attentionSection.setPrefWidth(450);
         recentActivitySection.setPrefWidth(650);
 
-        Label overviewDescription = new Label("Monitor product records, stock levels, and recent inventory activity.");
+        Label overviewDescription = new Label("Welcome back Manager!");
 
         VBox page = new VBox(18, overviewDescription, summaryCards, tablesRow);
         page.setPadding(new Insets(22));
@@ -351,7 +351,7 @@ public class managerDashboard {
 
         alert.showAndWait().ifPresent(response -> {
             if (response == javafx.scene.control.ButtonType.OK) {
-                // Replace this with returning to your Login screen later.
+                // will code it so that it returns into the login
                 stage.close();
             }
         });
