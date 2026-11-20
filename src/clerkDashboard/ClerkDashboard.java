@@ -341,9 +341,9 @@ public class ClerkDashboard {
     }
 
     private void openInventoryCheck() {
-        syncInventoryRecords();
-        InventoryGUI inventoryView = new InventoryGUI(inventorySystem, clerkName, false);
-        displayPage("Check Inventory", inventoryView);
+    	
+    	InventoryGUI inventoryGUI =new InventoryGUI(inventorySystem);
+        inventoryGUI.setStageComponents();
     }
 
     private void syncInventoryRecords() {

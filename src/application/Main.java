@@ -57,8 +57,9 @@ public class Main extends Application {
 	}
 
 	private void showInventory() {
-		syncInventoryRecords();
-		sceneManager.showWithBackButton(new InventoryGUI(inventory, currentUser, isManager), this::showMenu);
+		 InventoryGUI inventoryGUI =new InventoryGUI(inventory);
+         inventoryGUI.setStageComponents();
+		
 	}
 	private void showTransactions() {
 		syncInventoryRecords();
