@@ -86,11 +86,6 @@ public class managerDashboard {
         stage.show();
     }
     
-
-    // ---------------------------------------------------------------------
-    // Main window layout
-    // ---------------------------------------------------------------------
-
     private Node createTopBar() {
         Label managerDetails = new Label(managerName + "   |   ID: " + managerID + "   |   Manager");
 
@@ -124,7 +119,7 @@ public class managerDashboard {
         inventoryButton.setOnAction(event -> openInventoryManagement());
         salesButton.setOnAction(event -> showSalesPlaceholder());
         activityButton.setOnAction(event -> showActivityHistory());
-        userButton.setOnAction(event -> showUserManagementPlaceholder());
+        userButton.setOnAction(event -> showUserManagement());
         logoutButton.setOnAction(event -> confirmLogout());
 
         Region spacer = new Region();
@@ -324,17 +319,11 @@ public class managerDashboard {
     }
     
     private void showSalesPlaceholder() {
-        showPlaceholderPage(
-                "Sales & Transactions",
-                "The SalesTransactionSystem is not connected to this dashboard yet. "
-                + "Once checkout and receipt-history methods are complete, this page "
-                + "can open the POS and transaction history.");
+        showPlaceholderPage("Sales & Transactions", "will be integrated later");
     }
     
-    private void showUserManagementPlaceholder() {
-        showPlaceholderPage(
-                "User Management",
-                "Connect this page to your existing user-management screen when it is ready.");
+    private void showUserManagement() {
+        showPlaceholderPage("User Management", "Validating pending accounts");
     }
     
     private void showPlaceholderPage(String title, String message) {
