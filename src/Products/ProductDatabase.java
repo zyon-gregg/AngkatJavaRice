@@ -1,79 +1,68 @@
 package Products;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import users.Source;
-import users.SourceDatabase;
-
+/**
+ * Stores products keyed by product code.
+ * Uses LinkedHashMap so products keep their insertion order in the GUI table.
+ * This class has no JavaFX code, so it can be reused and tested on its own.
+ */
 public class ProductDatabase {
 	private String databaseName;
-	private HashMap<String,Product> database = new HashMap<>();
-	
-	public ProductDatabase(String databaseName){
+	private final Map<String, Product> database = new LinkedHashMap<>();
+
+	public ProductDatabase(String databaseName) {
 		this.setDatabaseName(databaseName);
 	}
-	
+
 	public void addProduct(Product product) {
+		if (product == null) {
+			throw new IllegalArgumentException("Product cannot be null.");
+		}
+		if (database.containsKey(product.getProductCode())) {
+			throw new IllegalArgumentException("Product code already exists: " + product.getProductCode());
+		}
 		database.put(product.getProductCode(), product);
 	}
-	
+
 	public void removeProduct(Product product) {
-		database.remove(product.getProductCode());
-	}
-	
-	public void editProduct(Product product, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
-		
-		if(!product.getProductName().equals(productName)) {
-			product.setProductName(productName);
-		}
-		
-		if(!product.getProductDescription().equals(productDescription)) {
-			product.setProductDescription(productDescription);
-		}
-		
-		if(!(product.getProductCostInKG() == (productCostInKG))) {
-			product.setProductCostInKG(productCostInKG);
-		}
-		
-		if(!(product.getProductRawPrice() == productRawPrice)) {
-			product.setProductRawPrice(productRawPrice);
-		}
-		
-		if(!(product.getProductEstimatedMarketPrice() == productEstimatedMarketPrice)) {
-			product.setProductEstimatedMarketPrice(productEstimatedMarketPrice);
-		}
-		
-		//Update Table Implementation or Something
-	}
-	
-	public void addAllSourcesToDatabase(SourceDatabase sourceDB) {
-		for(Source sources: sourceDB.returnSources()) {
-			for(Product product: sources.returnProducts()) {
-				this.addProduct(product);
-			}
+		if (product != null) {
+			database.remove(product.getProductCode());
 		}
 	}
-	
-	public ArrayList<Product> getAllProducts() {
-		return new ArrayList<Product>(database.values());
-	}
-	
-	public String searchProduct(Product product) {
-		for(String key: database.keySet()) {
-			if(key.equals(product.getProductCode())) {
-				return key;
-			}
+
+	public void editProduct(Product product, String productName, String productDescription, String productSource,
+			double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		if (product == null || !database.containsKey(product.getProductCode())) {
+			throw new IllegalArgumentException("Product not found in the database.");
 		}
-		return null;
+		product.update(productName, productDescription, productSource, productCostInKG,
+				productRawPrice, productEstimatedMarketPrice);
 	}
-	
+
+	/** Returns the product with this code, or null if none exists. */
+	public Product searchProduct(String productCode) {
+		return database.get(productCode);
+	}
+
+	/** Returns a copy of all products, so callers cannot break the database by editing the list. */
+	public List<Product> getAllProducts() {
+		return new ArrayList<>(database.values());
+	}
+
+	public int size() {
+		return database.size();
+	}
+
 	public void viewAllProducts() {
-		for(String key : database.keySet()) {
-			System.out.println(key + " : " + database.get(key).viewState());
+		for (Map.Entry<String, Product> entry : database.entrySet()) {
+			System.out.println(entry.getKey() + " : " + entry.getValue().viewState());
 		}
 	}
-	
+
 	public void removeAllProducts() {
 		database.clear();
 	}
@@ -83,11 +72,9 @@ public class ProductDatabase {
 	}
 
 	public void setDatabaseName(String databaseName) {
-		this.databaseName = databaseName;
+		if (databaseName == null || databaseName.isBlank()) {
+			throw new IllegalArgumentException("Database name is required.");
+		}
+		this.databaseName = databaseName.trim();
 	}
-	
-	
-	
-	
-	
-}	
+}

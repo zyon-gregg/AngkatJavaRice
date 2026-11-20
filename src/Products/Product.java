@@ -1,122 +1,140 @@
 package Products;
-import users.Source;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
+/**
+ * A fish product handled at the port.
+ * All setters validate their input and throw IllegalArgumentException,
+ * so the GUI only needs to catch the exception and show its message.
+ */
 public class Product {
-	
-	//Attributes
-	
+
+	// Attributes
 	private static int nextId = 1;
 	private String productCode;
 	private String productName;
 	private String productDescription;
+	private String productSource; // fishing ground, fish pen, or supplier
 	private double productCostInKG;
 	private double productRawPrice;
 	private double productEstimatedMarketPrice;
-	private Source productSource = null;
-	//Constructor
 	
-	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice, Source productSource){
-		this.setProductCode(database);
-		this.productName = productName;
-		this.setProductDescription(productDescription);
-		this.productCostInKG = productCostInKG;
-		this.productRawPrice = productRawPrice;
-		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
-		this.setProductSource(productSource);
-	}
-	
-	
-	//Methods
-	
-	public Product(ProductDatabase database, String productName, String productDescription, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
-		this.setProductCode(database);
-		this.productName = productName;
-		this.setProductDescription(productDescription);
-		this.productCostInKG = productCostInKG;
-		this.productRawPrice = productRawPrice;
-		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
-		this.setProductSource(productSource);
+
+	// Constructors
+
+	/** Creates a NEW product and auto-generates its code (P00001, P00002, ...). */
+	public Product(ProductDatabase database, String productName, String productDescription, String productSource,
+			double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		this(String.format("P%05d", nextId), productName, productDescription, productSource,
+				productCostInKG, productRawPrice, productEstimatedMarketPrice);
 	}
 
+	/** Used when LOADING saved products from a file (the code already exists). */
+	public Product(String productCode, String productName, String productDescription, String productSource,
+			double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		// Validate everything first so a bad product never consumes an ID
+		String name = requireText(productName, "Product name");
+		String source = requireText(productSource, "Source");
+		double cost = requirePositive(productCostInKG, "Cost per kg");
+		double raw = requirePositive(productRawPrice, "Raw price");
+		double market = requirePositive(productEstimatedMarketPrice, "Estimated market price");
 
-	protected void setProductCode(ProductDatabase database) {
-		
-		//Product Code Format: 00001, 00010, -> 99999 (Can Be Expanded Later if Needed)
-		
-		String formatted = String.format("P%05d",nextId);
-		nextId++;
-		this.productCode = formatted;
-	}
-	
-	
-	public String viewState() {
-		String compiled = this.productCode + "|" + this.productName + "|" + this.productDescription + "|" + this.productCostInKG  + "|" + this.productRawPrice + "|" + this.productEstimatedMarketPrice;
-		return compiled;
-	
-	}
-	
-	//Auto generated Getters and Setters
-	public String getProductName() {
-		return productName;
-	}
-
-	public void setProductName(String productName) {
-		this.productName = productName;
-	}
-
-	public String getProductCode() {
-		return productCode;
-	}
-
-	public void setProductCode(String productCode) {
 		this.productCode = productCode;
+		this.productName = name;
+		this.productDescription = productDescription == null ? "" : productDescription.trim();
+		this.productSource = source;
+		this.productCostInKG = cost;
+		this.productRawPrice = raw;
+		this.productEstimatedMarketPrice = market;
+		syncNextId(productCode);
 	}
 
-	public double getProductCostInKG() {
-		return productCostInKG;
+	// Methods
+
+
+	public Product(String string, String string2, String string3, double d, double e, double f) {
+		// TODO Auto-generated constructor stub
 	}
 
-	public void setProductCostInKG(double productCostInKG) {
-		this.productCostInKG = productCostInKG;
+	/** Keeps nextId ahead of any code in use, so IDs stay unique after loading from a file. */
+	private static void syncNextId(String code) {
+		try {
+			int number = Integer.parseInt(code.substring(1));
+			if (number >= nextId) {
+				nextId = number + 1;
+			}
+		} catch (NumberFormatException | IndexOutOfBoundsException | NullPointerException ex) {
+			throw new IllegalArgumentException("Invalid product code: " + code);
+		}
 	}
 
-	public double getProductRawPrice() {
-		return productRawPrice;
+	/** Edits all editable fields at once. Nothing changes if any value is invalid. */
+	public void update(String productName, String productDescription, String productSource,
+			double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+		String name = requireText(productName, "Product name");
+		String source = requireText(productSource, "Source");
+		double cost = requirePositive(productCostInKG, "Cost per kg");
+		double raw = requirePositive(productRawPrice, "Raw price");
+		double market = requirePositive(productEstimatedMarketPrice, "Estimated market price");
+
+		this.productName = name;
+		this.productDescription = productDescription == null ? "" : productDescription.trim();
+		this.productSource = source;
+		this.productCostInKG = cost;
+		this.productRawPrice = raw;
+		this.productEstimatedMarketPrice = market;
 	}
 
-	public void setProductRawPrice(double productRawPrice) {
-		this.productRawPrice = productRawPrice;
+	/** Pipe-separated line, handy for saving to a text file. */
+	public String viewState() {
+		return this.productCode + "|" + this.productName + "|" + this.productDescription + "|"
+				+ this.productSource + "|" + this.productCostInKG + "|" + this.productRawPrice + "|"
+				+ this.productEstimatedMarketPrice;
 	}
 
-	public double getProductEstimatedMarketPrice() {
-		return productEstimatedMarketPrice;
+	private static String requireText(String value, String label) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException(label + " is required.");
+		}
+		return value.trim();
 	}
 
-	public void setProductEstimatedMarketPrice(double productEstimatedMarketPrice) {
-		this.productEstimatedMarketPrice = productEstimatedMarketPrice;
+	private static double requirePositive(double value, String label) {
+		if (Double.isNaN(value) || value <= 0) {
+			throw new IllegalArgumentException(label + " must be greater than zero.");
+		}
+		return value;
 	}
 
+	// Getters and Setters (setters validate)
 
-	public String getProductDescription() {
-		return productDescription;
+	public String getProductCode() { return productCode; }
+
+	public String getProductName() { return productName; }
+	public void setProductName(String productName) {
+		this.productName = requireText(productName, "Product name");
 	}
 
-
+	public String getProductDescription() { return productDescription; }
 	public void setProductDescription(String productDescription) {
-		this.productDescription = productDescription;
+		this.productDescription = productDescription == null ? "" : productDescription.trim();
 	}
 
-
-	public Source getProductSource() {
-		return productSource;
+	public String getProductSource() { return productSource; }
+	public void setProductSource(String productSource) {
+		this.productSource = requireText(productSource, "Source");
 	}
 
-
-	public void setProductSource(Source productSource) {
-		this.productSource = productSource;
+	public double getProductCostInKG() { return productCostInKG; }
+	public void setProductCostInKG(double productCostInKG) {
+		this.productCostInKG = requirePositive(productCostInKG, "Cost per kg");
 	}
-	
+
+	public double getProductRawPrice() { return productRawPrice; }
+	public void setProductRawPrice(double productRawPrice) {
+		this.productRawPrice = requirePositive(productRawPrice, "Raw price");
+	}
+
+	public double getProductEstimatedMarketPrice() { return productEstimatedMarketPrice; }
+	public void setProductEstimatedMarketPrice(double productEstimatedMarketPrice) {
+		this.productEstimatedMarketPrice = requirePositive(productEstimatedMarketPrice, "Estimated market price");
+	}
 }

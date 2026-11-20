@@ -1,79 +1,72 @@
 package application;
 
+<<<<<<< HEAD
 import managerDashboard.managerDashboard;
+=======
+>>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
 import Products.Product;
 import Products.ProductDatabase;
 import Products.ProductManagementView;
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import users.Source;
-import users.SourceDatabase;
-
 import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventorySystem;
-
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 
-/**
- * Demo entry point for testing the Product Management screen alone.
- */
+import transaction.SalesTransactionSystem;
+import transaction.TransactionView;
+import users.Buyer;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
 public class Main extends Application {
+
+	private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
+	private final InventorySystem inventory = new InventorySystem();
+	private SceneManager sceneManager;
+
+	// Set after a successful login
+	private String currentUser = "";
+	private boolean isManager = false;
 
 	@Override
 	public void start(Stage stage) {
-		ProductDatabase database = new ProductDatabase("Angkat Fish Port");
-		Source sampleSource = new Source("Source","SourcePassword","Fisherman");
-		SourceDatabase sampleSourceDatabase = new SourceDatabase("SourceDatabase");
-		SourceDatabase sampleSourceDatabase2 = new SourceDatabase("SourceDatabase");//used for testing empty cases
-		sampleSourceDatabase.addSourceToDatabase(sampleSource);
-		
-		Product bangus = new Product(database, "Bangus", "Fresh milkfish, whole", 120.00, 150.00, 180.00,sampleSource);
-		Product tilapia = new Product(database, "Tilapia", "Fresh tilapia, whole", 80.00, 100.00, 120.00,sampleSource);
-		Product tuna = new Product(database, "Tuna", "Yellowfin tuna, sliced", 230.00, 280.00, 320.00,sampleSource);
-		Product galunggong = new Product(database, "Galunggong", "Round scad", 110.00, 140.00, 160.00,sampleSource);
-		Product pusit = new Product(database, "Pusit", "Fresh squid", 200.00, 240.00, 280.00,sampleSource);
-		
-		sampleSource.addProductToSource(bangus, 200.00);//Set Quantity Temporarily, Will Add method to connect Inventory stock to this
-		sampleSource.addProductToSource(tilapia, 200.00);
-		sampleSource.addProductToSource(tuna, 200.00);
-		sampleSource.addProductToSource(galunggong, 200.00);
-		sampleSource.addProductToSource(pusit, 200.00);
-		
-		InventorySystem inventorySystem = new InventorySystem();
-		
-		initializeProductInventory(inventorySystem, bangus, 450.00);
-		initializeProductInventory(inventorySystem, tilapia, 200.00);
-		initializeProductInventory(inventorySystem, tuna, 600.00);
-		initializeProductInventory(inventorySystem, galunggong, 700.00);
-		initializeProductInventory(inventorySystem, pusit, 150.00);
-		
-		database.addAllSourcesToDatabase(sampleSourceDatabase);
+		loadSampleData();
 
-        Button productButton = new Button("Product Management");
+		sceneManager = new SceneManager(stage, 1150, 600);
+		showLogin();
 
+<<<<<<< HEAD
         Button inventoryButton = new Button("Inventory Management");
         
         Button managerDashboardButton = new Button("Manager Dashboard");
+=======
+		stage.setTitle("Angkat - Fish Port Management System");
+		stage.show();
+	}
+>>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
 
-        // Product Management Window
-        productButton.setOnAction(e -> {
-        	ProductManagementView view = new ProductManagementView(database, true);
+	// ---------- Screens ----------
 
-            Stage productStage = new Stage();
+	private void showLogin() {
+		sceneManager.setRoot(new LoginView(this::authenticate, (user, role) -> {
+			currentUser = user;
+			isManager = role.equals("MANAGER");
+			showMenu();
+		}));
+	}
 
-            productStage.setTitle("Angkat - Product Management");
+	private void showMenu() {
+		sceneManager.setRoot(new MainMenuView(this::showProducts, this::showInventory, this::showTransactions));
+	}
 
-            productStage.setScene(new Scene(view, 1000, 560));
+	private void showProducts() {
+		sceneManager.showWithBackButton(new ProductManagementView(products, isManager), this::showMenu);
+	}
 
+<<<<<<< HEAD
             productStage.show();
         });
         
@@ -114,16 +107,68 @@ public class Main extends Application {
         stage.setScene(new Scene(root, 400, 300));
         stage.show();
 
+=======
+	private void showInventory() {
+		syncInventoryRecords();
+		sceneManager.showWithBackButton(new InventoryGUI(inventory, currentUser, isManager), this::showMenu);
+	}
+	private void showTransactions() {
+		syncInventoryRecords();
+		sceneManager.showWithBackButton(new TransactionView(sales, products, getBuyers()), this::showMenu);
+>>>>>>> branch 'main' of https://github.com/zyon-gregg/AngkatJavaRice.git
 	}
 	
-	private void initializeProductInventory(InventorySystem inventorySystem,Product product,double initialStock) {
+	/** TODO: return the real buyers from BuyerDatabase. Empty for now, so the buyer dropdown is empty. */
+	private List<Buyer> getBuyers() {
+		return new ArrayList<>();
+	}
 
-        // Create inventory record for the product
-        inventorySystem.createInventoryRecord(product);
+	// ---------- Login ----------
 
-        // Add its initial stock
-        inventorySystem.restockProduct(product.getProductCode(),initialStock,"System","Initial demo stock");
-    }
+	/**
+	 * TEMPORARY login check, so the login screen works without the users package.
+	 * Replace the body with the real user database once that part is ready.
+	 * Returns "MANAGER" or "CLERK", or null if the login is wrong.
+	 */
+	private String authenticate(String username, String password) {
+		if (username.equals("manager") && password.equals("manager123")) return "MANAGER";
+		if (username.equals("clerk") && password.equals("clerk123")) return "CLERK";
+		return null;
+	}
+
+	// ---------- Data ----------
+
+	/** Gives every product that has no stock record yet one (starting at 0 kg). */
+	private void syncInventoryRecords() {
+		for (Product p : products.getAllProducts()) {
+			if (inventory.getProductInventoryByCode(p.getProductCode()) == null) {
+				inventory.createInventoryRecord(p);
+			}
+		}
+	}
+
+	private void loadSampleData() {
+		// Arguments: name, description, source, cost/kg, raw price, estimated market price
+		Product bangus = new Product(products,"Bangus", "Fresh milkfish, whole", "Dagupan fish pens", 120.00, 150.00, 180.00);
+		Product tilapia = new Product(products,"Tilapia", "Fresh tilapia, whole", "Taal Lake fish cages", 80.00, 100.00, 120.00);
+		Product tuna = new Product(products,"Tuna", "Yellowfin tuna, sliced", "General Santos", 230.00, 280.00, 320.00);
+		Product galunggong = new Product(products,"Galunggong", "Round scad", "Navotas Fish Port", 110.00, 140.00, 160.00);
+		Product pusit = new Product(products,"Pusit", "Fresh squid", "Palawan", 200.00, 240.00, 280.00);
+
+		for (Product p : new Product[] { bangus, tilapia, tuna, galunggong, pusit }) {
+			products.addProduct(p);
+		}
+		syncInventoryRecords();
+
+		// Sample stock: Tuna stays at 0 (out of stock), Tilapia and Pusit are low
+		inventory.restockProduct(bangus.getProductCode(), 500, "manager", "Opening stock");
+		inventory.restockProduct(tilapia.getProductCode(), 250, "manager", "Opening stock");
+		inventory.restockProduct(galunggong.getProductCode(), 800, "manager", "Opening stock");
+		inventory.restockProduct(pusit.getProductCode(), 120, "manager", "Opening stock");
+	}
+	
+	private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory);
+
 
 	public static void main(String[] args) {
 		launch(args);
