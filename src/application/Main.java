@@ -1,6 +1,7 @@
 package application;
 
 import managerDashboard.managerDashboard;
+import clerkDashboard.ClerkDashboard;
 
 import Products.Product;
 import Products.ProductDatabase;
@@ -49,10 +50,37 @@ public class Main extends Application {
 	// ---------- Screens ----------
 
 	private void showLogin() {
+		sceneManager = new SceneManager(primaryStage, 1150, 600);
+		primaryStage.setTitle("Angkat - Fish Port Management System");
+
 		sceneManager.setRoot(new LoginView(this::authenticate, (user, role) -> {
 			currentUser = user;
 			isManager = role.equals("MANAGER");
-			showMenu();
+
+			if (isManager) {
+				managerDashboard dashboard = new managerDashboard(
+						primaryStage,
+						user,
+						"MGR-001",
+						products,
+						inventory
+				);
+				dashboard.show();
+			} else if (role.equals("CLERK")) {
+				ClerkDashboard clerkDash = new ClerkDashboard(
+						primaryStage,
+						user,
+						"CLK-001",
+						products,
+						inventory,
+						sales,
+						getBuyers(),
+						this::showLogin
+				);
+				clerkDash.show();
+			} else {
+				showMenu();
+			}
 		}));
 	}
 
