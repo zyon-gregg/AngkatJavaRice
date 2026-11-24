@@ -1,70 +1,71 @@
 package users;
 
-
 public class User {
 
-	private String userID;
-	private String userName;
-	private String name;
-	private String password;
-	private String userAccessLevel;
-	private Boolean activated;
-	
-	public User(String username, String password, String name){
-		this.setUserName(username);
-		this.setPassword(password);
-		this.setName(name);
-	}
+    private String userID;
+    private String userName;
+    private String name;
+    private String password;
+    private String userAccessLevel;
+    private boolean activated;
 
-	/** The role name used by the GUI, e.g. "manager" or "clerk". */
-	public  String getRole() {
-		return this.userAccessLevel;
-	};
-	
-	public String getUserName() {
-		return userName;
-	}
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-	public String getUserID() {
-		return userID;
-	}
-	public void setUserID(String userID) {
-		this.userID = userID;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+    public User(String username, String password, String name) {
+        this.setUserName(username);
+        this.setPassword(password);
+        this.setName(name);
+        this.activated = false;
+    }
 
-	public String getUserAccessLevel() {
-		return userAccessLevel;
-	}
+    // The role name used by the GUI, such as MANAGER or CLERK.
+    public String getRole() {
+        return this.userAccessLevel;
+    }
 
-	public void setUserAccessLevel(String userAccessLevel) {
-		this.userAccessLevel = userAccessLevel;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public String getUserID() {
+        return userID;
+    }
 
-	public Boolean getActivated() {
-		return activated;
-	}
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
 
-	public void setActivated(Boolean activated) {
-		this.activated = activated;
-	}
-	
-	
-	
-	
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUserAccessLevel() {
+        return userAccessLevel;
+    }
+
+    public void setUserAccessLevel(String userAccessLevel) {
+        this.userAccessLevel = userAccessLevel;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean getActivated() {
+        return activated;
+    }
+
+    public void setActivated(boolean activated) {
+        this.activated = activated;
+    }
 }

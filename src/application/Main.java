@@ -6,7 +6,15 @@ import clerkDashboard.ClerkDashboard;
 import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import login.LoginManager;
 import managerDashboard.ManagerDashboard;
 import transaction.SalesTransactionSystem;
 import users.Buyer;
@@ -17,14 +25,14 @@ import users.User;
 
 public class Main extends Application {
 
-    // Shared backend instances. Create each system once and pass these same
-    // objects to the dashboards and module windows.
+    // Shared backend instances. These objects are passed to each dashboard.
     private final ProductDatabase products =
             new ProductDatabase("Angkat Fish Port");
 
     private final InventorySystem inventory = new InventorySystem();
     private final BuyerDatabase buyers = new BuyerDatabase("Buyers");
     private final SourceDatabase sources = new SourceDatabase("Source");
+    private final LoginManager loginManager = new LoginManager();
 
     private final SalesTransactionSystem sales =
             new SalesTransactionSystem(products, inventory, buyers, sources);
@@ -38,84 +46,155 @@ public class Main extends Application {
         primaryStage.setTitle("Angkat - Fish Port Management System");
 
         loadSampleData();
+        loadDefaultAccounts();
         showLogin();
 
         primaryStage.show();
     }
 
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
     // LOGIN AND AUTHENTICATION
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
 
     private void showLogin() {
-        // Clear the previous session before displaying the login screen.
         authenticatedUser = null;
         sales.setCurrentUser(null);
+        loginManager.logout();
 
         LoginView loginView = new LoginView(
                 this::authenticate,
                 (username, role) -> {
-                    authenticatedUser = createTestUser(username, role);
+                    if (authenticatedUser == null) {
+                        showLogin();
+                        return;
+                    }
+
                     sales.setCurrentUser(authenticatedUser);
 
-                    if ("MANAGER".equals(role)) {
+                    if ("MANAGER".equalsIgnoreCase(role)) {
                         showManagerDashboard();
-                    } else if ("CLERK".equals(role)) {
+                    } else if ("CLERK".equalsIgnoreCase(role)) {
                         showClerkDashboard();
+                    } else {
+                        showLogin();
                     }
-                }
+                },
+                this::showRegistrationDialog
         );
 
-        // Dashboards currently create and assign their own Scene to this
-        // Stage, so login must do the same instead of using SceneManager's
-        // separate, no-longer-displayed Scene.
         primaryStage.setScene(new Scene(loginView, 1150, 600));
         primaryStage.setTitle("Angkat - Fish Port Management System");
     }
 
-    /**
-     * Temporary test authentication.
-     * Returns MANAGER, CLERK, or null when credentials are invalid.
-     */
+    // Uses the existing LoginManager to authenticate the user.
     private String authenticate(String username, String password) {
-        if ("manager".equals(username) && "manager123".equals(password)) {
-            return "MANAGER";
+        boolean loginSuccessful = loginManager.login(username, password);
+
+        if (!loginSuccessful) {
+            authenticatedUser = null;
+            return null;
         }
 
-        if ("clerk".equals(username) && "clerk123".equals(password)) {
-            return "CLERK";
+        authenticatedUser = loginManager.getLoggedInUser();
+
+        if (authenticatedUser == null) {
+            return null;
         }
 
-        return null;
+        return authenticatedUser.getUserAccessLevel();
     }
 
-    /**
-     * Creates a temporary User object for the two hard-coded test accounts.
-     * Replace this method when LoginManager returns the real authenticated User.
-     */
-    private User createTestUser(String username, String role) {
-        String displayName;
-        String userID;
+    // Creates the first Manager and a sample Clerk account for testing.
+    private void loadDefaultAccounts() {
+        User manager = new User("manager", "manager123", "Test Manager");
+        manager.setUserID("MGR001");
+        manager.setUserAccessLevel("MANAGER");
+        manager.setActivated(true);
+        loginManager.addAccount(manager);
 
-        if ("MANAGER".equals(role)) {
-            displayName = "Test Manager";
-            userID = "MGR001";
-        } else {
-            displayName = "Test Clerk";
-            userID = "CLK001";
-        }
-
-        User user = new User(username, "", displayName);
-        user.setUserID(userID);
-        user.setUserAccessLevel(role);
-        user.setActivated(true);
-
-        return user;
+        User clerk = new User("clerk", "clerk123", "Test Clerk");
+        clerk.setUserID("CLK001");
+        clerk.setUserAccessLevel("CLERK");
+        clerk.setActivated(true);
+        loginManager.addAccount(clerk);
     }
 
-    // --------------------------------------------------
+    // Opens a simple form for a new user to request a Clerk account.
+    private void showRegistrationDialog() {
+        Dialog<ButtonType> dialog = new Dialog<ButtonType>();
+        dialog.initOwner(primaryStage);
+        dialog.setTitle("Request an Account");
+        dialog.setHeaderText("Submit your details for Manager approval.");
+
+        TextField nameField = new TextField();
+        TextField usernameField = new TextField();
+        PasswordField passwordField = new PasswordField();
+        PasswordField confirmPasswordField = new PasswordField();
+
+        nameField.setPromptText("Full name");
+        usernameField.setPromptText("Username");
+        passwordField.setPromptText("Password");
+        confirmPasswordField.setPromptText("Confirm password");
+
+        GridPane form = new GridPane();
+        form.setHgap(10);
+        form.setVgap(10);
+        form.add(new Label("Full name:"), 0, 0);
+        form.add(nameField, 1, 0);
+        form.add(new Label("Username:"), 0, 1);
+        form.add(usernameField, 1, 1);
+        form.add(new Label("Password:"), 0, 2);
+        form.add(passwordField, 1, 2);
+        form.add(new Label("Confirm password:"), 0, 3);
+        form.add(confirmPasswordField, 1, 3);
+
+        dialog.getDialogPane().setContent(form);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                ButtonType.OK, ButtonType.CANCEL);
+
+        java.util.Optional<ButtonType> result = dialog.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String name = nameField.getText().trim();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+            String confirmPassword = confirmPasswordField.getText();
+
+            if (name.isEmpty() || username.isEmpty() || password.trim().isEmpty()) {
+                showMessage("Registration", "Please complete all fields.");
+                return;
+            }
+
+            if (!password.equals(confirmPassword)) {
+                showMessage("Registration", "The passwords do not match.");
+                return;
+            }
+
+            boolean requestCreated = loginManager.registerUser(
+                    username, password, name);
+
+            if (requestCreated) {
+                showMessage("Registration Submitted",
+                        "Your account request was submitted. A Manager must approve it before you can log in.");
+            } else {
+                showMessage("Registration", 
+                        "That username is already used or the registration details are incomplete.");
+            }
+        }
+    }
+
+    private void showMessage(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(primaryStage);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    // -----------------------------------------------------------------
     // DASHBOARDS
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
 
     private void showManagerDashboard() {
         ManagerDashboard managerDashboard = new ManagerDashboard(
@@ -125,6 +204,7 @@ public class Main extends Application {
                 inventory,
                 sales,
                 buyers.returnBuyerList(),
+                loginManager,
                 this::showLogin
         );
 
@@ -147,9 +227,9 @@ public class Main extends Application {
         clerkDashboard.show();
     }
 
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
     // DATA INITIALIZATION
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
 
     /** Creates an inventory record for each product that does not have one. */
     private void syncInventoryRecords() {
@@ -181,14 +261,12 @@ public class Main extends Application {
                 products, "Pusit", "Fresh squid",
                 "Palawan", 200.00, 240.00, 280.00);
 
-        // Register products.
         for (Product product : new Product[] {
                 bangus, tilapia, tuna, galunggong, pusit
         }) {
             products.addProduct(product);
         }
 
-        // Register source and its available quantities.
         Source appleFarm = new Source("AppleF", "TheFarm", "AppleFarms");
 
         for (Product product : new Product[] {
@@ -199,7 +277,6 @@ public class Main extends Application {
 
         sources.addSourceToDatabase(appleFarm);
 
-        // Register sample buyers.
         buyers.addBuyerToDatabase(
                 new Buyer("Apple", "Apple123", "Apples", 20000));
         buyers.addBuyerToDatabase(
@@ -207,7 +284,6 @@ public class Main extends Application {
         buyers.addBuyerToDatabase(
                 new Buyer("Apple3", "Apple12345", "Apples", 22130000));
 
-        // Create inventory records, then populate opening stock.
         syncInventoryRecords();
 
         inventory.restockProduct(
@@ -218,8 +294,6 @@ public class Main extends Application {
                 galunggong.getProductCode(), 800, "System", "Opening stock");
         inventory.restockProduct(
                 pusit.getProductCode(), 120, "System", "Opening stock");
-
-        // Tuna intentionally remains at 0 kg for the out-of-stock test case.
     }
 
     public static void main(String[] args) {

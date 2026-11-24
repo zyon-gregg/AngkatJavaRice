@@ -10,6 +10,7 @@ import Products.ProductManagementView;
 import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventorySystem;
 import inventoryManagementSystem.StockRecordedChange;
+import login.LoginManager;
 import transaction.SalesTransactionSystem;
 import transaction.TransactionView;
 import users.Buyer;
@@ -54,6 +55,7 @@ public class ManagerDashboard {
     private final InventorySystem inventorySystem;
     private final SalesTransactionSystem salesSystem;
     private final List<Buyer> buyers;
+    private final LoginManager loginManager;
 
     // Main JavaFX components
     private BorderPane root;
@@ -77,6 +79,19 @@ public class ManagerDashboard {
             SalesTransactionSystem salesSystem,
             List<Buyer> buyers,
             Runnable onLogout) {
+        this(stage, manager, productDatabase, inventorySystem,
+                salesSystem, buyers, null, onLogout);
+    }
+
+    public ManagerDashboard(
+            Stage stage,
+            User manager,
+            ProductDatabase productDatabase,
+            InventorySystem inventorySystem,
+            SalesTransactionSystem salesSystem,
+            List<Buyer> buyers,
+            LoginManager loginManager,
+            Runnable onLogout) {
 
         this.stage = stage;
         this.manager = manager;
@@ -84,6 +99,7 @@ public class ManagerDashboard {
         this.inventorySystem = inventorySystem;
         this.salesSystem = salesSystem;
         this.buyers = buyers;
+        this.loginManager = loginManager;
         this.onLogout = onLogout;
     }
 
@@ -342,15 +358,24 @@ public class ManagerDashboard {
     }
 
     private void openUserManagement() {
+        if (loginManager == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("User Management");
+            alert.setHeaderText("Login manager is not connected.");
+            alert.setContentText("Please connect LoginManager in Main.java.");
+            alert.initOwner(stage);
+            alert.showAndWait();
+            return;
+        }
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("User Management");
-        alert.setHeaderText("User Management is not connected yet");
-        alert.setContentText(
-                "This section can be connected to LoginManager when account "
-                + "approval and user-management functions are ready.");
-        alert.initOwner(stage);
-        alert.showAndWait();
+        UserManagementView userManagementView =
+                new UserManagementView(loginManager, manager);
+
+        Stage userStage = new Stage();
+        userStage.initOwner(stage);
+        userStage.setTitle("Angkat - User Management");
+        userStage.setScene(new Scene(userManagementView, 1050, 760));
+        userStage.show();
     }
 
     // -----------------------------------------------------------------

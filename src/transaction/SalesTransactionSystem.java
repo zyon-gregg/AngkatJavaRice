@@ -297,9 +297,7 @@ public class SalesTransactionSystem {
                     "No employee is logged in. Please log in before processing a sale.");
         }
 
-        Boolean isActivated = currentUser.getActivated();
-
-        if (isActivated == null || isActivated == false) {
+        if (!currentUser.getActivated()) {
             throw new IllegalArgumentException("This employee account is not active.");
         }
 
