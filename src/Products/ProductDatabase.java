@@ -56,10 +56,7 @@ public class ProductDatabase {
     // Updates the existing Product object instead of replacing it.
     // InventoryOfProduct holds this same object, so its displayed details
     // are updated without changing the stock quantity.
-    public boolean editProduct(Product product, String productName,
-            String productDescription, String productSource,
-            double productCostInKG, double productRawPrice,
-            double productEstimatedMarketPrice) {
+    public boolean editProduct(Product product, String productName, String productDescription, String productSource, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
 
         if (product == null) {
             return false;
@@ -72,8 +69,7 @@ public class ProductDatabase {
             return false;
         }
 
-        savedProduct.update(productName, productDescription, productSource,
-                productCostInKG, productRawPrice, productEstimatedMarketPrice);
+        savedProduct.update(productName, productDescription, productSource, productCostInKG, productRawPrice, productEstimatedMarketPrice);
 
         return true;
     }
