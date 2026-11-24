@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 
 import Products.ProductDatabase;
 import inventoryManagementSystem.InventorySystem;
@@ -34,22 +36,21 @@ public class DataManager {
 		this.sale = sa;
 	}
 	
-	public static void readProductFromFile() { 
+	public static void saveProducts() { 
+		File file = new File("src/SaveLoad/Products.txt");
 		
-		/**
-		
-		try(){
+		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
+			
 		}
-		
-		**/
 		
 		
 	}
 	
-	public static void saveProductToFile() {
+	public static void loadProducts() {
 		
 	}
 
