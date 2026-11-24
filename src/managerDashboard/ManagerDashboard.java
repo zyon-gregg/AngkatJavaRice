@@ -12,6 +12,8 @@ import inventoryManagementSystem.InventorySystem;
 import inventoryManagementSystem.StockRecordedChange;
 import login.LoginManager;
 import transaction.SalesTransactionSystem;
+import transaction.Receipt;
+import transaction.ReceiptItem;
 import transaction.TransactionView;
 import users.Buyer;
 import users.User;
@@ -354,6 +356,7 @@ public class ManagerDashboard {
         transactionStage.initOwner(stage);
         transactionStage.setTitle("Angkat - Sales & Transactions");
         transactionStage.setScene(new Scene(transactionView, 1150, 700));
+        transactionStage.setOnHidden(event -> refreshDashboard());
         transactionStage.show();
     }
 
@@ -424,7 +427,7 @@ public class ManagerDashboard {
         if ("INVENTORY".equals(currentActivity)) {
             activityTableArea.getChildren().setAll(createInventoryHistoryTable(8));
         } else {
-            activityTableArea.getChildren().setAll(createTransactionHistoryPlaceholder());
+            activityTableArea.getChildren().setAll(createTransactionHistoryTable(8));
         }
     }
 
@@ -524,24 +527,203 @@ public class ManagerDashboard {
     }
 
     /**
-     * Transaction history is a placeholder until Receipt.java's getters and
-     * the latest SalesTransactionSystem history API are confirmed.
+     * Shows the latest completed sales transactions.
+     * maximumRows = 0 means show all transactions.
      */
-    private Node createTransactionHistoryPlaceholder() {
+    private Node createTransactionHistoryTable(int maximumRows) {
 
-        Label message = new Label(
-                "Transaction history will appear here once the Receipt "
-                + "fields and transaction-history methods are connected.");
+        TableView<Receipt> table = new TableView<>();
 
-        Button openTransactionsButton = new Button("Open Sales & Transactions");
-        openTransactionsButton.setOnAction(event -> openSalesManagement());
+        TableColumn<Receipt, String> receiptIDColumn =
+                new TableColumn<>("Receipt ID");
+        receiptIDColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                cell.getValue().getTransactionID()));
 
-        VBox placeholder = new VBox(12, message, openTransactionsButton);
-        placeholder.setAlignment(Pos.CENTER_LEFT);
-        placeholder.setPadding(new Insets(20));
-        placeholder.setMinHeight(150);
+        TableColumn<Receipt, String> buyerColumn =
+                new TableColumn<>("Buyer");
+        buyerColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                getReceiptBuyerName(cell.getValue())));
 
-        return placeholder;
+        TableColumn<Receipt, String> employeeColumn =
+                new TableColumn<>("Processed By");
+        employeeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                getReceiptEmployeeName(cell.getValue())));
+
+        TableColumn<Receipt, String> paymentColumn =
+                new TableColumn<>("Payment Method");
+        paymentColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                getReceiptPaymentMethod(cell.getValue())));
+
+        TableColumn<Receipt, String> totalColumn =
+                new TableColumn<>("Total Amount");
+        totalColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                formatMoney(cell.getValue().getTotalAmount())));
+
+        TableColumn<Receipt, String> dateColumn =
+                new TableColumn<>("Date and Time");
+        dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                formatDateTime(cell.getValue().getTransacTime())));
+
+        TableColumn<Receipt, String> statusColumn =
+                new TableColumn<>("Status");
+        statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
+                getReceiptStatus(cell.getValue())));
+
+        table.getColumns().addAll(
+                receiptIDColumn,
+                buyerColumn,
+                employeeColumn,
+                paymentColumn,
+                totalColumn,
+                dateColumn,
+                statusColumn);
+
+        // Retrieve the saved receipts and place the newest transaction first.
+        List<Receipt> records = new ArrayList<>(salesSystem.getAllReceipt());
+
+        for (int i = 0; i < records.size(); i++) {
+            for (int j = i + 1; j < records.size(); j++) {
+                LocalDateTime firstTime = records.get(i).getTransacTime();
+                LocalDateTime secondTime = records.get(j).getTransacTime();
+                boolean moveSecondReceipt = false;
+
+                if (firstTime == null && secondTime != null) {
+                    moveSecondReceipt = true;
+                } else if (firstTime != null && secondTime != null
+                        && firstTime.isBefore(secondTime)) {
+                    moveSecondReceipt = true;
+                }
+
+                if (moveSecondReceipt) {
+                    Receipt temporaryReceipt = records.get(i);
+                    records.set(i, records.get(j));
+                    records.set(j, temporaryReceipt);
+                }
+            }
+        }
+
+        if (maximumRows > 0 && records.size() > maximumRows) {
+            records = new ArrayList<>(records.subList(0, maximumRows));
+        }
+
+        table.setItems(FXCollections.observableArrayList(records));
+        table.setPlaceholder(new Label("No completed transactions have been recorded."));
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(350);
+
+        Button viewReceiptButton = new Button("View Selected Receipt");
+        viewReceiptButton.setOnAction(event -> {
+            Receipt selectedReceipt = table.getSelectionModel().getSelectedItem();
+            showReceiptDetails(selectedReceipt);
+        });
+
+        HBox tableActions = new HBox(10, viewReceiptButton);
+        tableActions.setAlignment(Pos.CENTER_LEFT);
+
+        VBox transactionHistory = new VBox(10, table, tableActions);
+        return transactionHistory;
+    }
+
+    private String getReceiptBuyerName(Receipt receipt) {
+        if (receipt == null) {
+            return "";
+        }
+
+        String buyerName = receipt.getBuyerName();
+        if (buyerName == null || buyerName.trim().isEmpty()) {
+            return "Not recorded";
+        }
+
+        return buyerName;
+    }
+
+    private String getReceiptEmployeeName(Receipt receipt) {
+        if (receipt == null || receipt.getEmployee() == null) {
+            return "Not recorded";
+        }
+
+        String employeeName = receipt.getEmployee().getName();
+        if (employeeName == null || employeeName.trim().isEmpty()) {
+            employeeName = receipt.getEmployee().getUserName();
+        }
+
+        if (employeeName == null || employeeName.trim().isEmpty()) {
+            return "Not recorded";
+        }
+
+        return employeeName;
+    }
+
+    private String getReceiptPaymentMethod(Receipt receipt) {
+        if (receipt == null || receipt.getPaymentMethod() == null) {
+            return "Not recorded";
+        }
+
+        return receipt.getPaymentMethod();
+    }
+
+    private String getReceiptStatus(Receipt receipt) {
+        if (receipt == null || receipt.getPurchaseStatus() == null) {
+            return "Not recorded";
+        }
+
+        return receipt.getPurchaseStatus();
+    }
+
+    private String formatMoney(Double amount) {
+        if (amount == null) {
+            return "PHP 0.00";
+        }
+
+        return String.format("PHP %,.2f", amount);
+    }
+
+    /** Displays the selected receipt and its saved item details. */
+    private void showReceiptDetails(Receipt receipt) {
+        if (receipt == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.initOwner(stage);
+            alert.setTitle("Transaction Details");
+            alert.setHeaderText(null);
+            alert.setContentText("Select a transaction from the table first.");
+            alert.showAndWait();
+            return;
+        }
+
+        StringBuilder details = new StringBuilder();
+        details.append("Receipt ID: ").append(receipt.getTransactionID()).append("\n");
+        details.append("Buyer: ").append(getReceiptBuyerName(receipt)).append("\n");
+        details.append("Processed By: ").append(getReceiptEmployeeName(receipt)).append("\n");
+        details.append("Date: ").append(formatDateTime(receipt.getTransacTime())).append("\n");
+        details.append("Payment Method: ").append(getReceiptPaymentMethod(receipt)).append("\n\n");
+        details.append("PURCHASED ITEMS\n");
+
+        for (ReceiptItem item : receipt.getItems()) {
+            details.append(item.getProductName())
+                    .append(" (").append(item.getProductCode()).append(")")
+                    .append("\n  ")
+                    .append(String.format("%.2f kg x PHP %,.2f = PHP %,.2f",
+                            item.getQuantityInKG(), item.getUnitPrice(), item.getSubtotal()))
+                    .append("\n");
+        }
+
+        details.append("\nTotal: ").append(formatMoney(receipt.getTotalAmount())).append("\n");
+        details.append("Amount Paid: ").append(formatMoney(receipt.getAmountPaid())).append("\n");
+
+        if ("Cash".equals(receipt.getPaymentMethod())) {
+            details.append("Cash Received: ").append(formatMoney(receipt.getCashReceived())).append("\n");
+            details.append("Change: ").append(formatMoney(receipt.getChange())).append("\n");
+        }
+
+        details.append("Status: ").append(getReceiptStatus(receipt));
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(stage);
+        alert.setTitle("Transaction Details");
+        alert.setHeaderText("Receipt " + receipt.getTransactionID());
+        alert.setContentText(details.toString());
+        alert.getDialogPane().setPrefWidth(520);
+        alert.showAndWait();
     }
 
     private String formatDateTime(LocalDateTime dateTime) {

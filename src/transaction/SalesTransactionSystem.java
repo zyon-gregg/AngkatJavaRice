@@ -234,6 +234,14 @@ public class SalesTransactionSystem {
         receipt.setCashReceived(recordedCashReceived);
         receipt.setChange(change);
         receipt.setPaymentMethod(selectedPaymentMethod);
+
+        // Save the buyer name in the receipt for transaction history.
+        String buyerName = buyer.getName();
+        if (buyerName == null || buyerName.trim().isEmpty()) {
+            buyerName = buyer.getUserName();
+        }
+        receipt.setBuyerName(buyerName);
+
         receipt.setEmployee(currentUser);
         receipt.setEmployeeLevel(currentLevel());
         receipt.setTransacTime(LocalDateTime.now());
