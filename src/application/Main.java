@@ -55,7 +55,7 @@ public class Main extends Application {
         }
         
 
-        loadSampleData();
+        //loadSampleData();
         loadDefaultAccounts();
         showLogin();
 
@@ -111,8 +111,6 @@ public class Main extends Application {
             alert.setContentText("Please try logging out again.");
             alert.showAndWait();
         }
-        
-        
     }
 
     // Uses the existing LoginManager to authenticate the user.
@@ -234,7 +232,7 @@ public class Main extends Application {
                 sales,
                 buyers.returnBuyerList(),
                 loginManager,
-                this::showLogin
+                this::handleLogout
         );
 
         managerDashboard.show();
@@ -250,7 +248,7 @@ public class Main extends Application {
                 inventory,
                 sales,
                 buyers.returnBuyerList(),
-                this::showLogin
+                this::handleLogout
         );
 
         clerkDashboard.show();
@@ -268,6 +266,8 @@ public class Main extends Application {
             }
         }
     }
+    
+    /*
 
     private void loadSampleData() {
         Product bangus = new Product(
@@ -323,6 +323,23 @@ public class Main extends Application {
                 galunggong.getProductCode(), 800, "System", "Opening stock");
         inventory.restockProduct(
                 pusit.getProductCode(), 120, "System", "Opening stock");
+    }
+    
+    */
+    
+    @Override
+    public void stop() { //will update this for other save and load
+
+        if (dataManager != null) {
+
+            boolean saved = dataManager.saveProducts();
+
+            if (saved) {
+                System.out.println("Products saved successfully.");
+            } else {
+                System.out.println("Failed to save products.");
+            }
+        }
     }
 
     public static void main(String[] args) {
