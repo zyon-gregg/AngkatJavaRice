@@ -13,6 +13,7 @@ import java.util.List;
 import Products.Product;
 import Products.ProductDatabase;
 import inventoryManagementSystem.InventorySystem;
+import inventoryManagementSystem.StockRecordedChange;
 import login.LoginManager;
 import transaction.SalesTransactionSystem;
 import users.BuyerDatabase;
@@ -141,24 +142,87 @@ public class DataManager {
 			while (line != null) {
 				String[] extractedData = line.split("\\|", -1);
 				
-				String code = extractedData[0];
-				String name = extractedData[1];
-				String description = extractedData[2];
-				String source = extractedData[3];
-				double cost = Double.parseDouble(extractedData[4]);
-				double rawPrice = Double.parseDouble(extractedData[5]);
-				double marketPrice = Double.parseDouble(extractedData[6]);
-				
+				String code = extractedData[0];				
 				double ProductStockInKG = Double.parseDouble(extractedData[7]);
 				LocalDateTime lastUpdated = LocalDateTime.parse(extractedData[8]);
 				
 				
+				Product product = products.searchProduct(code);
+				boolean success = inventory.restoreInventoryRecord(product, ProductStockInKG, lastUpdated);
+				
+				line = reader.readLine();
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public boolean saveInventoryHistory() {
+		File file = new File("src/SaveLoad/StockRecordedHistory.txt");
+		
+		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){
+			
+			ArrayList<StockRecordedChange> records = inventory.getAllHistory();
+			
+			for (StockRecordedChange record : records) {
+				String data = record.getRecordId() 
+						+ "|" + record.getProduct().getProductCode()
+						+ "|" + record.getChangeType() 
+						+ "|" + record.getPreviousStock() 
+						+ "|" + record.getNewStock() 
+						+ "|" + record.getTime().toString()
+						+ "|" + record.getPerformedBy()
+						+ "|" + record.getExplanation();
+				
+				writer.write(data);
+				writer.newLine();
+				
+			}
+			
+			return true;
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+			
+		}
+		
+	}
+	
+	public boolean loadInventoryHistory() {
+		
+		File file = new File("src/SaveLoad/StockRecordedHistory.txt");
+		
+		try(BufferedReader reader = Files.newBufferedReader(file.toPath())){
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				String[] extractedData = line.split("\\|", -1);
+				
+				String code = extractedData[0];
+				String productCode = extractedData[1];
+				
+				Product restoredProduct = products.searchProduct(productCode);
+				
+				String changeType = extractedData[2];
+				
+				double previousStock = Double.parseDouble(extractedData[3]);
+				double newStock = Double.parseDouble(extractedData[4]);
+				
+				LocalDateTime time = LocalDateTime.parse(extractedData[5]);
+				
+				String performedBy = extractedData[6];
+				String explanation = extractedData[7];		
 				
 				//polymorphism, this calls the other product constructor
-				Product product = new Product(code, name, description, source, cost, rawPrice, marketPrice);
-				products.addProduct(product);
-				
-				
+				StockRecordedChange restored = new StockRecordedChange(code, restoredProduct, changeType, previousStock, newStock, time, performedBy, explanation);
+				boolean success = inventory.restoreInventoryHistory(restored);
 				
 				line = reader.readLine();
 			}

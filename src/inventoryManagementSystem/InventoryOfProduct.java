@@ -18,6 +18,12 @@ public class InventoryOfProduct {
 		this.lastUpdated = LocalDateTime.now();
 	}
 	
+	public InventoryOfProduct(Product currentProduct, double stock, LocalDateTime update) {//for loading
+		this.product = currentProduct;
+		this.productStockInKG = stock;
+		this.lastUpdated = update;
+	}
+	
 	public Product getProduct() {
 		return product;
 	}

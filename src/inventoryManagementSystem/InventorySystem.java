@@ -26,6 +26,49 @@ public class InventorySystem {
         nextId++;
         return id;
     }
+    
+    public synchronized boolean restoreInventoryRecord(Product product, double stock, LocalDateTime lastUpdated) { //loading of inventory record
+
+        if (product == null || lastUpdated == null) {
+            return false;
+        }
+
+        String productCode = product.getProductCode();
+
+        if (productCode == null || productCode.trim().isEmpty()) {
+            return false;
+        }
+
+        if (stock < 0 || stock > MAX_STOCK_IN_KG || Double.isNaN(stock) || Double.isInfinite(stock)) {
+            return false;
+        }
+
+        if (inventoryRecords.containsKey(productCode)) {
+            return false;
+        }
+
+        InventoryOfProduct restoredInventory = new InventoryOfProduct(product, stock, lastUpdated);
+        inventoryRecords.put(productCode, restoredInventory);
+
+        return true;
+    }
+    
+    public synchronized boolean restoreInventoryHistory(StockRecordedChange record) { //loading of inventory history
+
+        if (record.getProduct() == null || record.getTime() == null) {
+            return false;
+        }
+
+
+        if (history.containsKey(record.getProductCode())) {
+            return false;
+        }
+  
+        history.put(record.getProductCode(), record);
+        return true;
+    }
+    
+    
 
     // Creates an inventory record with an opening stock of 0 kg.
     // Returns false if the product is invalid or already has a record.

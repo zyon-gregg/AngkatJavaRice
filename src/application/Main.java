@@ -46,19 +46,18 @@ public class Main extends Application {
         
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
+        
         /*
-        boolean succesfulLoad;
+        boolean loadProducts = dataManager.loadProducts();  
+        boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
+        boolean loadInventoryHistory = dataManager.loadInventoryHistory();
+         
         
-        succesfulLoad = dataManager.loadProducts();  
-        if(!succesfulLoad) {
-        	System.out.print("Unsuccesful load of products");
-        }
-        
-        succesfulLoad = dataManager.loadInventoryProducts();  
-        if(!succesfulLoad) {
-        	System.out.print("Unsuccesful load of inventory of products");
+        if(!loadProducts && !loadInventoryProduct && !loadInventoryHistory) {
+        	System.out.print("Unsuccesful load of one of the data");
         }
         */
+        
         
 
         loadSampleData();
@@ -106,35 +105,22 @@ public class Main extends Application {
     	
     	//add more here
 
-        boolean saved;
         
-        saved = dataManager.saveProducts();
+        boolean saveProduct = dataManager.saveProducts();
+        boolean saveInventoryProduct = dataManager.saveInventoryProducts();
+        boolean saveInventoryHistory = dataManager.saveInventoryHistory();
 
-        if (saved) {
-            System.out.println("Products saved successfully.");
+        if (saveProduct && saveInventoryProduct && saveInventoryHistory) {
             showLogin();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(primaryStage);
             alert.setTitle("Saving Error");
-            alert.setHeaderText("Unable to save products.");
+            alert.setHeaderText("Unable to save some components");
             alert.setContentText("Please try logging out again.");
             alert.showAndWait();
         }
         
-        saved = dataManager.saveInventoryProducts();
-
-        if (saved) {
-            System.out.println("Inventory of products saved successfully.");
-            showLogin();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.initOwner(primaryStage);
-            alert.setTitle("Saving Error");
-            alert.setHeaderText("Unable to save inventory of products.");
-            alert.setContentText("Please try logging out again.");
-            alert.showAndWait();
-        }
         
         
     }
