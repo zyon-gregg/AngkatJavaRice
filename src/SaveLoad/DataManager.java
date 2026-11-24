@@ -7,7 +7,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.util.List;
 
+import Products.Product;
 import Products.ProductDatabase;
 import inventoryManagementSystem.InventorySystem;
 import login.LoginManager;
@@ -36,21 +38,62 @@ public class DataManager {
 		this.sale = sa;
 	}
 	
-	public static void saveProducts() { 
+	public boolean saveProducts() { 
 		File file = new File("src/SaveLoad/Products.txt");
 		
 		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){
 			
+			List<Product> productsToBeSaved = products.getAllProducts();
+			
+			for (Product product : productsToBeSaved) {
+				writer.write(product.viewState());
+				writer.newLine();
+				
+			}
+			
+			return true;
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
+			return false;
 			
 		}
 		
 		
 	}
 	
-	public static void loadProducts() {
+	public boolean loadProducts() {
+		
+		File file = new File("src/SaveLoad/Products.txt");
+		
+		try(BufferedReader reader = Files.newBufferedReader(file.toPath())){
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				String[] extractedData = line.split("\\|", -1);
+				
+				String code = extractedData[0];
+				String name = extractedData[1];
+				String description = extractedData[2];
+				String source = extractedData[3];
+				double cost = Double.parseDouble(extractedData[4]);
+				double rawPrice = Double.parseDouble(extractedData[4]);
+				double marketPrice = Double.parseDouble(extractedData[4]);
+				
+				
+				//polymorphism, this calls the other product constructor
+				Product product = new Product(code, name, description, source, cost, rawPrice, marketPrice);
+				products.addProduct(product);
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
 		
 	}
 
