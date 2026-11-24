@@ -11,12 +11,12 @@ import java.util.Map;
 
 import Products.Product;
 import Products.ProductDatabase;
+import inventoryManagementSystem.InventoryOfProduct;
 import inventoryManagementSystem.InventorySystem;
 import users.Buyer;
 import users.BuyerDatabase;
 import users.SourceDatabase;
 import users.User;
-import inventoryManagementSystem.InventoryOfProduct;
 
 public class SalesTransactionSystem {
 
@@ -39,33 +39,38 @@ public class SalesTransactionSystem {
         this.sources = sources;
     }
 
+    // The logged-in employee is set by the application before opening the POS.
     public void setCurrentUser(User user) {
-        this.currentUser = user;
+        currentUser = user;
     }
 
     private String currentLevel() {
-    	
-    	if (currentUser == null) {
-    		return "UKNOWN";
-    	} else {
-    		return currentUser.getUserAccessLevel();
-    	}
-    	
+        if (currentUser == null) {
+            return "UNKNOWN";
+        }
+
+        return currentUser.getUserAccessLevel();
     }
 
+    // Creates a new cart for a buyer.
     public Cart createCart(Buyer buyer) {
         validateCurrentEmployee();
+
         if (buyer == null) {
             throw new IllegalArgumentException("Buyer is required.");
         }
 
-        Cart existingCart = buyer.getBuyerCart();
-        if (existingCart != null && !Boolean.TRUE.equals(existingCart.getIsPaid())) {
+        Cart oldCart = buyer.getBuyerCart();
+
+        if (oldCart != null && !Boolean.TRUE.equals(oldCart.getIsPaid())) {
             throw new IllegalArgumentException("This buyer already has an unfinished sale. Complete or cancel it first.");
         }
 
-        String saleID = String.format("S%05d", nextIdCart++);
-        String receiptID = String.format("R%05d", nextIdReceipt++);
+        String saleID = String.format("S%05d", nextIdCart);
+        nextIdCart++;
+
+        String receiptID = String.format("R%05d", nextIdReceipt);
+        nextIdReceipt++;
 
         Cart cart = new Cart();
         Receipt receipt = new Receipt();
@@ -88,31 +93,50 @@ public class SalesTransactionSystem {
         if (cart == null) {
             return 0.0;
         }
+
         cart.updateCartValue();
+        
         return cart.getTotalCartValue();
     }
 
     public boolean cartEmpty(Cart cart) {
-        return cart == null || cart.isEmpty();
+        if (cart == null) {
+            return true;
+        }
+
+        return cart.isEmpty();
     }
 
     public double productStock(Product product) {
         if (product == null) {
             return 0.0;
         }
-        InventoryOfProduct record =
-        	    invSystem.getProductInventoryByCode(product.getProductCode());
-        return record == null ? 0.0 : record.getProductStockInKG();
+
+        InventoryOfProduct inventory = invSystem.getProductInventoryByCode(product.getProductCode());
+
+        if (inventory == null) {
+            return 0.0;
+        }
+
+        return inventory.getProductStockInKG();
     }
 
     public boolean checkProductStockWithQuantity(Product product, Double quantity) {
-        return product != null && quantity != null
-                && invSystem.hasSufficientStock(product.getProductCode(), quantity);
+        if (product == null || quantity == null) {
+            return false;
+        }
+
+        return invSystem.hasSufficientStock(product.getProductCode(), quantity);
     }
 
+    // Used when the caller wants to pay the exact cart total.
     public Receipt completeSale(Buyer buyer, String paymentMethod) {
-        Cart cart = buyer == null ? null : buyer.getBuyerCart();
-        double exactPayment = cart == null ? 0.0 : cart.getTotalCartValue();
+        double exactPayment = 0.0;
+
+        if (buyer != null && buyer.getBuyerCart() != null) {
+            exactPayment = buyer.getBuyerCart().getTotalCartValue();
+        }
+
         return completeSale(buyer, paymentMethod, exactPayment);
     }
 
@@ -125,42 +149,49 @@ public class SalesTransactionSystem {
         }
 
         Cart cart = buyer.getBuyerCart();
+
         if (cart == null) {
             throw new IllegalArgumentException("Start a sale before completing checkout.");
         }
+
         Receipt receipt = cart.getReceipt();
+
         if (receipt == null) {
             throw new IllegalArgumentException("The sale is missing its receipt record.");
         }
+
         if (Boolean.TRUE.equals(cart.getIsPaid())) {
             throw new IllegalArgumentException("This sale is already paid.");
         }
+
         if (cart.isEmpty()) {
             throw new IllegalArgumentException("The cart is empty.");
         }
 
-        String normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
+        String selectedPaymentMethod = normalizePaymentMethod(paymentMethod);
 
         cart.updateCartValue();
         double total = cart.getTotalCartValue();
-        if (!Double.isFinite(total) || total <= 0) {
+
+        if (total <= 0 || Double.isNaN(total) || Double.isInfinite(total)) {
             throw new IllegalArgumentException("The sale total is invalid.");
         }
 
+        // The buyer's budget is the spending limit for this transaction.
         double buyerBudget = buyer.getBudget();
-        if (!Double.isFinite(buyerBudget) || buyerBudget < total) {
-            throw new IllegalArgumentException(String.format(
-                    "Buyer spending limit (PHP %,.2f) is less than the cart total (PHP %,.2f).",
-                    buyerBudget, total));
+
+        if (buyerBudget < total || Double.isNaN(buyerBudget) || Double.isInfinite(buyerBudget)) {
+            throw new IllegalArgumentException(String.format("Buyer spending limit (PHP %,.2f) is less than the cart total (PHP %,.2f).", buyerBudget, total));
         }
 
-        double change = 0.0;
         double recordedCashReceived = 0.0;
-        if ("Cash".equals(normalizedPaymentMethod)) {
-            if (!Double.isFinite(cashReceived) || cashReceived < total) {
-                throw new IllegalArgumentException(String.format(
-                        "Cash received must be a finite amount of at least PHP %,.2f.", total));
+        double change = 0.0;
+
+        if (selectedPaymentMethod.equals("Cash")) {
+            if (cashReceived < total || Double.isNaN(cashReceived) || Double.isInfinite(cashReceived)) {
+                throw new IllegalArgumentException(String.format("Cash received must be at least PHP %,.2f.", total));
             }
+
             recordedCashReceived = cashReceived;
             change = cashReceived - total;
         }
@@ -168,58 +199,37 @@ public class SalesTransactionSystem {
         List<ReceiptItem> receiptItems = new ArrayList<>();
         Map<String, Double> quantitiesByProductCode = new LinkedHashMap<>();
 
-        for (Map.Entry<Product, Double> entry : cart.getCart().entrySet()) {
-            Product product = entry.getKey();
-            Double quantity = entry.getValue();
+        prepareSaleItems(cart, receiptItems, quantitiesByProductCode);
 
-            if (product == null || quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
-                throw new IllegalArgumentException("The cart contains an invalid product or quantity.");
-            }
-            if (!isProductRegistered(product.getProductCode())) {
-                throw new IllegalArgumentException("Product " + product.getProductCode() + " is no longer registered. Remove it from the cart and try again.");
-            }
-
-            double unitPrice = cart.getUnitPrice(product);
-            String productName = cart.getProductName(product);
-            
-            receiptItems.add(new ReceiptItem(product.getProductCode(), productName, quantity, unitPrice));
-
-            double combinedQuantity = quantitiesByProductCode.getOrDefault(
-                    product.getProductCode(), 0.0) + quantity;
-            if (!Double.isFinite(combinedQuantity)) {
-                throw new IllegalArgumentException("Combined quantity for "
-                        + productName + " is invalid.");
-            }
-            quantitiesByProductCode.put(product.getProductCode(), combinedQuantity);
-        }
-
-        // Provide a product-specific stock error before invoking the atomic
-        // inventory operation. InventorySystem checks everything again under
-        // its synchronized batch method before changing any quantity.
         for (Map.Entry<String, Double> entry : quantitiesByProductCode.entrySet()) {
-            if (!invSystem.hasSufficientStock(entry.getKey(), entry.getValue())) {
-                Product product = findProductByCode(entry.getKey());
-                String name = product == null ? entry.getKey() : product.getProductName();
-                throw new IllegalArgumentException("Not enough available stock for " + name
-                        + ". Available: " + String.format("%.2f kg", productStock(product)) + ".");
+            String productCode = entry.getKey();
+            double quantity = entry.getValue();
+
+            if (!invSystem.hasSufficientStock(productCode, quantity)) {
+                Product product = findProductByCode(productCode);
+                String productName = productCode;
+
+                if (product != null) {
+                    productName = product.getProductName();
+                }
+
+                throw new IllegalArgumentException("Not enough available stock for " + productName + ". Available: " + String.format("%.2f kg", productStock(product)) + ".");
             }
         }
 
         String employeeUsername = currentUser.getUserName();
-        String auditExplanation = "Sale " + cart.getSaleID()
-                + " / Receipt " + receipt.getTransactionID();
+        String auditExplanation = "Sale " + cart.getSaleID() + " / Receipt " + receipt.getTransactionID();
 
-        // No receipt is marked paid and no payment is stored until this
-        // all-or-nothing inventory operation succeeds.
-        invSystem.reduceStockForSale(
-                quantitiesByProductCode, employeeUsername, auditExplanation);
+        // InventorySystem checks all products before deducting any of them.
+        invSystem.reduceStockForSale(quantitiesByProductCode, employeeUsername, auditExplanation);
 
+        // Save the receipt only after the stock deduction succeeds.
         receipt.setItems(receiptItems);
         receipt.setTotalAmount(total);
         receipt.setAmountPaid(total);
         receipt.setCashReceived(recordedCashReceived);
         receipt.setChange(change);
-        receipt.setPaymentMethod(normalizedPaymentMethod);
+        receipt.setPaymentMethod(selectedPaymentMethod);
         receipt.setEmployee(currentUser);
         receipt.setEmployeeLevel(currentLevel());
         receipt.setTransacTime(LocalDateTime.now());
@@ -231,83 +241,151 @@ public class SalesTransactionSystem {
         return receipt;
     }
 
+    // Builds the receipt snapshots and combines quantities with the same product code.
+    private void prepareSaleItems(Cart cart, List<ReceiptItem> receiptItems, Map<String, Double> quantitiesByProductCode) {
+
+        for (Map.Entry<Product, Double> entry : cart.getCart().entrySet()) {
+            Product product = entry.getKey();
+            Double quantity = entry.getValue();
+
+            if (product == null || quantity == null) {
+                throw new IllegalArgumentException("The cart contains an invalid item.");
+            }
+
+            if (quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
+                throw new IllegalArgumentException("The cart contains an invalid quantity.");
+            }
+
+            String productCode = product.getProductCode();
+            Product registeredProduct = findProductByCode(productCode);
+
+            if (registeredProduct == null) {
+                throw new IllegalArgumentException("Product " + productCode + " is no longer registered. Remove it from the cart and try again.");
+            }
+
+            double unitPrice = cart.getUnitPrice(product);
+            String productName = cart.getProductName(product);
+
+            ReceiptItem receiptItem = new ReceiptItem(productCode, productName,
+                    quantity, unitPrice);
+            receiptItems.add(receiptItem);
+
+            Double previousQuantity = quantitiesByProductCode.get(productCode);
+            double combinedQuantity = quantity;
+
+            if (previousQuantity != null) {
+                combinedQuantity = previousQuantity + quantity;
+            }
+
+            if (Double.isNaN(combinedQuantity) || Double.isInfinite(combinedQuantity)) {
+                throw new IllegalArgumentException("The combined quantity for "
+                        + productName + " is invalid.");
+            }
+
+            quantitiesByProductCode.put(productCode, combinedQuantity);
+        }
+    }
+
+    // Checks that a valid employee is logged in before using the POS backend.
     private void validateCurrentEmployee() {
         if (currentUser == null) {
-            throw new IllegalArgumentException("No employee is logged in. Please log in before processing a sale.");
+            throw new IllegalArgumentException(
+                    "No employee is logged in. Please log in before processing a sale.");
         }
-        if (!Boolean.TRUE.equals(currentUser.getActivated())) {
+
+        Boolean isActivated = currentUser.getActivated();
+
+        if (isActivated == null || isActivated == false) {
             throw new IllegalArgumentException("This employee account is not active.");
         }
 
         String role = currentUser.getUserAccessLevel();
+
         if (!"CLERK".equalsIgnoreCase(role) && !"MANAGER".equalsIgnoreCase(role)) {
-            throw new IllegalArgumentException("Only an authenticated Clerk or Manager can process a sale.");
+            throw new IllegalArgumentException(
+                    "Only a Clerk or Manager can process a sale.");
         }
-        if (currentUser.getUserName() == null || currentUser.getUserName().isBlank()) {
+
+        String username = currentUser.getUserName();
+
+        if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("The logged-in employee has no username.");
         }
     }
 
     private String normalizePaymentMethod(String paymentMethod) {
-        if (paymentMethod == null || paymentMethod.isBlank()) {
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
             throw new IllegalArgumentException("Select a payment method.");
         }
-        String value = paymentMethod.trim();
-        if ("Cash".equalsIgnoreCase(value)) return "Cash";
-        if ("GCash".equalsIgnoreCase(value)) return "GCash";
-        if ("Bank Transfer".equalsIgnoreCase(value)) return "Bank Transfer";
-        throw new IllegalArgumentException("Unsupported payment method: " + paymentMethod);
-    }
 
-    private boolean isProductRegistered(String productCode) {
-        return findProductByCode(productCode) != null;
+        String selectedMethod = paymentMethod.trim();
+
+        if (selectedMethod.equalsIgnoreCase("Cash")) {
+            return "Cash";
+        }
+
+        if (selectedMethod.equalsIgnoreCase("GCash")) {
+            return "GCash";
+        }
+
+        if (selectedMethod.equalsIgnoreCase("Bank Transfer")) {
+            return "Bank Transfer";
+        }
+
+        throw new IllegalArgumentException("Unsupported payment method: " + paymentMethod);
     }
 
     private Product findProductByCode(String productCode) {
         if (productCode == null) {
             return null;
         }
-        for (Product product : database.getAllProducts()) {
-            if (productCode.equals(product.getProductCode())) {
-                return product;
-            }
-        }
-        return null;
+
+        return database.searchProduct(productCode);
     }
 
-    /**
-     * Cancels every unfinished cart when an employee logs out. This prevents
-     * an abandoned buyer cart from blocking the next employee's sale.
-     */
+    // Cancels every unfinished cart when an employee logs out.
     public synchronized int cancelAllUnpaidSales() {
         if (buyers == null) {
             return 0;
         }
 
         int cancelledCount = 0;
+
         for (Buyer buyer : buyers.returnBuyers()) {
-            if (buyer != null && buyer.getBuyerCart() != null
-                    && !Boolean.TRUE.equals(buyer.getBuyerCart().getIsPaid())) {
+            if (buyer == null) {
+                continue;
+            }
+
+            Cart cart = buyer.getBuyerCart();
+
+            if (cart != null && !Boolean.TRUE.equals(cart.getIsPaid())) {
                 cancelSale(buyer);
                 cancelledCount++;
             }
         }
+
         return cancelledCount;
     }
 
-    /** Cancels an unpaid cart. Completed sales cannot be cancelled this way. */
+    // Removes an unfinished cart. A completed sale cannot be cancelled here.
     public synchronized boolean cancelSale(Buyer buyer) {
-        if (buyer == null || buyer.getBuyerCart() == null) {
+        if (buyer == null) {
             return false;
         }
 
         Cart cart = buyer.getBuyerCart();
+
+        if (cart == null) {
+            return false;
+        }
+
         if (Boolean.TRUE.equals(cart.getIsPaid())) {
             throw new IllegalArgumentException("A completed sale cannot be cancelled as an unpaid cart.");
         }
 
         cartHashMap.remove(cart.getSaleID());
         buyer.setBuyerCart(null);
+
         return true;
     }
 
