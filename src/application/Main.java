@@ -95,6 +95,23 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(loginView, 1150, 600));
         primaryStage.setTitle("Angkat - Fish Port Management System");
     }
+    
+    private void handleLogout() { //the acutal saving
+
+        boolean saved = dataManager.saveProducts();
+
+        if (saved) {
+            System.out.println("Products saved successfully.");
+            showLogin();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Saving Error");
+            alert.setHeaderText("Unable to save products.");
+            alert.setContentText("Please try logging out again.");
+            alert.showAndWait();
+        }
+    }
 
     // Uses the existing LoginManager to authenticate the user.
     private String authenticate(String username, String password) {
