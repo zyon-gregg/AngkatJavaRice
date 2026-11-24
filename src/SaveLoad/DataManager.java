@@ -340,42 +340,97 @@ public class DataManager {
 	    }
 
 	    public boolean loadSources() {
-	        File file = new File("src/SaveLoad/Sources2.txt");
+        File file = new File("src/SaveLoad/Sources2.txt");
 
-	        HashMap<String, Source> restoredSources = new HashMap<String, Source>();
-	        
-	        boolean loadSuccessful = true;
+        HashMap<String, Source> restoredSources = new HashMap<String, Source>();
 
-	        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
 
-	            String line = reader.readLine();
+            String line = reader.readLine();
 
-	            while (line != null) {
-	            	String[] extractedData = line.split("\\|", -1);
-	            	
-	            	String username = extractedData[0];
-                    String password = extractedData[1];
-                    String name = extractedData[2];
-                    String productCode = extractedData[3];
-                    double quantity = Double.parseDouble(extractedData[4]);
-                    Product product = products.searchProduct(productCode);
-                    Source source = restoredSources.get(username);
-                    
+            while (line != null) {
+
+                if (line.trim().isEmpty()) {
+                    line = reader.readLine();
+                    continue;
+                }
+
+                String[] extractedData = line.split("\\|", -1);
+
+                if (extractedData.length != 5) {
+                    System.out.println("Invalid source record: " + line);
+                    return false;
+                }
+
+                String username = extractedData[0];
+                String password = extractedData[1];
+                String name = extractedData[2];
+                String productCode = extractedData[3];
+                String quantityText = extractedData[4];
+
+                if (username.trim().isEmpty() || password.trim().isEmpty()
+                        || name.trim().isEmpty()) {
+                    System.out.println("Source information is incomplete: " + line);
+                    return false;
+                }
+
+                // Create each Source object only once.
+                Source source = restoredSources.get(username);
+
+                if (source == null) {
+                    source = new Source(username, password, name);
+                    restoredSources.put(username, source);
+                }
+
+                // An empty product code and quantity represent a source with no products.
+                if (productCode.trim().isEmpty() && quantityText.trim().isEmpty()) {
+                    line = reader.readLine();
+                    continue;
+                }
+
+                // A product code and quantity must either both exist or both be empty.
+                if (productCode.trim().isEmpty() || quantityText.trim().isEmpty()) {
+                    System.out.println("Incomplete source product record: " + line);
+                    return false;
+                }
+
+                Product product = products.searchProduct(productCode);
+
+                if (product == null) {
+                    System.out.println("Product not found for source record: " + productCode);
+                    return false;
+                }
+
+                try {
+                    double quantity = Double.parseDouble(quantityText);
+
+                    if (Double.isNaN(quantity) || Double.isInfinite(quantity) || quantity < 0) {
+                        System.out.println("Invalid source quantity: " + quantityText);
+                        return false;
+                    }
+
                     source.addProductToSource(product, quantity);
 
-	                line = reader.readLine();
-	            }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid source quantity: " + quantityText);
+                    return false;
+                }
 
-	            for (Source source : restoredSources.values()) {
-	                sources.addSourceToDatabase(source);
-	            }
+                line = reader.readLine();
+            }
 
-	            return loadSuccessful;
+            // Add the reconstructed sources to SourceDatabase after reading succeeds.
+            for (Source source : restoredSources.values()) {
+                sources.addSourceToDatabase(source);
+            }
 
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	            return false;
-	        }
-	    }
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
 }

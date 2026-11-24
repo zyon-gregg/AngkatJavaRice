@@ -55,16 +55,32 @@ public class InventorySystem {
     
     public synchronized boolean restoreInventoryHistory(StockRecordedChange record) { //loading of inventory history
 
-        if (record.getProduct() == null || record.getTime() == null) {
+        if (record == null || record.getProduct() == null || record.getTime() == null
+                || record.getRecordId() == null || record.getRecordId().trim().isEmpty()) {
             return false;
         }
 
+        String recordID = record.getRecordId();
 
-        if (history.containsKey(record.getProductCode())) {
+        if (history.containsKey(recordID)) {
             return false;
         }
-  
-        history.put(record.getProductCode(), record);
+
+        history.put(recordID, record);
+
+        // Continue generating stock history IDs after the highest restored ID.
+        if (recordID.startsWith("SC")) {
+            try {
+                int savedID = Integer.parseInt(recordID.substring(2));
+
+                if (savedID >= nextId) {
+                    nextId = savedID + 1;
+                }
+            } catch (NumberFormatException e) {
+                // Keep the current nextId if the saved ID is not numeric.
+            }
+        }
+
         return true;
     }
     

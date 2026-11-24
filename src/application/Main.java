@@ -5,6 +5,7 @@ import Products.ProductDatabase;
 import clerkDashboard.ClerkDashboard;
 import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -38,6 +39,7 @@ public class Main extends Application {
     private DataManager dataManager;
     private Stage primaryStage;
     private User authenticatedUser;
+    private boolean startupSuccessful = false;
 
     @Override
     public void start(Stage stage) {
@@ -47,26 +49,48 @@ public class Main extends Application {
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
         
-        /*
-        boolean loadProducts = dataManager.loadProducts();  
-        boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
-        boolean loadInventoryHistory = dataManager.loadInventoryHistory();
-        boolean loadBuyers = dataManager.loadBuyers();
-        boolean loadSources = dataManager.loadSources();
-         
         
-        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers || !loadSources) {
-        	System.out.print("Unsuccesful load of one of the data");
-        }
-        */
-        
-        
+        // Load products first because inventory and sources reference Product objects.
+        boolean loadProducts = dataManager.loadProducts();
+        boolean loadInventoryProduct = false;
+        boolean loadInventoryHistory = false;
+        boolean loadBuyers = false;
+        boolean loadSources = false;
 
-        loadSampleData();
+        if (loadProducts) {
+            loadInventoryProduct = dataManager.loadInventoryProducts();
+        }
+
+        if (loadProducts && loadInventoryProduct) {
+            loadInventoryHistory = dataManager.loadInventoryHistory();
+        }
+
+        if (loadProducts && loadInventoryProduct && loadInventoryHistory) {
+            loadBuyers = dataManager.loadBuyers();
+            loadSources = dataManager.loadSources();
+        }
+
+        if (!loadProducts || !loadInventoryProduct || !loadInventoryHistory
+                || !loadBuyers || !loadSources) {
+
+            System.out.println("Unsuccessful load of one or more data files. The application will not continue loading.");
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Data Loading Error");
+            alert.setHeaderText("Unable to load saved application data.");
+            alert.setContentText("Check the console for the data file that could not be loaded. No data will be saved during this failed startup.");
+            primaryStage.show();
+            alert.showAndWait();
+            Platform.exit();
+            return;
+        }
+
         loadDefaultAccounts();
         showLogin();
 
         primaryStage.show();
+        startupSuccessful = true;
     }
 
     // -----------------------------------------------------------------
@@ -349,7 +373,7 @@ public class Main extends Application {
     @Override
     public void stop() { //will update this for other save and load
 
-        if (dataManager != null) {
+        if (dataManager != null && startupSuccessful) {
         	boolean saveProduct = dataManager.saveProducts();
             boolean saveInventoryProduct = dataManager.saveInventoryProducts();
             boolean saveInventoryHistory = dataManager.saveInventoryHistory();
