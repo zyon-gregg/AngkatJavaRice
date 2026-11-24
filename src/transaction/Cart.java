@@ -1,7 +1,6 @@
 package transaction;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,32 +23,36 @@ public class Cart {
     Cart() {
     }
 
-    /** Price used when a product is first added to a cart. */
+    // Gets the selling price used when a product is first added to the cart.
     public static double unitPrice(Product product) {
         if (product == null) {
             throw new IllegalArgumentException("Product is required.");
         }
+
         double price = product.getProductRawPrice();
-        if (!Double.isFinite(price) || price <= 0) {
+
+        if (price <= 0 || Double.isNaN(price) || Double.isInfinite(price)) {
             throw new IllegalArgumentException("Product has an invalid selling price.");
         }
+
         return price;
     }
     
-    //adds a product, replacing its quantity, and locking its price at the first add
 
+    // Adds a product to the cart. Adding it again replaces its quantity.
+    // The first selling price is kept so later product price edits do not change this cart.
     public void addToCart(Product product, Double quantity) {
         ensureNotPaid();
 
         if (product == null) {
             throw new IllegalArgumentException("Product is required.");
         }
-        
-        if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
-            throw new IllegalArgumentException("Quantity must be a finite number greater than zero.");
+
+        if (quantity == null || quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
+            throw new IllegalArgumentException("Quantity must be greater than zero.");
         }
 
-        if (!cart.containsKey(product)) { //avoid duplication of product to the cart
+        if (!cart.containsKey(product)) {
             unitPrices.put(product, unitPrice(product));
             productNames.put(product, product.getProductName());
         }
@@ -60,53 +63,69 @@ public class Cart {
 
     public void removeFromCart(Product product) {
         ensureNotPaid();
+
         cart.remove(product);
         unitPrices.remove(product);
         productNames.remove(product);
         updateCartValue();
     }
 
-    public void updateCartValue() { //updates the total price of the cart each time a product is being added
+    // Recalculates the total using the saved price for each cart item.
+    public void updateCartValue() {
         double total = 0.0;
-        
+
         for (Map.Entry<Product, Double> item : cart.entrySet()) {
+        	
             Product product = item.getKey();
             Double quantity = item.getValue();
             Double price = unitPrices.get(product);
 
-            if (product == null || quantity == null || !Double.isFinite(quantity) || quantity <= 0
-                    || price == null || !Double.isFinite(price) || price <= 0) {
-                throw new IllegalStateException("The cart contains an invalid item.");
+            if (product == null || quantity == null || price == null) {
+                throw new IllegalStateException("The cart contains an incomplete item.");
             }
 
-            total += price * quantity;
-            
-            if (!Double.isFinite(total)) {
-                throw new IllegalStateException("The cart total is too large or invalid.");
+            if (quantity <= 0 || price <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity) || Double.isNaN(price) || Double.isInfinite(price)) {
+                throw new IllegalStateException("The cart contains an invalid quantity or price.");
+            }
+
+            total = total + (price * quantity);
+
+            if (Double.isNaN(total) || Double.isInfinite(total)) {
+                throw new IllegalStateException("The cart total is invalid.");
             }
         }
-        
-        
+
         totalCartValue = total;
         lastUpdated = LocalDateTime.now();
     }
 
     public double getUnitPrice(Product product) {
-        Double price = unitPrices.get(product);
-        return price == null ? unitPrice(product) : price;
+        Double savedPrice = unitPrices.get(product);
+
+        if (savedPrice == null) {
+            return unitPrice(product);
+        }
+
+        return savedPrice;
     }
 
     public String getProductName(Product product) {
-        String name = productNames.get(product);
-        return name == null ? product.getProductName() : name;
+        String savedName = productNames.get(product);
+
+        if (savedName == null) {
+            return product.getProductName();
+        }
+
+        return savedName;
     }
 
     public double getSubtotal(Product product) {
         Double quantity = cart.get(product);
-        
+
         if (quantity == null) {
             return 0.0;
         }
+
         return getUnitPrice(product) * quantity;
     }
 
@@ -118,13 +137,14 @@ public class Cart {
         this.saleID = saleID;
     }
 
-    //returns the copy of the cart
+    // Returns a copy of the cart items.
     public HashMap<Product, Double> getCart() {
         return new HashMap<>(cart);
     }
 
     public void setCart(HashMap<Product, Double> items) {
         ensureNotPaid();
+
         cart.clear();
         unitPrices.clear();
         productNames.clear();
@@ -133,6 +153,7 @@ public class Cart {
             for (Map.Entry<Product, Double> item : items.entrySet()) {
                 addToCart(item.getKey(), item.getValue());
             }
+            
         } else {
             updateCartValue();
         }
@@ -143,9 +164,10 @@ public class Cart {
     }
 
     public void setTotalCartValue(Double totalCartValue) {
-        if (totalCartValue == null || !Double.isFinite(totalCartValue) || totalCartValue < 0) {
-            throw new IllegalArgumentException("Cart total must be a finite non-negative amount.");
+        if (totalCartValue == null || totalCartValue < 0 || Double.isNaN(totalCartValue) || Double.isInfinite(totalCartValue)) {
+            throw new IllegalArgumentException("Cart total must be zero or greater.");
         }
+
         this.totalCartValue = totalCartValue;
     }
 
