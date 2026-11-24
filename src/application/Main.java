@@ -53,6 +53,11 @@ public class Main extends Application {
         if(!succesfulLoad) {
         	System.out.print("Unsuccesful load of products");
         }
+        
+        succesfulLoad = dataManager.loadInventoryProducts();  
+        if(!succesfulLoad) {
+        	System.out.print("Unsuccesful load of inventory of products");
+        }
         */
         
 

@@ -131,6 +131,43 @@ public class DataManager {
 	}
 	
 	public boolean loadInventoryProducts() {
+		
+		File file = new File("src/SaveLoad/Inventory.txt");
+		
+		try(BufferedReader reader = Files.newBufferedReader(file.toPath())){
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				String[] extractedData = line.split("\\|", -1);
+				
+				String code = extractedData[0];
+				String name = extractedData[1];
+				String description = extractedData[2];
+				String source = extractedData[3];
+				double cost = Double.parseDouble(extractedData[4]);
+				double rawPrice = Double.parseDouble(extractedData[5]);
+				double marketPrice = Double.parseDouble(extractedData[6]);
+				
+				double ProductStockInKG = Double.parseDouble(extractedData[7]);
+				LocalDateTime lastUpdated = LocalDateTime.parse(extractedData[8]);
+				
+				
+				
+				//polymorphism, this calls the other product constructor
+				Product product = new Product(code, name, description, source, cost, rawPrice, marketPrice);
+				products.addProduct(product);
+				
+				
+				
+				line = reader.readLine();
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
 		return true;
 	}
 
