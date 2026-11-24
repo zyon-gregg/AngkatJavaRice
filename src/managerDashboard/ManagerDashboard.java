@@ -337,6 +337,7 @@ public class ManagerDashboard {
         productStage.initOwner(stage);
         productStage.setTitle("Angkat - Product Management");
         productStage.setScene(new Scene(productView, 1000, 560));
+        productStage.setOnHidden(event -> refreshDashboard());
         productStage.show();
     }
 
@@ -344,6 +345,9 @@ public class ManagerDashboard {
 
         InventoryGUI inventoryGUI = new InventoryGUI(
                 inventorySystem, manager.getUserName(), true);
+
+        // Refresh the dashboard after the Manager closes Inventory Management.
+        inventoryGUI.getStage().setOnHidden(event -> refreshDashboard());
         inventoryGUI.setStageComponents();
     }
 
