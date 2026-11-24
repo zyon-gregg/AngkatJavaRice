@@ -267,7 +267,6 @@ public class Main extends Application {
         }
     }
     
-    /*
 
     private void loadSampleData() {
         Product bangus = new Product(
@@ -289,12 +288,6 @@ public class Main extends Application {
         Product pusit = new Product(
                 products, "Pusit", "Fresh squid",
                 "Palawan", 200.00, 240.00, 280.00);
-
-        for (Product product : new Product[] {
-                bangus, tilapia, tuna, galunggong, pusit
-        }) {
-            products.addProduct(product);
-        }
 
         Source appleFarm = new Source("AppleF", "TheFarm", "AppleFarms");
 
@@ -325,7 +318,6 @@ public class Main extends Application {
                 pusit.getProductCode(), 120, "System", "Opening stock");
     }
     
-    */
     
     @Override
     public void stop() { //will update this for other save and load
