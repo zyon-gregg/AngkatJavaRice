@@ -35,19 +35,21 @@ public class Cart {
         }
         return price;
     }
+    
+    //adds a product, replacing its quantity, and locking its price at the first add
 
-    /** Adds a product or replaces its quantity, locking its price at first add. */
     public void addToCart(Product product, Double quantity) {
         ensureNotPaid();
 
         if (product == null) {
             throw new IllegalArgumentException("Product is required.");
         }
+        
         if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be a finite number greater than zero.");
         }
 
-        if (!cart.containsKey(product)) {
+        if (!cart.containsKey(product)) { //avoid duplication of product to the cart
             unitPrices.put(product, unitPrice(product));
             productNames.put(product, product.getProductName());
         }
@@ -64,8 +66,9 @@ public class Cart {
         updateCartValue();
     }
 
-    public void updateCartValue() {
+    public void updateCartValue() { //updates the total price of the cart each time a product is being added
         double total = 0.0;
+        
         for (Map.Entry<Product, Double> item : cart.entrySet()) {
             Product product = item.getKey();
             Double quantity = item.getValue();
@@ -77,10 +80,13 @@ public class Cart {
             }
 
             total += price * quantity;
+            
             if (!Double.isFinite(total)) {
                 throw new IllegalStateException("The cart total is too large or invalid.");
             }
         }
+        
+        
         totalCartValue = total;
         lastUpdated = LocalDateTime.now();
     }
@@ -97,6 +103,7 @@ public class Cart {
 
     public double getSubtotal(Product product) {
         Double quantity = cart.get(product);
+        
         if (quantity == null) {
             return 0.0;
         }
@@ -111,7 +118,7 @@ public class Cart {
         this.saleID = saleID;
     }
 
-    /** Returns a copy so external code cannot bypass cart methods and validation. */
+    //returns the copy of the cart
     public HashMap<Product, Double> getCart() {
         return new HashMap<>(cart);
     }
