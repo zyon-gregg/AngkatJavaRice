@@ -111,6 +111,8 @@ public class Main extends Application {
             alert.setContentText("Please try logging out again.");
             alert.showAndWait();
         }
+        
+        
     }
 
     // Uses the existing LoginManager to authenticate the user.
