@@ -32,10 +32,7 @@ public class SalesTransactionSystem {
     private int nextIdReceipt = 1;
     private User currentUser;
 
-    public SalesTransactionSystem(ProductDatabase products,
-                                  InventorySystem inventory,
-                                  BuyerDatabase buyers,
-                                  SourceDatabase sources) {
+    public SalesTransactionSystem(ProductDatabase products, InventorySystem inventory, BuyerDatabase buyers, SourceDatabase sources) {
         this.database = products;
         this.invSystem = inventory;
         this.buyers = buyers;
@@ -47,7 +44,13 @@ public class SalesTransactionSystem {
     }
 
     private String currentLevel() {
-        return currentUser == null ? "UNKNOWN" : currentUser.getUserAccessLevel();
+    	
+    	if (currentUser == null) {
+    		return "UKNOWN";
+    	} else {
+    		return currentUser.getUserAccessLevel();
+    	}
+    	
     }
 
     public Cart createCart(Buyer buyer) {
@@ -107,29 +110,13 @@ public class SalesTransactionSystem {
                 && invSystem.hasSufficientStock(product.getProductCode(), quantity);
     }
 
-    /**
-     * Backwards-compatible overload. Callers that do not supply a cash tender
-     * are treated as paying the exact total. TransactionView uses the explicit
-     * three-argument overload for cash payments.
-     */
     public Receipt completeSale(Buyer buyer, String paymentMethod) {
         Cart cart = buyer == null ? null : buyer.getBuyerCart();
         double exactPayment = cart == null ? 0.0 : cart.getTotalCartValue();
         return completeSale(buyer, paymentMethod, exactPayment);
     }
 
-    /**
-     * Completes a sale only after validating the employee, buyer spending limit,
-     * payment, every product, and all inventory requirements. InventorySystem
-     * then performs all stock deductions atomically and records their history.
-     *
-     * Buyer.budget is treated as the buyer's spending limit, not as cash handed
-     * to the cashier. For Cash, cashReceived is the actual tendered amount.
-     * GCash and Bank Transfer are simulated as exact full payments.
-     */
-    public synchronized Receipt completeSale(Buyer buyer,
-                                             String paymentMethod,
-                                             double cashReceived) {
+    public synchronized Receipt completeSale(Buyer buyer, String paymentMethod, double cashReceived) {
 
         validateCurrentEmployee();
 
@@ -178,10 +165,6 @@ public class SalesTransactionSystem {
             change = cashReceived - total;
         }
 
-        // Build item snapshots and aggregate quantities by product code.
-        // This preserves the prices/names used when the items entered the cart
-        // and prevents duplicate Product objects with the same code bypassing
-        // the total stock check.
         List<ReceiptItem> receiptItems = new ArrayList<>();
         Map<String, Double> quantitiesByProductCode = new LinkedHashMap<>();
 
@@ -189,19 +172,17 @@ public class SalesTransactionSystem {
             Product product = entry.getKey();
             Double quantity = entry.getValue();
 
-            if (product == null || quantity == null
-                    || !Double.isFinite(quantity) || quantity <= 0) {
+            if (product == null || quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
                 throw new IllegalArgumentException("The cart contains an invalid product or quantity.");
             }
             if (!isProductRegistered(product.getProductCode())) {
-                throw new IllegalArgumentException("Product " + product.getProductCode()
-                        + " is no longer registered. Remove it from the cart and try again.");
+                throw new IllegalArgumentException("Product " + product.getProductCode() + " is no longer registered. Remove it from the cart and try again.");
             }
 
             double unitPrice = cart.getUnitPrice(product);
             String productName = cart.getProductName(product);
-            receiptItems.add(new ReceiptItem(
-                    product.getProductCode(), productName, quantity, unitPrice));
+            
+            receiptItems.add(new ReceiptItem(product.getProductCode(), productName, quantity, unitPrice));
 
             double combinedQuantity = quantitiesByProductCode.getOrDefault(
                     product.getProductCode(), 0.0) + quantity;
