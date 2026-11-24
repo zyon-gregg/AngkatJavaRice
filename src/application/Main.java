@@ -49,7 +49,7 @@ public class Main extends Application {
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
         
-        
+       
         // Load products first because inventory and sources reference Product objects.
         boolean loadProducts = dataManager.loadProducts();
         boolean loadInventoryProduct = false;
@@ -85,7 +85,9 @@ public class Main extends Application {
             Platform.exit();
             return;
         }
-
+        
+       
+        //loadSampleData();
         loadDefaultAccounts();
         showLogin();
 
