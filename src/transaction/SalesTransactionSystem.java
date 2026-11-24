@@ -426,4 +426,76 @@ public class SalesTransactionSystem {
     public Receipt getReceiptByID(String transactionID) {
         return receiptHashMap.get(transactionID);
     }
+
+
+    // Restores a completed receipt and its cart snapshot from saved data.
+    public boolean restoreReceipt(String transactionID, String saleID,
+            String buyerName, double totalAmount, double amountPaid,
+            double cashReceived, String paymentMethod, double change,
+            LocalDateTime transactionTime, User employee,
+            String employeeLevel, String purchaseStatus,
+            List<ReceiptItem> items) {
+
+        if (transactionID == null || transactionID.trim().isEmpty()) {
+            return false;
+        }
+
+        if (receiptHashMap.containsKey(transactionID)) {
+            return false;
+        }
+
+        Receipt restoredReceipt = new Receipt();
+        restoredReceipt.setTransactionID(transactionID);
+        restoredReceipt.setBuyerName(buyerName);
+        restoredReceipt.setTotalAmount(totalAmount);
+        restoredReceipt.setAmountPaid(amountPaid);
+        restoredReceipt.setCashReceived(cashReceived);
+        restoredReceipt.setPaymentMethod(paymentMethod);
+        restoredReceipt.setChange(change);
+        restoredReceipt.setTransacTime(transactionTime);
+        restoredReceipt.setEmployee(employee);
+        restoredReceipt.setEmployeeLevel(employeeLevel);
+        restoredReceipt.setPurchaseStatus(purchaseStatus);
+        restoredReceipt.setItems(items);
+
+        Cart restoredCart = new Cart();
+        restoredCart.setSaleID(saleID);
+        restoredCart.setReceipt(restoredReceipt);
+        restoredCart.setProcessing(employee);
+        restoredCart.setEmployeeLevelofProcessing(employeeLevel);
+        restoredCart.setIsPaid(true);
+        restoredReceipt.setCart(restoredCart);
+
+        receiptHashMap.put(transactionID, restoredReceipt);
+        if (saleID != null && !saleID.trim().isEmpty()) {
+            cartHashMap.put(saleID, restoredCart);
+        }
+
+        // Continue receipt IDs after the highest restored receipt ID.
+        if (transactionID.startsWith("R")) {
+            try {
+                int savedReceiptNumber = Integer.parseInt(transactionID.substring(1));
+                if (savedReceiptNumber >= nextIdReceipt) {
+                    nextIdReceipt = savedReceiptNumber + 1;
+                }
+            } catch (NumberFormatException e) {
+                // Keep the current counter when the saved ID has a different format.
+            }
+        }
+
+        // Continue sale IDs after the highest restored sale ID.
+        if (saleID != null && saleID.startsWith("S")) {
+            try {
+                int savedSaleNumber = Integer.parseInt(saleID.substring(1));
+                if (savedSaleNumber >= nextIdCart) {
+                    nextIdCart = savedSaleNumber + 1;
+                }
+            } catch (NumberFormatException e) {
+                // Keep the current counter when the saved ID has a different format.
+            }
+        }
+
+        return true;
+    }
+
 }

@@ -1,11 +1,8 @@
 package SaveLoad;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,10 +16,13 @@ import inventoryManagementSystem.InventorySystem;
 import inventoryManagementSystem.StockRecordedChange;
 import login.LoginManager;
 import transaction.SalesTransactionSystem;
+import transaction.Receipt;
+import transaction.ReceiptItem;
 import users.Buyer;
 import users.BuyerDatabase;
 import users.Source;
 import users.SourceDatabase;
+import users.User;
 
 import inventoryManagementSystem.InventoryOfProduct;
 import java.time.LocalDateTime;
@@ -432,5 +432,344 @@ public class DataManager {
         }
     }
 
+
+	public boolean saveAccounts() {
+		File file = new File("src/SaveLoad/Accounts.txt");
+		
+		try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
+			
+			ArrayList<User> accountsToBeSaved = login.getAccounts();
+			
+			for (User account : accountsToBeSaved) {
+				String data = account.getUserID()
+						+ "|" + account.getUserName()
+						+ "|" + account.getPassword()
+						+ "|" + account.getName()
+						+ "|" + account.getUserAccessLevel()
+						+ "|" + account.getActivated();
+				
+				writer.write(data);
+				writer.newLine();
+			}
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean loadAccounts() {
+		File file = new File("src/SaveLoad/Accounts.txt");
+		
+		try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				if (line.trim().isEmpty()) {
+					line = reader.readLine();
+					continue;
+				}
+				
+				String[] extractedData = line.split("\\|", -1);
+				
+				if (extractedData.length != 6) {
+					System.out.println("Invalid account record: " + line);
+					return false;
+				}
+				
+				String userID = extractedData[0];
+				String username = extractedData[1];
+				String password = extractedData[2];
+				String name = extractedData[3];
+				String accessLevel = extractedData[4];
+				boolean activated = Boolean.parseBoolean(extractedData[5]);
+				
+				User account = new User(username, password, name);
+				account.setUserID(userID);
+				account.setUserAccessLevel(accessLevel);
+				account.setActivated(activated);
+				
+				login.addAccount(account);
+				
+				line = reader.readLine();
+			}
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean savePendingAccounts() {
+		File file = new File("src/SaveLoad/PendingAccounts.txt");
+		
+		try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
+			
+			ArrayList<User> pendingToBeSaved = login.getPending();
+			
+			for (User account : pendingToBeSaved) {
+				String userID = account.getUserID();
+				if (userID == null) {
+					userID = "";
+				}
+				
+				String data = userID
+						+ "|" + account.getUserName()
+						+ "|" + account.getPassword()
+						+ "|" + account.getName()
+						+ "|" + account.getUserAccessLevel()
+						+ "|" + account.getActivated();
+				
+				writer.write(data);
+				writer.newLine();
+			}
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean loadPendingAccounts() {
+		File file = new File("src/SaveLoad/PendingAccounts.txt");
+		ArrayList<User> restoredPending = new ArrayList<User>();
+		
+		try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				if (line.trim().isEmpty()) {
+					line = reader.readLine();
+					continue;
+				}
+				
+				String[] extractedData = line.split("\\|", -1);
+				
+				if (extractedData.length != 6) {
+					System.out.println("Invalid pending account record: " + line);
+					return false;
+				}
+				
+				String userID = extractedData[0];
+				String username = extractedData[1];
+				String password = extractedData[2];
+				String name = extractedData[3];
+				String accessLevel = extractedData[4];
+				boolean activated = Boolean.parseBoolean(extractedData[5]);
+				
+				User account = new User(username, password, name);
+				account.setUserID(userID);
+				account.setUserAccessLevel(accessLevel);
+				account.setActivated(activated);
+				
+				restoredPending.add(account);
+				
+				line = reader.readLine();
+			}
+			
+			login.setPending(restoredPending);
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean saveSalesReceipts() {
+		File receiptFile = new File("src/SaveLoad/Receipt.txt");
+		File itemFile = new File("src/SaveLoad/ReceiptItem.txt");
+		
+		try (BufferedWriter receiptWriter = Files.newBufferedWriter(receiptFile.toPath());
+				BufferedWriter itemWriter = Files.newBufferedWriter(itemFile.toPath())) {
+			
+			Collection<Receipt> receiptsToBeSaved = sale.getAllReceipt();
+			
+			for (Receipt receipt : receiptsToBeSaved) {
+				String saleID = "";
+				
+				if (receipt.getCart() != null) {
+					saleID = receipt.getCart().getSaleID();
+				}
+				
+				User employee = receipt.getEmployee();
+				String employeeID = "";
+				String employeeUsername = "";
+				String employeeName = "";
+				
+				if (employee != null) {
+					employeeID = employee.getUserID();
+					employeeUsername = employee.getUserName();
+					employeeName = employee.getName();
+				}
+				
+				String data = receipt.getTransactionID()
+						+ "|" + saleID
+						+ "|" + receipt.getBuyerName()
+						+ "|" + receipt.getTotalAmount()
+						+ "|" + receipt.getAmountPaid()
+						+ "|" + receipt.getCashReceived()
+						+ "|" + receipt.getPaymentMethod()
+						+ "|" + receipt.getChange()
+						+ "|" + receipt.getTransacTime().toString()
+						+ "|" + employeeID
+						+ "|" + employeeUsername
+						+ "|" + employeeName
+						+ "|" + receipt.getEmployeeLevel()
+						+ "|" + receipt.getPurchaseStatus();
+				
+				receiptWriter.write(data);
+				receiptWriter.newLine();
+				
+				for (ReceiptItem item : receipt.getItems()) {
+					String itemData = receipt.getTransactionID()
+							+ "|" + item.getProductCode()
+							+ "|" + item.getProductName()
+							+ "|" + item.getQuantityInKG()
+							+ "|" + item.getUnitPrice();
+					
+					itemWriter.write(itemData);
+					itemWriter.newLine();
+				}
+			}
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean loadSalesReceipts() {
+		File receiptFile = new File("src/SaveLoad/Receipt.txt");
+		File itemFile = new File("src/SaveLoad/ReceiptItem.txt");
+		
+		HashMap<String, ArrayList<ReceiptItem>> restoredItems =
+				new HashMap<String, ArrayList<ReceiptItem>>();
+		
+		try (BufferedReader itemReader = Files.newBufferedReader(itemFile.toPath())) {
+			
+			String line = itemReader.readLine();
+			
+			while (line != null) {
+				if (line.trim().isEmpty()) {
+					line = itemReader.readLine();
+					continue;
+				}
+				
+				String[] extractedData = line.split("\\|", -1);
+				
+				if (extractedData.length != 5) {
+					System.out.println("Invalid receipt item record: " + line);
+					return false;
+				}
+				
+				String receiptID = extractedData[0];
+				String productCode = extractedData[1];
+				String productName = extractedData[2];
+				double quantity = Double.parseDouble(extractedData[3]);
+				double unitPrice = Double.parseDouble(extractedData[4]);
+				
+				ReceiptItem item = new ReceiptItem(productCode, productName, quantity, unitPrice);
+				ArrayList<ReceiptItem> items = restoredItems.get(receiptID);
+				
+				if (items == null) {
+					items = new ArrayList<ReceiptItem>();
+					restoredItems.put(receiptID, items);
+				}
+				
+				items.add(item);
+				line = itemReader.readLine();
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		try (BufferedReader receiptReader = Files.newBufferedReader(receiptFile.toPath())) {
+			
+			String line = receiptReader.readLine();
+			
+			while (line != null) {
+				if (line.trim().isEmpty()) {
+					line = receiptReader.readLine();
+					continue;
+				}
+				
+				String[] extractedData = line.split("\\|", -1);
+				
+				if (extractedData.length != 14) {
+					System.out.println("Invalid receipt record: " + line);
+					return false;
+				}
+				
+				String receiptID = extractedData[0];
+				String saleID = extractedData[1];
+				String buyerName = extractedData[2];
+				double totalAmount = Double.parseDouble(extractedData[3]);
+				double amountPaid = Double.parseDouble(extractedData[4]);
+				double cashReceived = Double.parseDouble(extractedData[5]);
+				String paymentMethod = extractedData[6];
+				double change = Double.parseDouble(extractedData[7]);
+				LocalDateTime transactionTime = LocalDateTime.parse(extractedData[8]);
+				String employeeID = extractedData[9];
+				String employeeUsername = extractedData[10];
+				String employeeName = extractedData[11];
+				String employeeLevel = extractedData[12];
+				String purchaseStatus = extractedData[13];
+				
+				User employee = null;
+				
+				if (!employeeUsername.trim().isEmpty()) {
+					employee = new User(employeeUsername, "", employeeName);
+					employee.setUserID(employeeID);
+					employee.setUserAccessLevel(employeeLevel);
+					employee.setActivated(true);
+				}
+				
+				ArrayList<ReceiptItem> items = restoredItems.get(receiptID);
+				
+				if (items == null) {
+					items = new ArrayList<ReceiptItem>();
+				}
+				
+				boolean restored = sale.restoreReceipt(receiptID, saleID, buyerName, totalAmount,
+						amountPaid, cashReceived, paymentMethod, change,
+						transactionTime, employee, employeeLevel, purchaseStatus, items);
+				
+				if (!restored) {
+					System.out.println("Unable to restore receipt: " + receiptID);
+					return false;
+				}
+				
+				line = receiptReader.readLine();
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return false;
+		} catch (java.time.format.DateTimeParseException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+	}
 
 }

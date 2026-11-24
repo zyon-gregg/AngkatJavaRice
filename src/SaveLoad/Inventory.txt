@@ -1,3 +1,4 @@
+P00006|Dilis|Salty, small.|Perusian Fish port|50.0|20.0|95.0|0.0|2026-11-25T03:10:27.702386100
 P00004|Galunggong|Round scad|Navotas Fish Port|110.0|140.0|160.0|800.0|2026-11-25T02:46:50.297348600
 P00005|Pusit|Fresh squid|Palawan|200.0|240.0|280.0|120.0|2026-11-25T02:46:50.297348600
 P00002|Tilapia|Fresh tilapia, whole|Taal Lake fish cages|80.0|100.0|120.0|250.0|2026-11-25T02:46:50.297348600
