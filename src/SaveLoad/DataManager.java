@@ -357,19 +357,13 @@ public class DataManager {
 
                 String[] extractedData = line.split("\\|", -1);
 
-                if (extractedData.length != 5) {
-                    System.out.println("Invalid source record: " + line);
-                    return false;
-                }
-
                 String username = extractedData[0];
                 String password = extractedData[1];
                 String name = extractedData[2];
                 String productCode = extractedData[3];
                 String quantityText = extractedData[4];
 
-                if (username.trim().isEmpty() || password.trim().isEmpty()
-                        || name.trim().isEmpty()) {
+                if (username.trim().isEmpty() || password.trim().isEmpty() || name.trim().isEmpty()) {
                     System.out.println("Source information is incomplete: " + line);
                     return false;
                 }
@@ -475,10 +469,6 @@ public class DataManager {
 				
 				String[] extractedData = line.split("\\|", -1);
 				
-				if (extractedData.length != 6) {
-					System.out.println("Invalid account record: " + line);
-					return false;
-				}
 				
 				String userID = extractedData[0];
 				String username = extractedData[1];
@@ -552,11 +542,6 @@ public class DataManager {
 				}
 				
 				String[] extractedData = line.split("\\|", -1);
-				
-				if (extractedData.length != 6) {
-					System.out.println("Invalid pending account record: " + line);
-					return false;
-				}
 				
 				String userID = extractedData[0];
 				String username = extractedData[1];
@@ -668,11 +653,6 @@ public class DataManager {
 				
 				String[] extractedData = line.split("\\|", -1);
 				
-				if (extractedData.length != 5) {
-					System.out.println("Invalid receipt item record: " + line);
-					return false;
-				}
-				
 				String receiptID = extractedData[0];
 				String productCode = extractedData[1];
 				String productName = extractedData[2];
@@ -711,11 +691,6 @@ public class DataManager {
 				
 				String[] extractedData = line.split("\\|", -1);
 				
-				if (extractedData.length != 14) {
-					System.out.println("Invalid receipt record: " + line);
-					return false;
-				}
-				
 				String receiptID = extractedData[0];
 				String saleID = extractedData[1];
 				String buyerName = extractedData[2];
@@ -746,9 +721,7 @@ public class DataManager {
 					items = new ArrayList<ReceiptItem>();
 				}
 				
-				boolean restored = sale.restoreReceipt(receiptID, saleID, buyerName, totalAmount,
-						amountPaid, cashReceived, paymentMethod, change,
-						transactionTime, employee, employeeLevel, purchaseStatus, items);
+				boolean restored = sale.restoreReceipt(receiptID, saleID, buyerName, totalAmount, amountPaid, cashReceived, paymentMethod, change, transactionTime, employee, employeeLevel, purchaseStatus, items);
 				
 				if (!restored) {
 					System.out.println("Unable to restore receipt: " + receiptID);
