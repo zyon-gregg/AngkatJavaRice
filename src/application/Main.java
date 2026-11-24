@@ -6,7 +6,7 @@ import Products.ProductManagementView;
 import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventorySystem;
 import clerkDashboard.ClerkDashboard;
-import managerDashboard.managerDashboard;
+import managerDashboard.ManagerDashboard;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -147,8 +147,8 @@ public class Main extends Application {
 	
 	private void showManagerDashboard() {
 
-	    managerDashboard managerDashboard = new managerDashboard(primaryStage, "Manager", currentUser, products, inventory);
-	    managerDashboard.show();
+	    //ManagerDashboard managerDashboard = new ManagerDashboard(primaryStage, "Manager", currentUser, products, inventory);
+	   // managerDashboard.show();
 	}
 	
 	private void showClerkDashboard() {
