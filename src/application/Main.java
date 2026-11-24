@@ -35,6 +35,7 @@ public class Main extends Application {
 
     private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory, buyers, sources);
 
+    private DataManager dataManager;
     private Stage primaryStage;
     private User authenticatedUser;
 
@@ -42,6 +43,8 @@ public class Main extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Angkat - Fish Port Management System");
+        
+        dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
 
         loadSampleData();
         loadDefaultAccounts();
