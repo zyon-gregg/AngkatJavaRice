@@ -79,8 +79,8 @@ public class DataManager {
 				String description = extractedData[2];
 				String source = extractedData[3];
 				double cost = Double.parseDouble(extractedData[4]);
-				double rawPrice = Double.parseDouble(extractedData[4]);
-				double marketPrice = Double.parseDouble(extractedData[4]);
+				double rawPrice = Double.parseDouble(extractedData[5]);
+				double marketPrice = Double.parseDouble(extractedData[6]);
 				
 				
 				//polymorphism, this calls the other product constructor
