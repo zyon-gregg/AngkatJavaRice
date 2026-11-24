@@ -13,9 +13,7 @@ public class Product {
     private double productEstimatedMarketPrice;
 
     // The database parameter is kept so existing GUI code does not need to change.
-    public Product(ProductDatabase database, String productName, String productDescription,
-            String productSource, double productCostInKG, double productRawPrice,
-            double productEstimatedMarketPrice) {
+    public Product(ProductDatabase database, String productName, String productDescription, String productSource, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
 
         this.productCode = String.format("P%05d", nextId);
         nextId++;
@@ -29,9 +27,7 @@ public class Product {
     }
 
     // This constructor is used when products are loaded from a saved file.
-    public Product(String productCode, String productName, String productDescription,
-            String productSource, double productCostInKG, double productRawPrice,
-            double productEstimatedMarketPrice) {
+    public Product(String productCode, String productName, String productDescription, String productSource, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
 
         this.productCode = productCode;
         this.productName = productName;
@@ -61,8 +57,7 @@ public class Product {
         }
     }
 
-    public void update(String productName, String productDescription, String productSource,
-            double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
+    public void update(String productName, String productDescription, String productSource, double productCostInKG, double productRawPrice, double productEstimatedMarketPrice) {
 
         this.productName = productName;
         this.productDescription = productDescription;
@@ -74,8 +69,7 @@ public class Product {
 
     // Returns the product information in a format that can be saved to a text file.
     public String viewState() {
-        return productCode + "|" + productName + "|" + productDescription + "|" + productSource
-                + "|" + productCostInKG + "|" + productRawPrice + "|" + productEstimatedMarketPrice;
+        return productCode + "|" + productName + "|" + productDescription + "|" + productSource + "|" + productCostInKG + "|" + productRawPrice + "|" + productEstimatedMarketPrice;
     }
 
     public String getProductCode() {
