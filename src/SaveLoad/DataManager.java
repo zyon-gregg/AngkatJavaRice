@@ -8,7 +8,10 @@ import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import Products.Product;
 import Products.ProductDatabase;
@@ -18,6 +21,7 @@ import login.LoginManager;
 import transaction.SalesTransactionSystem;
 import users.Buyer;
 import users.BuyerDatabase;
+import users.Source;
 import users.SourceDatabase;
 
 import inventoryManagementSystem.InventoryOfProduct;
@@ -292,5 +296,86 @@ public class DataManager {
 		
 		return true;
 	}
+	
+	 public boolean saveSources() {
+		 File file = new File("src/SaveLoad/Sources2.txt");
+		 
+		 try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
+			 
+			 Collection<Source> sourcesToBeSaved = sources.returnSources();
+			 
+			 for (Source source : sourcesToBeSaved) {
+				 
+				 HashMap<Product, Double> sourceProducts = source.getSourceProductsAndQuantity();
+
+	                if (sourceProducts.isEmpty()) {
+	                    String data = source.getUserName()
+	                            + "|" + source.getPassword()
+	                            + "|" + source.getName() + "||";
+
+	                    writer.write(data);
+	                    writer.newLine();
+	                    
+	                } else {
+	                	
+	                    for (Map.Entry<Product, Double> entry : sourceProducts.entrySet()) {
+	                        String data = source.getUserName()
+	                                + "|" + source.getPassword()
+	                                + "|" + source.getName()
+	                                + "|" + entry.getKey().getProductCode()
+	                                + "|" + entry.getValue();
+
+	                        writer.write(data);
+	                        writer.newLine();
+	                    }
+	                }
+	            }
+
+	            return true;
+
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+	    }
+
+	    public boolean loadSources() {
+	        File file = new File("src/SaveLoad/Sources2.txt");
+
+	        HashMap<String, Source> restoredSources = new HashMap<String, Source>();
+	        
+	        boolean loadSuccessful = true;
+
+	        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
+
+	            String line = reader.readLine();
+
+	            while (line != null) {
+	            	String[] extractedData = line.split("\\|", -1);
+	            	
+	            	String username = extractedData[0];
+                    String password = extractedData[1];
+                    String name = extractedData[2];
+                    String productCode = extractedData[3];
+                    double quantity = Double.parseDouble(extractedData[4]);
+                    Product product = products.searchProduct(productCode);
+                    Source source = restoredSources.get(username);
+                    
+                    source.addProductToSource(product, quantity);
+
+	                line = reader.readLine();
+	            }
+
+	            for (Source source : restoredSources.values()) {
+	                sources.addSourceToDatabase(source);
+	            }
+
+	            return loadSuccessful;
+
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+	    }
 
 }

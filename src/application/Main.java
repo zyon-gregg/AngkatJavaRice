@@ -52,13 +52,15 @@ public class Main extends Application {
         boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
         boolean loadInventoryHistory = dataManager.loadInventoryHistory();
         boolean loadBuyers = dataManager.loadBuyers();
+        boolean loadSources = dataManager.loadSources();
          
         
-        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers) {
+        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers || !loadSources) {
         	System.out.print("Unsuccesful load of one of the data");
         }
-        
         */
+        
+        
 
         loadSampleData();
         loadDefaultAccounts();
@@ -107,20 +109,24 @@ public class Main extends Application {
     	
     	sales.cancelAllUnpaidSales();
 
-        
         boolean saveProduct = dataManager.saveProducts();
         boolean saveInventoryProduct = dataManager.saveInventoryProducts();
         boolean saveInventoryHistory = dataManager.saveInventoryHistory();
         boolean saveBuyers = dataManager.saveBuyers();
+        boolean saveSources = dataManager.saveSources();
+        //boolean saveAccounts = dataManager.saveAccounts();
+        //boolean savePendingAccounts = dataManager.savePendingAccounts();
+        //boolean saveReceipts = dataManager.saveSalesReceipts();
 
-        if (saveProduct && saveInventoryProduct && saveInventoryHistory && saveBuyers) {
+        if (saveProduct && saveInventoryProduct && saveInventoryHistory
+                && saveBuyers && saveSources) {
             showLogin();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(primaryStage);
             alert.setTitle("Saving Error");
             alert.setHeaderText("Unable to save some components");
-            alert.setContentText("Please try logging out again.");
+            alert.setContentText("Some data could not be saved. Please check the console before closing the application.");
             alert.showAndWait();
         }
         
@@ -344,13 +350,20 @@ public class Main extends Application {
     public void stop() { //will update this for other save and load
 
         if (dataManager != null) {
+        	boolean saveProduct = dataManager.saveProducts();
+            boolean saveInventoryProduct = dataManager.saveInventoryProducts();
+            boolean saveInventoryHistory = dataManager.saveInventoryHistory();
+            boolean saveBuyers = dataManager.saveBuyers();
+            boolean saveSources = dataManager.saveSources();
+            //boolean saveAccounts = dataManager.saveAccounts();
+            //boolean savePendingAccounts = dataManager.savePendingAccounts();
+            //boolean saveReceipts = dataManager.saveSalesReceipts();
 
-            boolean saved = dataManager.saveProducts();
-
-            if (saved) {
-                System.out.println("Products saved successfully.");
+            if (saveProduct && saveInventoryProduct && saveInventoryHistory
+                    && saveBuyers && saveSources) {
+                System.out.println("All data saved successfully.");
             } else {
-                System.out.println("Failed to save products.");
+                System.out.println("Some data could not be saved. Check the error messages above.");
             }
         }
     }
