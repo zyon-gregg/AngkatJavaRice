@@ -19,7 +19,8 @@ public class Main extends Application {
 
     // Shared backend instances. Create each system once and pass these same
     // objects to the dashboards and module windows.
-    private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
+    private final ProductDatabase products =
+            new ProductDatabase("Angkat Fish Port");
 
     private final InventorySystem inventory = new InventorySystem();
     private final BuyerDatabase buyers = new BuyerDatabase("Buyers");
@@ -135,6 +136,7 @@ public class Main extends Application {
                 primaryStage,
                 authenticatedUser.getName(),
                 authenticatedUser.getUserID(),
+                authenticatedUser.getUserName(),
                 products,
                 inventory,
                 sales,

@@ -47,6 +47,7 @@ public class ClerkDashboard {
     private final Stage stage;
     private final String clerkName;
     private final String clerkID;
+    private final String clerkUsername;
 
     private final ProductDatabase productDatabase;
     private final InventorySystem inventorySystem;
@@ -59,9 +60,14 @@ public class ClerkDashboard {
     private Label pageTitleLabel;
     private String currentPage = "Overview";
 
+    /**
+     * Preferred constructor. The username is kept separately from the
+     * display name and user ID because it is used in inventory audit records.
+     */
     public ClerkDashboard(Stage stage,
                           String clerkName,
                           String clerkID,
+                          String clerkUsername,
                           ProductDatabase productDatabase,
                           InventorySystem inventorySystem,
                           SalesTransactionSystem salesSystem,
@@ -70,11 +76,25 @@ public class ClerkDashboard {
         this.stage = stage;
         this.clerkName = clerkName;
         this.clerkID = clerkID;
+        this.clerkUsername = clerkUsername;
         this.productDatabase = productDatabase;
         this.inventorySystem = inventorySystem;
         this.salesSystem = salesSystem;
         this.buyers = buyers;
         this.onLogout = onLogout;
+    }
+
+    /** Backward-compatible overload for any older callers. */
+    public ClerkDashboard(Stage stage,
+                          String clerkName,
+                          String clerkID,
+                          ProductDatabase productDatabase,
+                          InventorySystem inventorySystem,
+                          SalesTransactionSystem salesSystem,
+                          List<Buyer> buyers,
+                          Runnable onLogout) {
+        this(stage, clerkName, clerkID, clerkID,
+                productDatabase, inventorySystem, salesSystem, buyers, onLogout);
     }
 
     public void show() {
@@ -341,8 +361,10 @@ public class ClerkDashboard {
     }
 
     private void openInventoryCheck() {
-    	
-    	InventoryGUI inventoryGUI =new InventoryGUI(inventorySystem);
+
+        // Clerks can inspect inventory and history but cannot modify stock.
+        InventoryGUI inventoryGUI = new InventoryGUI(
+                inventorySystem, clerkUsername, false);
         inventoryGUI.setStageComponents();
     }
 

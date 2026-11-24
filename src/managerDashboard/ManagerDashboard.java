@@ -321,7 +321,8 @@ public class ManagerDashboard {
 
     private void openInventoryManagement() {
 
-        InventoryGUI inventoryGUI = new InventoryGUI(inventorySystem);
+        InventoryGUI inventoryGUI = new InventoryGUI(
+                inventorySystem, manager.getUserName(), true);
         inventoryGUI.setStageComponents();
     }
 
