@@ -113,8 +113,7 @@ public class InventorySystem {
     }
 
     // Adds quantity to the current stock.
-    public synchronized void restockProduct(String productCode, double quantity,
-            String nameOfUser, String explanation) {
+    public synchronized void restockProduct(String productCode, double quantity, String nameOfUser, String explanation) {
 
         InventoryOfProduct inventory = inventoryRecords.get(productCode);
 
@@ -131,20 +130,17 @@ public class InventorySystem {
         double previousStock = inventory.getProductStockInKG();
         double newStock = previousStock + quantity;
 
-        if (previousStock < 0 || Double.isNaN(previousStock) || Double.isInfinite(previousStock)
-                || newStock > MAX_STOCK_IN_KG || Double.isInfinite(newStock)) {
+        if (previousStock < 0 || Double.isNaN(previousStock) || Double.isInfinite(previousStock) || newStock > MAX_STOCK_IN_KG || Double.isInfinite(newStock)) {
             System.out.println("Restocking would exceed the maximum stock of 1000 kg.");
             return;
         }
 
-        addHistoryRecord(inventory, StockRecordedChange.RESTOCK, previousStock, newStock,
-                nameOfUser, explanation);
+        addHistoryRecord(inventory, StockRecordedChange.RESTOCK, previousStock, newStock, nameOfUser, explanation);
         inventory.setProductStockInKG(newStock);
     }
 
     // Manually reduces stock. This is used by the Inventory Management screen.
-    public synchronized void reduceStock(String productCode, double quantity,
-            String nameOfUser, String explanation) {
+    public synchronized void reduceStock(String productCode, double quantity, String nameOfUser, String explanation) {
 
         InventoryOfProduct inventory = inventoryRecords.get(productCode);
 
@@ -165,8 +161,7 @@ public class InventorySystem {
 
         double previousStock = inventory.getProductStockInKG();
 
-        if (previousStock < 0 || previousStock > MAX_STOCK_IN_KG
-                || Double.isNaN(previousStock) || Double.isInfinite(previousStock)) {
+        if (previousStock < 0 || previousStock > MAX_STOCK_IN_KG || Double.isNaN(previousStock) || Double.isInfinite(previousStock)) {
             System.out.println("The current stock value is invalid. Correct it before deducting stock.");
             return;
         }
@@ -178,14 +173,12 @@ public class InventorySystem {
 
         double newStock = previousStock - quantity;
 
-        addHistoryRecord(inventory, StockRecordedChange.SALE_DEDUCTION, previousStock,
-                newStock, nameOfUser, explanation);
+        addHistoryRecord(inventory, StockRecordedChange.SALE_DEDUCTION, previousStock, newStock, nameOfUser, explanation);
         inventory.setProductStockInKG(newStock);
     }
 
     // Sets the stock to an exact quantity. This is used for manual stock adjustments.
-    public synchronized void editStock(String productCode, double quantity,
-            String nameOfUser, String explanation) {
+    public synchronized void editStock(String productCode, double quantity, String nameOfUser, String explanation) {
 
         InventoryOfProduct inventory = inventoryRecords.get(productCode);
 
@@ -194,16 +187,14 @@ public class InventorySystem {
             return;
         }
 
-        if (quantity < 0 || quantity > MAX_STOCK_IN_KG
-                || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
+        if (quantity < 0 || quantity > MAX_STOCK_IN_KG || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
             System.out.println("Stock must be between 0 and 1000 kg.");
             return;
         }
 
         double previousStock = inventory.getProductStockInKG();
 
-        addHistoryRecord(inventory, StockRecordedChange.STOCK_ADJUSTMENT, previousStock,
-                quantity, nameOfUser, explanation);
+        addHistoryRecord(inventory, StockRecordedChange.STOCK_ADJUSTMENT, previousStock, quantity, nameOfUser, explanation);
         inventory.setProductStockInKG(quantity);
     }
 
@@ -212,8 +203,7 @@ public class InventorySystem {
      * First, check every product. Only after all checks pass do we reduce stock.
      * This prevents a sale from deducting only some of its products.
      */
-    public synchronized boolean reduceStockForSale(Map<String, Double> quantitiesByProductCode,
-            String nameOfUser, String explanation) {
+    public synchronized boolean reduceStockForSale(Map<String, Double> quantitiesByProductCode, String nameOfUser, String explanation) {
 
         if (quantitiesByProductCode == null || quantitiesByProductCode.isEmpty()) {
             return false;
@@ -224,6 +214,7 @@ public class InventorySystem {
         }
 
         String reason = "Sale inventory deduction";
+        
         if (explanation != null && !explanation.trim().isEmpty()) {
             reason = explanation.trim();
         }
@@ -235,8 +226,7 @@ public class InventorySystem {
             String productCode = entry.getKey();
             Double quantity = entry.getValue();
 
-            if (productCode == null || productCode.trim().isEmpty() || quantity == null
-                    || quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
+            if (productCode == null || productCode.trim().isEmpty() || quantity == null || quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
                 return false;
             }
 
@@ -248,8 +238,7 @@ public class InventorySystem {
 
             double currentStock = inventory.getProductStockInKG();
 
-            if (currentStock < 0 || currentStock > MAX_STOCK_IN_KG
-                    || Double.isNaN(currentStock) || Double.isInfinite(currentStock)) {
+            if (currentStock < 0 || currentStock > MAX_STOCK_IN_KG || Double.isNaN(currentStock) || Double.isInfinite(currentStock)) {
                 return false;
             }
 
@@ -269,30 +258,27 @@ public class InventorySystem {
             double previousStock = inventory.getProductStockInKG();
             double newStock = newStockValues.get(productCode);
 
-            addHistoryRecord(inventory, StockRecordedChange.SALE_DEDUCTION, previousStock,
-                    newStock, nameOfUser, reason);
+            addHistoryRecord(inventory, StockRecordedChange.SALE_DEDUCTION, previousStock, newStock, nameOfUser, reason);
             inventory.setProductStockInKG(newStock);
         }
 
         return true;
     }
 
-    private void addHistoryRecord(InventoryOfProduct inventory, String changeType,
-            double previousStock, double newStock, String nameOfUser, String explanation) {
+    private void addHistoryRecord(InventoryOfProduct inventory, String changeType, double previousStock, double newStock, String nameOfUser, String explanation) {
 
         String performedBy = nameOfUser;
+        
         if (performedBy == null || performedBy.trim().isEmpty()) {
             performedBy = "Unknown";
         }
 
         String reason = "";
-        if (explanation != null) {
-            reason = explanation.trim();
+        if (explanation != null) {reason = explanation.trim();
         }
 
         String recordId = generateID();
-        StockRecordedChange record = new StockRecordedChange(recordId, inventory.getProduct(),
-                changeType, previousStock, newStock, LocalDateTime.now(), performedBy, reason);
+        StockRecordedChange record = new StockRecordedChange(recordId, inventory.getProduct(), changeType, previousStock, newStock, LocalDateTime.now(), performedBy, reason);
 
         history.put(recordId, record);
     }
@@ -300,15 +286,13 @@ public class InventorySystem {
     public synchronized boolean hasSufficientStock(String productCode, double quantity) {
         InventoryOfProduct inventory = inventoryRecords.get(productCode);
 
-        if (inventory == null || quantity <= 0 || Double.isNaN(quantity)
-                || Double.isInfinite(quantity)) {
+        if (inventory == null || quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
             return false;
         }
 
         double currentStock = inventory.getProductStockInKG();
 
-        if (currentStock < 0 || currentStock > MAX_STOCK_IN_KG
-                || Double.isNaN(currentStock) || Double.isInfinite(currentStock)) {
+        if (currentStock < 0 || currentStock > MAX_STOCK_IN_KG || Double.isNaN(currentStock) || Double.isInfinite(currentStock)) {
             return false;
         }
 
