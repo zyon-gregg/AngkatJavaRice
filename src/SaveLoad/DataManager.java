@@ -86,6 +86,8 @@ public class DataManager {
 				//polymorphism, this calls the other product constructor
 				Product product = new Product(code, name, description, source, cost, rawPrice, marketPrice);
 				products.addProduct(product);
+				
+				line = reader.readLine();
 			}
 			
 		} catch (IOException e) {
