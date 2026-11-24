@@ -11,11 +11,6 @@ import javafx.stage.Stage;
 
 import java.time.format.DateTimeFormatter;
 
-/**
- * Inventory window with role-aware presentation.
- * Managers can perform stock operations; Clerks can only view inventory
- * and stock movement history.
- */
 public class InventoryGUI {
 
     // Window components
@@ -43,27 +38,22 @@ public class InventoryGUI {
     private Button refreshButton;
 
     private static final double MAX_STOCK_IN_KG = 1000.00;
-    private final DateTimeFormatter dateFormat =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    /**
-     * Explicit constructor: every caller must state the acting username
-     * and whether stock-management controls are allowed.
-     */
-    public InventoryGUI(InventorySystem inventorySystem,
-                        String currentUsername,
-                        boolean canManageStock) {
+    public InventoryGUI(InventorySystem inventorySystem, String currentUsername, boolean canManageStock) {
 
         if (inventorySystem == null) {
             throw new IllegalArgumentException("InventorySystem cannot be null.");
         }
 
         this.inventorySystem = inventorySystem;
+        
         if (currentUsername == null || currentUsername.trim().isEmpty()) {
             this.currentUsername = "Unknown User";
         } else {
             this.currentUsername = currentUsername;
         }
+        
         this.canManageStock = canManageStock;
 
         this.stage = new Stage();
@@ -77,9 +67,11 @@ public class InventoryGUI {
         mainContainer.setPadding(new Insets(15));
 
         String inventoryTitleText = "Inventory Overview";
+        
         if (canManageStock) {
             inventoryTitleText = "Inventory Management";
         }
+        
         Label inventoryTitle = new Label(inventoryTitleText);
 
         refreshButton = new Button("Refresh");
@@ -91,19 +83,14 @@ public class InventoryGUI {
         inventoryTable = createInventoryTable();
         inventoryTable.setPrefHeight(250);
 
-        mainContainer.getChildren().addAll(
-                header,
-                inventoryTable,
-                new Separator());
+        mainContainer.getChildren().addAll(header, inventoryTable, new Separator());
 
         if (canManageStock) {
             mainContainer.getChildren().add(createManagerOperationsSection());
             mainContainer.getChildren().add(new Separator());
             registerInventorySelectionListener();
         } else {
-            Label readOnlyNotice = new Label(
-                    "Read-only access: Clerks can view stock levels and history, "
-                    + "but only Managers can modify inventory.");
+            Label readOnlyNotice = new Label("Read-only access: Clerks can view stock levels and history, " + "but only Managers can modify inventory.");
             readOnlyNotice.setWrapText(true);
             mainContainer.getChildren().add(readOnlyNotice);
             mainContainer.getChildren().add(new Separator());
@@ -121,11 +108,13 @@ public class InventoryGUI {
         refreshButton.setOnAction(event -> refreshTables());
 
         root.setCenter(mainContainer);
+        
         if (canManageStock) {
             stage.setTitle("Angkat - Inventory Management");
         } else {
             stage.setTitle("Angkat - Inventory Overview (Read Only)");
         }
+        
         stage.setScene(scene);
 
         refreshTables();
@@ -160,15 +149,9 @@ public class InventoryGUI {
         adjustButton.setOnAction(event -> handleAdjustment());
         deductButton.setOnAction(event -> handleDeduction());
 
-        HBox operationButtons = new HBox(
-                10, restockButton, adjustButton, deductButton);
+        HBox operationButtons = new HBox(10, restockButton, adjustButton, deductButton);
 
-        return new VBox(
-                10,
-                operationTitle,
-                selectedProductLabel,
-                operationForm,
-                operationButtons);
+        return new VBox(10, operationTitle, selectedProductLabel, operationForm, operationButtons);
     }
 
     private void registerInventorySelectionListener() {
@@ -182,10 +165,7 @@ public class InventoryGUI {
                         String productCode = newValue.getProduct().getProductCode();
                         double stock = newValue.getProductStockInKG();
 
-                        selectedProductLabel.setText(
-                                "Selected: " + productName + " (" + productCode + ")"
-                                + " | Current Stock: "
-                                + String.format("%.2f kg", stock));
+                        selectedProductLabel.setText("Selected: " + productName + " (" + productCode + ")" + " | Current Stock: " + String.format("%.2f kg", stock));
                     }
                 });
     }
@@ -194,8 +174,8 @@ public class InventoryGUI {
 
         TableView<InventoryOfProduct> table = new TableView<>();
 
-        TableColumn<InventoryOfProduct, String> codeColumn =
-                new TableColumn<>("Product Code");
+        TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");
+        
         codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
                 data.getValue().getProduct().getProductCode()));
 
