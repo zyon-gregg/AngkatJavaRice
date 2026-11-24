@@ -46,16 +46,17 @@ public class Main extends Application {
         
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
+        /*
         boolean succesfulLoad;
         
-        succesfulLoad = dataManager.loadProducts();
-        
+        succesfulLoad = dataManager.loadProducts();  
         if(!succesfulLoad) {
         	System.out.print("Unsuccesful load of products");
         }
+        */
         
 
-        //loadSampleData();
+        loadSampleData();
         loadDefaultAccounts();
         showLogin();
 
@@ -97,8 +98,12 @@ public class Main extends Application {
     }
     
     private void handleLogout() { //the acutal saving
+    	
+    	//add more here
 
-        boolean saved = dataManager.saveProducts();
+        boolean saved;
+        
+        saved = dataManager.saveProducts();
 
         if (saved) {
             System.out.println("Products saved successfully.");
@@ -111,6 +116,22 @@ public class Main extends Application {
             alert.setContentText("Please try logging out again.");
             alert.showAndWait();
         }
+        
+        saved = dataManager.saveInventoryProducts();
+
+        if (saved) {
+            System.out.println("Inventory of products saved successfully.");
+            showLogin();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Saving Error");
+            alert.setHeaderText("Unable to save inventory of products.");
+            alert.setContentText("Please try logging out again.");
+            alert.showAndWait();
+        }
+        
+        
     }
 
     // Uses the existing LoginManager to authenticate the user.
@@ -288,6 +309,12 @@ public class Main extends Application {
         Product pusit = new Product(
                 products, "Pusit", "Fresh squid",
                 "Palawan", 200.00, 240.00, 280.00);
+        
+        for (Product product : new Product[] {
+                bangus, tilapia, tuna, galunggong, pusit
+        }) {
+            products.addProduct(product);
+        }
 
         Source appleFarm = new Source("AppleF", "TheFarm", "AppleFarms");
 

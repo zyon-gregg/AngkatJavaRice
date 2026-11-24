@@ -3,4 +3,3 @@ P00002|Tilapia|Fresh tilapia, whole|Taal Lake fish cages|80.0|100.0|120.0
 P00003|Tuna|Yellowfin tuna, sliced|General Santos|230.0|280.0|320.0
 P00004|Galunggong|Round scad|Navotas Fish Port|110.0|140.0|160.0
 P00005|Pusit|Fresh squid|Palawan|200.0|240.0|280.0
-P00006|Dilis|Salty|Batangas Fishery|90.0|80.0|150.0

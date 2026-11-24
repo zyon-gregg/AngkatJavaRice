@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import Products.Product;
@@ -16,6 +17,9 @@ import login.LoginManager;
 import transaction.SalesTransactionSystem;
 import users.BuyerDatabase;
 import users.SourceDatabase;
+
+import inventoryManagementSystem.InventoryOfProduct;
+import java.time.LocalDateTime;
 
 import java.io.IOException;
 
@@ -97,6 +101,37 @@ public class DataManager {
 		
 		return true;
 		
+	}
+	
+	public boolean saveInventoryProducts() {
+		File file = new File("src/SaveLoad/Inventory.txt");
+		
+		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){
+			
+			ArrayList<InventoryOfProduct> inventoryOfProducts = inventory.getAllInventory();
+			
+			for (InventoryOfProduct productStock : inventoryOfProducts) {
+				
+				String data = productStock.getProduct().viewState() + "|" + productStock.getProductStockInKG() + "|" + productStock.getLastUpdated().toString();		
+				writer.write(data);
+				writer.newLine();
+				
+			}
+			
+			return true;
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+			
+		}
+		
+
+	}
+	
+	public boolean loadInventoryProducts() {
+		return true;
 	}
 
 }
