@@ -1,93 +1,73 @@
 package transaction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import users.User;
 
 public class Receipt {
-	private String transactionID;
-	private Cart cart;
-	private Double amountPaid;
-	private String paymentMethod;
-	private Double change;
-	private LocalDateTime transacTime;
-	private User employee;
-	private String employeeLevel;
-	private String purchaseStatus;
-	
-	Receipt(){
-		
-	}
 
-	public String getTransactionID() {
-		return transactionID;
-	}
+    private String transactionID;
+    private Cart cart;
+    private List<ReceiptItem> items = Collections.emptyList();
+    private Double totalAmount = 0.0;
+    private Double amountPaid;
+    private Double cashReceived = 0.0;
+    private String paymentMethod;
+    private Double change = 0.0;
+    private LocalDateTime transacTime;
+    private User employee;
+    private String employeeLevel;
+    private String purchaseStatus;
 
-	public void setTransactionID(String transactionID) {
-		this.transactionID = transactionID;
-	}
+    Receipt() {
+    }
 
-	public Cart getCart() {
-		return cart;
-	}
+    public String getTransactionID() { return transactionID; }
+    public void setTransactionID(String transactionID) { this.transactionID = transactionID; }
 
-	public void setCart(Cart cart) {
-		this.cart = cart;
-	}
+    public Cart getCart() { return cart; }
+    public void setCart(Cart cart) { this.cart = cart; }
 
-	public Double getAmountPaid() {
-		return amountPaid;
-	}
+    /** Immutable line-item snapshots for historical receipt display. */
+    public List<ReceiptItem> getItems() { return items; }
 
-	public void setAmountPaid(Double amountPaid) {
-		this.amountPaid = amountPaid;
-	}
+    void setItems(List<ReceiptItem> items) {
+        if (items == null) {
+            this.items = Collections.emptyList();
+        } else {
+            this.items = Collections.unmodifiableList(new ArrayList<>(items));
+        }
+    }
 
-	public String getPaymentMethod() {
-		return paymentMethod;
-	}
+    public Double getTotalAmount() { return totalAmount; }
+    void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
 
-	public void setPaymentMethod(String paymentMethod) {
-		this.paymentMethod = paymentMethod;
-	}
+    /** Amount applied to settle the sale. This equals the sale total. */
+    public Double getAmountPaid() { return amountPaid; }
+    public void setAmountPaid(Double amountPaid) { this.amountPaid = amountPaid; }
 
-	public Double getChange() {
-		return change;
-	}
+    /** Cash tendered by the customer. Zero for simulated cashless payments. */
+    public Double getCashReceived() { return cashReceived; }
+    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
 
-	public void setChange(Double change) {
-		this.change = change;
-	}
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
-	public LocalDateTime getTransacTime() {
-		return transacTime;
-	}
+    public Double getChange() { return change; }
+    public void setChange(Double change) { this.change = change; }
 
-	public void setTransacTime(LocalDateTime transacTime) {
-		this.transacTime = transacTime;
-	}
+    public LocalDateTime getTransacTime() { return transacTime; }
+    public void setTransacTime(LocalDateTime transacTime) { this.transacTime = transacTime; }
 
-	public User getEmployee() {
-		return employee;
-	}
+    public User getEmployee() { return employee; }
+    public void setEmployee(User employee) { this.employee = employee; }
 
-	public void setEmployee(User employee) {
-		this.employee = employee;
-	}
+    public String getEmployeeLevel() { return employeeLevel; }
+    public void setEmployeeLevel(String employeeLevel) { this.employeeLevel = employeeLevel; }
 
-	public String getEmployeeLevel() {
-		return employeeLevel;
-	}
-
-	public void setEmployeeLevel(String employeeLevel) {
-		this.employeeLevel = employeeLevel;
-	}
-
-	public String getPurchaseStatus() {
-		return purchaseStatus;
-	}
-
-	public void setPurchaseStatus(String purchaseStatus) {
-		this.purchaseStatus = purchaseStatus;
-	}
+    public String getPurchaseStatus() { return purchaseStatus; }
+    public void setPurchaseStatus(String purchaseStatus) { this.purchaseStatus = purchaseStatus; }
 }

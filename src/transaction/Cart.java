@@ -1,6 +1,7 @@
 package transaction;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,121 +9,186 @@ import Products.Product;
 import users.User;
 
 public class Cart {
-	private String saleID;
-	private HashMap<Product,Double> cart = new HashMap<>();
-	private Double totalCartValue = 0.0;      // CHANGED: was null, which crashed updateCartValue()
-	private LocalDateTime lastUpdated;
-	private User processing;
-	private String employeeLevelofProcessing;
-	private Receipt receipt;
-	private Boolean isPaid = false;           // CHANGED: was null
 
-	Cart(){
+    private String saleID;
+    private final HashMap<Product, Double> cart = new HashMap<>();
+    private final HashMap<Product, Double> unitPrices = new HashMap<>();
+    private final HashMap<Product, String> productNames = new HashMap<>();
+    private Double totalCartValue = 0.0;
+    private LocalDateTime lastUpdated;
+    private User processing;
+    private String employeeLevelofProcessing;
+    private Receipt receipt;
+    private Boolean isPaid = false;
 
-	}
+    Cart() {
+    }
 
-	/**
-	 * CHANGED: the price per kg used for every sale.
-	 * To sell at another price (e.g. estimated market price), change it here only.
-	 */
-	public static double unitPrice(Product product) {
-		return product.getProductRawPrice();
-	}
+    /** Price used when a product is first added to a cart. */
+    public static double unitPrice(Product product) {
+        if (product == null) {
+            throw new IllegalArgumentException("Product is required.");
+        }
+        double price = product.getProductRawPrice();
+        if (!Double.isFinite(price) || price <= 0) {
+            throw new IllegalArgumentException("Product has an invalid selling price.");
+        }
+        return price;
+    }
 
-	/** Adds the product, or replaces its quantity if it is already in the cart. */
-	public void addToCart(Product product, Double quant) {
-		if (product == null) {
-			throw new IllegalArgumentException("Product is required.");
-		}
-		if (quant == null || quant.isNaN() || quant <= 0) {
-			throw new IllegalArgumentException("Quantity must be greater than zero.");
-		}
-		this.cart.put(product, quant);
-		updateCartValue();
-	}
+    /** Adds a product or replaces its quantity, locking its price at first add. */
+    public void addToCart(Product product, Double quantity) {
+        ensureNotPaid();
 
-	public void removeFromCart(Product product) {
-		this.cart.remove(product);
-		updateCartValue();
-	}
+        if (product == null) {
+            throw new IllegalArgumentException("Product is required.");
+        }
+        if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be a finite number greater than zero.");
+        }
 
-	/** CHANGED: total is now price x kg for each item (it used to add up the kg only), recomputed from zero. */
-	public void updateCartValue() {
-		double total = 0;
-		for (Map.Entry<Product, Double> item : this.cart.entrySet()) {
-			total += unitPrice(item.getKey()) * item.getValue();
-		}
-		this.totalCartValue = total;
-		this.lastUpdated = LocalDateTime.now();
-	}
+        if (!cart.containsKey(product)) {
+            unitPrices.put(product, unitPrice(product));
+            productNames.put(product, product.getProductName());
+        }
 
-	public String getSaleID() {
-		return saleID;
-	}
+        cart.put(product, quantity);
+        updateCartValue();
+    }
 
-	public void setSaleID(String saleID) {
-		this.saleID = saleID;
-	}
+    public void removeFromCart(Product product) {
+        ensureNotPaid();
+        cart.remove(product);
+        unitPrices.remove(product);
+        productNames.remove(product);
+        updateCartValue();
+    }
 
-	public HashMap<Product,Double> getCart() {
-		return cart;
-	}
+    public void updateCartValue() {
+        double total = 0.0;
+        for (Map.Entry<Product, Double> item : cart.entrySet()) {
+            Product product = item.getKey();
+            Double quantity = item.getValue();
+            Double price = unitPrices.get(product);
 
-	public void setCart(HashMap<Product,Double> cart) {
-		this.cart = cart;
-		updateCartValue();
-	}
+            if (product == null || quantity == null || !Double.isFinite(quantity) || quantity <= 0
+                    || price == null || !Double.isFinite(price) || price <= 0) {
+                throw new IllegalStateException("The cart contains an invalid item.");
+            }
 
-	public Double getTotalCartValue() {
-		return totalCartValue;
-	}
+            total += price * quantity;
+            if (!Double.isFinite(total)) {
+                throw new IllegalStateException("The cart total is too large or invalid.");
+            }
+        }
+        totalCartValue = total;
+        lastUpdated = LocalDateTime.now();
+    }
 
-	public void setTotalCartValue(Double totalCartValue) {
-		this.totalCartValue = totalCartValue;
-	}
+    public double getUnitPrice(Product product) {
+        Double price = unitPrices.get(product);
+        return price == null ? unitPrice(product) : price;
+    }
 
-	public LocalDateTime getLastUpdated() {
-		return lastUpdated;
-	}
+    public String getProductName(Product product) {
+        String name = productNames.get(product);
+        return name == null ? product.getProductName() : name;
+    }
 
-	public void setLastUpdated(LocalDateTime lastUpdated) {
-		this.lastUpdated = lastUpdated;
-	}
+    public double getSubtotal(Product product) {
+        Double quantity = cart.get(product);
+        if (quantity == null) {
+            return 0.0;
+        }
+        return getUnitPrice(product) * quantity;
+    }
 
-	public User getProcessing() {
-		return processing;
-	}
+    public String getSaleID() {
+        return saleID;
+    }
 
-	public void setProcessing(User processing) {
-		this.processing = processing;
-	}
+    public void setSaleID(String saleID) {
+        this.saleID = saleID;
+    }
 
-	public String getEmployeeLevelofProcessing() {
-		return employeeLevelofProcessing;
-	}
+    /** Returns a copy so external code cannot bypass cart methods and validation. */
+    public HashMap<Product, Double> getCart() {
+        return new HashMap<>(cart);
+    }
 
-	public void setEmployeeLevelofProcessing(String employeeLevelofProcessing) {
-		this.employeeLevelofProcessing = employeeLevelofProcessing;
-	}
+    public void setCart(HashMap<Product, Double> items) {
+        ensureNotPaid();
+        cart.clear();
+        unitPrices.clear();
+        productNames.clear();
 
-	public Receipt getReceipt() {
-		return receipt;
-	}
+        if (items != null) {
+            for (Map.Entry<Product, Double> item : items.entrySet()) {
+                addToCart(item.getKey(), item.getValue());
+            }
+        } else {
+            updateCartValue();
+        }
+    }
 
-	public void setReceipt(Receipt receipt) {
-		this.receipt = receipt;
-	}
+    public Double getTotalCartValue() {
+        return totalCartValue;
+    }
 
-	public boolean isEmpty() {
-		return this.cart.isEmpty();
-	}
+    public void setTotalCartValue(Double totalCartValue) {
+        if (totalCartValue == null || !Double.isFinite(totalCartValue) || totalCartValue < 0) {
+            throw new IllegalArgumentException("Cart total must be a finite non-negative amount.");
+        }
+        this.totalCartValue = totalCartValue;
+    }
 
-	public Boolean getIsPaid() {
-		return isPaid;
-	}
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
 
-	public void setIsPaid(Boolean isPaid) {
-		this.isPaid = isPaid;
-	}
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
 
+    public User getProcessing() {
+        return processing;
+    }
+
+    public void setProcessing(User processing) {
+        this.processing = processing;
+    }
+
+    public String getEmployeeLevelofProcessing() {
+        return employeeLevelofProcessing;
+    }
+
+    public void setEmployeeLevelofProcessing(String employeeLevelofProcessing) {
+        this.employeeLevelofProcessing = employeeLevelofProcessing;
+    }
+
+    public Receipt getReceipt() {
+        return receipt;
+    }
+
+    public void setReceipt(Receipt receipt) {
+        this.receipt = receipt;
+    }
+
+    public boolean isEmpty() {
+        return cart.isEmpty();
+    }
+
+    public Boolean getIsPaid() {
+        return isPaid;
+    }
+
+    public void setIsPaid(Boolean isPaid) {
+        this.isPaid = isPaid;
+    }
+
+    private void ensureNotPaid() {
+        if (Boolean.TRUE.equals(isPaid)) {
+            throw new IllegalStateException("A completed sale cannot be modified.");
+        }
+    }
 }

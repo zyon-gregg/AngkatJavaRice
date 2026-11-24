@@ -1,329 +1,314 @@
 package inventoryManagementSystem;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
 import Products.Product;
 
 public class InventorySystem {
-	
-	
-	private final static double MAX_STOCK_IN_KG = 1000.00;
-	private final static double CRITICAL_LEVEL_IN_KG = 300.00;
-	
-	private final HashMap <String, InventoryOfProduct> inventoryRecords;
-	private final HashMap <String, StockRecordedChange> history;
-	
-	private int nextId = 1; //generating IDs for StockRecordedChange. Remind to save this counter.
-	
-	public InventorySystem() {
-		inventoryRecords = new HashMap<String, InventoryOfProduct>();
-		history = new HashMap<String, StockRecordedChange>();
-	}
-	
-	private String generateID() {
-		return "SC" + String.format("%03d", nextId++);
-	}
-	
-	//inventory record management
-	
-	public void createInventoryRecord(Product product) {
-		
-		if(product == null) {
-			System.out.println("No product to create a stock record with.");
-			return;
-		}
-		
-		String productCode = product.getProductCode();
-		
-		if (!inventoryRecords.containsKey(productCode)) {
-			
-			InventoryOfProduct newInventory = new InventoryOfProduct(product);
-			inventoryRecords.put(productCode, newInventory);
-			
-			
-		} else {
-			System.out.println("This product already has a recorded storage.");
-		}
-		
-		
-	}; 
-	
-	public InventoryOfProduct getProductInventoryByCode(String productCode) { //if you want to get the stock record of a specific product by its code.
-		if (inventoryRecords.isEmpty()) {
-			System.out.println("Inventory records does not exist yet. There is no product to restock");
-			return null;
-		}
-		
-		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
-			System.out.println("The stock record of that product does not exist");
-			return null;
-			
-		}
-		
-		return inventoryRecords.get(productCode);
 
-	}
-	
-	public ArrayList<InventoryOfProduct> getAllInventory() { //this may be needed to show in the GUI (Possibly used for table view
-		
-		ArrayList<InventoryOfProduct> listOfInventoryRecords = new ArrayList<>();
-		
-		//traversing through the hash map
-		
-		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
-			listOfInventoryRecords.add(currentProduct);
-		}
-		
-		return listOfInventoryRecords;
-		
-	}
-	
-	//audit features
-	public ArrayList<StockRecordedChange> getAllHistory() { //used for showing. GUI.
-		
-		ArrayList<StockRecordedChange> listOfAllRecords = new ArrayList<>();
-		
-		for (StockRecordedChange currentRecord : history.values()) {
-			listOfAllRecords.add(currentRecord);
-		}
-		
-		return listOfAllRecords;
-		
-	}
-	
-	public ArrayList<StockRecordedChange> getHistoryByProduct(String productId) { //for GUI
-		
-		ArrayList<StockRecordedChange> listOfAllRecords = new ArrayList<>();
-		
-		for (StockRecordedChange currentRecord : history.values()) {
-			
-			if (currentRecord.getProductCode().equals(productId)) {
-				listOfAllRecords.add(currentRecord);
-				
-			}
-			
-		}
-		
-		return listOfAllRecords;
-		
-	}
-	
-	
-	//stock operations
-	public void restockProduct(String productCode, double quantity, String nameOfUser, String explanation) {
-		
-		if (inventoryRecords.isEmpty()) {
-			System.out.println("Inventory records does not exist yet. There is no product to restock");
-			return;
-		}
-		
-		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
-			System.out.println("The stock record of that product does not exist");
-			return;
-			
-		}
-		
-		if (quantity <= 0) {//detects if the requested quantity is negative or 0. This is an invalid input
-			System.out.println("Requested quantity is invalid because it is negative or zero");
-			return;
-			
-		}
-		
-		Double calculatedStock = inventoryRecords.get(productCode).getProductStockInKG() + quantity;
-		
-		if (calculatedStock > MAX_STOCK_IN_KG) {
-			System.out.println("This amount of requested stock will exceed the maximum capacity of the product.");
-		
-		} else {
-			
-			Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
-			
-			String generatedID = generateID();
-			
-			StockRecordedChange record = new StockRecordedChange(
-					generatedID, 
-					productToBeRecorded, 
-					StockRecordedChange.RESTOCK, 
-					inventoryRecords.get(productCode).getProductStockInKG(), 
-					calculatedStock, 
-					LocalDateTime.now(), 
-					nameOfUser, 
-					explanation );
-			
-			
-			history.put(generatedID, record);
-			
-			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates 
-			
-		}
-				
-	}
-	
-	public void reduceStock(String productCode, double quantity, String nameOfUser, String explanation) { //this will be called when a customer reduces a stock. You need a product code and a requested quantity
-		
-		if (inventoryRecords.isEmpty()) {
-			System.out.println("Inventory records does not exist yet. There is no product to reduce");
-			return;
-		}
-		
-		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
-			System.out.println("The stock record of that product does not exist");
-			return;
-			
-		}
-		
-		if (quantity <= 0) { //Zero is made invalid because that implies nothing is changed.
-			System.out.println("Requested quantity is invalid because it is negative or zero.");
-			return;
-		}
-		
-		
-		Double calculatedStock = inventoryRecords.get(productCode).getProductStockInKG() - quantity;
-		
-		if (calculatedStock < 0) {
-			System.out.println("Not enough stock to suffice the requested quantity");
-		
-		} else {
-			Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
-			
-			String generatedID = generateID();
-			
-			String changeType = StockRecordedChange.SALE_DEDUCTION;
-			
-			StockRecordedChange record = new StockRecordedChange(
-					generatedID, 
-					productToBeRecorded, 
-					changeType, 
-					inventoryRecords.get(productCode).getProductStockInKG(), 
-					calculatedStock, 
-					LocalDateTime.now(), 
-					nameOfUser, 
-					explanation );
-			
-			
-			history.put(generatedID, record);
-			inventoryRecords.get(productCode).setProductStockInKG(calculatedStock); //updates it
-		}
-		
-		
-		
-	}
-	
-	public void editStock(String productCode, double quantity, String nameOfUser, String explanation) { //manually corrects a stock of a product if needed
-		
-		if (inventoryRecords.isEmpty()) {
-			System.out.println("Inventory records does not exist yet. There is no product to restock");
-			return;
-		}
-		
-		if (!inventoryRecords.containsKey(productCode)) {//the product is not in inventory records
-			System.out.println("The stock record of that product does not exist");
-			return;
-			
-		}
-		
-		if (quantity < 0) {//detects if the requested quantity is negative. This is an invalid input
-			System.out.println("Requested quantity is invalid because it is negative.");
-			return;
-			
-		}
-		
-		if (quantity > MAX_STOCK_IN_KG) {
-			System.out.println("Exceeds the max stock of the product");
-			return;
-		}
-		
-		Product productToBeRecorded = inventoryRecords.get(productCode).getProduct();
-		
-		String generatedID = generateID();
-		
-		StockRecordedChange record = new StockRecordedChange(
-				generatedID, 
-				productToBeRecorded, 
-				StockRecordedChange.STOCK_ADJUSTMENT, 
-				inventoryRecords.get(productCode).getProductStockInKG(), 
-				quantity, 
-				LocalDateTime.now(), 
-				nameOfUser, 
-				explanation );
-		
-		
-		history.put(generatedID, record);
-		
-		inventoryRecords.get(productCode).setProductStockInKG(quantity);
-		
-	}
-	
-	//stock checking
-	public boolean hasSufficientStock(String productCode, double quantity) {
-		//this could potentially be used for sales system
-		InventoryOfProduct productStock = getProductInventoryByCode(productCode);
-		
-		if (productStock == null) { //checks if a stock record of that product exists
-			return false;
-		}
-		
-		if (quantity <= 0 || quantity > MAX_STOCK_IN_KG) { //checks if the requested quantity is valid
-			return false;
-		}
-		
-		if (quantity <= productStock.getProductStockInKG()) { //checks if the requested quantity can be computed with that product's stock
-			return true;
-		} else {
-			return false;
-		}
-		
-	}
-	
-	public boolean isLowOnStock(String productCode) {
-		
-		InventoryOfProduct productStock = getProductInventoryByCode(productCode);
-		
-		if (productStock == null) {
-			return false;
-		}
-		
-		if (productStock.getProductStockInKG() > 0 && productStock.getProductStockInKG() <= CRITICAL_LEVEL_IN_KG) {
-			return true;
-			
-		} else {
-			return false;
-		}
-	}
-	
-	//inventory monitoring
-	
-	public ArrayList<InventoryOfProduct> getProductsLowOnStock() { //for table view. Viewing of products that are low in stock
-		
+    private static final double MAX_STOCK_IN_KG = 1000.00;
+    private static final double CRITICAL_LEVEL_IN_KG = 300.00;
 
-		ArrayList<InventoryOfProduct> listOfProductsLowOnStock = new ArrayList<>();
-		
-		//traversing through the hash map
-		
-		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
-			
-			if (currentProduct.getProductStockInKG() > 0 && currentProduct.getProductStockInKG() <= CRITICAL_LEVEL_IN_KG) {
-				listOfProductsLowOnStock.add(currentProduct);
-			}
-		}
-		
-		return listOfProductsLowOnStock;
-		
-	}
-	
-	public ArrayList<InventoryOfProduct> getProductsOutOfStock() { //for table view purposes. Viewing of products that are depleted of stock.
-		
-		
-		ArrayList<InventoryOfProduct> listOfDepletedProducts = new ArrayList<>();
-		
-		for (InventoryOfProduct currentProduct : inventoryRecords.values()) {
-			if (currentProduct.getProductStockInKG() == 0) {
-				listOfDepletedProducts.add(currentProduct);
-			}
-			
-		}
-		
-		return listOfDepletedProducts;	
-	}
-	
+    private final HashMap<String, InventoryOfProduct> inventoryRecords;
+    private final HashMap<String, StockRecordedChange> history;
+
+    private int nextId = 1;
+
+    public InventorySystem() {
+        inventoryRecords = new HashMap<>();
+        history = new HashMap<>();
+    }
+
+    private String generateID() {
+        return "SC" + String.format("%03d", nextId++);
+    }
+
+    // --------------------------------------------------
+    // Inventory record management
+    // --------------------------------------------------
+
+    public void createInventoryRecord(Product product) {
+        if (product == null) {
+            System.out.println("No product to create a stock record with.");
+            return;
+        }
+
+        String productCode = product.getProductCode();
+        if (!inventoryRecords.containsKey(productCode)) {
+            inventoryRecords.put(productCode, new InventoryOfProduct(product));
+        } else {
+            System.out.println("This product already has a recorded storage.");
+        }
+    }
+
+    public InventoryOfProduct getProductInventoryByCode(String productCode) {
+        if (productCode == null) {
+            return null;
+        }
+        return inventoryRecords.get(productCode);
+    }
+
+    public ArrayList<InventoryOfProduct> getAllInventory() {
+        return new ArrayList<>(inventoryRecords.values());
+    }
+
+    // --------------------------------------------------
+    // Inventory audit history
+    // --------------------------------------------------
+
+    public ArrayList<StockRecordedChange> getAllHistory() {
+        return new ArrayList<>(history.values());
+    }
+
+    public ArrayList<StockRecordedChange> getHistoryByProduct(String productCode) {
+        ArrayList<StockRecordedChange> records = new ArrayList<>();
+        if (productCode == null) {
+            return records;
+        }
+
+        for (StockRecordedChange record : history.values()) {
+            if (productCode.equals(record.getProductCode())) {
+                records.add(record);
+            }
+        }
+        return records;
+    }
+
+    // --------------------------------------------------
+    // Stock operations
+    // --------------------------------------------------
+
+    public synchronized void restockProduct(
+            String productCode, double quantity, String nameOfUser, String explanation) {
+
+        InventoryOfProduct inventory = inventoryRecords.get(productCode);
+        if (inventory == null) {
+            System.out.println("The stock record of that product does not exist.");
+            return;
+        }
+        if (!Double.isFinite(quantity) || quantity <= 0) {
+            System.out.println("Requested quantity must be a finite number greater than zero.");
+            return;
+        }
+
+        double previousStock = inventory.getProductStockInKG();
+        double newStock = previousStock + quantity;
+        if (!Double.isFinite(previousStock) || previousStock < 0
+                || !Double.isFinite(newStock) || newStock > MAX_STOCK_IN_KG) {
+            System.out.println("This restock would exceed the maximum stock capacity or the current stock is invalid.");
+            return;
+        }
+
+        addHistoryRecord(inventory, StockRecordedChange.RESTOCK,
+                previousStock, newStock, nameOfUser, explanation);
+        inventory.setProductStockInKG(newStock);
+    }
+
+    /**
+     * Deducts stock for a single manual operation. The method preserves the
+     * existing API used by InventoryGUI. Sales should use reduceStockForSale()
+     * so a multi-product checkout is validated and applied as one operation.
+     */
+    public synchronized void reduceStock(
+            String productCode, double quantity, String nameOfUser, String explanation) {
+
+        Map<String, Double> requested = new LinkedHashMap<>();
+        requested.put(productCode, quantity);
+        try {
+            reduceStockForSale(requested, nameOfUser, explanation);
+        } catch (IllegalArgumentException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public synchronized void editStock(
+            String productCode, double quantity, String nameOfUser, String explanation) {
+
+        InventoryOfProduct inventory = inventoryRecords.get(productCode);
+        if (inventory == null) {
+            System.out.println("The stock record of that product does not exist.");
+            return;
+        }
+        if (!Double.isFinite(quantity) || quantity < 0 || quantity > MAX_STOCK_IN_KG) {
+            System.out.println("Stock must be a finite value between 0 and " + MAX_STOCK_IN_KG + " kg.");
+            return;
+        }
+
+        double previousStock = inventory.getProductStockInKG();
+        addHistoryRecord(inventory, StockRecordedChange.STOCK_ADJUSTMENT,
+                previousStock, quantity, nameOfUser, explanation);
+        inventory.setProductStockInKG(quantity);
+    }
+
+    /**
+     * Atomically deducts all products in one sale.
+     *
+     * Every product code, quantity, and available stock level is validated
+     * before any stock is changed. If any item is invalid or unavailable,
+     * this method throws IllegalArgumentException and leaves ALL stock
+     * quantities and history records unchanged.
+     *
+     * @param quantitiesByProductCode required quantity in kg for each product
+     * @param nameOfUser username of the employee processing the sale
+     * @param explanation audit explanation, normally containing the sale ID
+     */
+    public synchronized void reduceStockForSale(
+            Map<String, Double> quantitiesByProductCode,
+            String nameOfUser,
+            String explanation) {
+
+        if (quantitiesByProductCode == null || quantitiesByProductCode.isEmpty()) {
+            throw new IllegalArgumentException("There are no products to deduct from inventory.");
+        }
+
+        if (nameOfUser == null || nameOfUser.isBlank()) {
+            throw new IllegalArgumentException("The employee processing the sale could not be identified.");
+        }
+
+        // Normalize/aggregate quantities first. This also protects against
+        // the same product code appearing more than once in an input map.
+        Map<String, Double> aggregated = new LinkedHashMap<>();
+        for (Map.Entry<String, Double> entry : quantitiesByProductCode.entrySet()) {
+            String productCode = entry.getKey();
+            Double quantity = entry.getValue();
+
+            if (productCode == null || productCode.isBlank()) {
+                throw new IllegalArgumentException("A sale item has an invalid product code.");
+            }
+            if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
+                throw new IllegalArgumentException("Quantity for product " + productCode
+                        + " must be a finite number greater than zero.");
+            }
+
+            double combined = aggregated.getOrDefault(productCode, 0.0) + quantity;
+            if (!Double.isFinite(combined)) {
+                throw new IllegalArgumentException("Combined quantity for product "
+                        + productCode + " is invalid.");
+            }
+            aggregated.put(productCode, combined);
+        }
+
+        // Phase 1: validate every item and calculate all resulting stock.
+        Map<String, Double> resultingStock = new LinkedHashMap<>();
+        for (Map.Entry<String, Double> entry : aggregated.entrySet()) {
+            String productCode = entry.getKey();
+            double quantity = entry.getValue();
+            InventoryOfProduct inventory = inventoryRecords.get(productCode);
+
+            if (inventory == null) {
+                throw new IllegalArgumentException("No inventory record exists for product "
+                        + productCode + ".");
+            }
+
+            double previousStock = inventory.getProductStockInKG();
+            if (!Double.isFinite(previousStock) || previousStock < 0
+                    || previousStock > MAX_STOCK_IN_KG) {
+                throw new IllegalArgumentException("Current stock for product "
+                        + productCode + " is invalid. Please correct the inventory first.");
+            }
+            if (quantity > previousStock) {
+                throw new IllegalArgumentException(String.format(
+                        "Insufficient stock for product %s. Available: %.2f kg; requested: %.2f kg.",
+                        productCode, previousStock, quantity));
+            }
+
+            resultingStock.put(productCode, previousStock - quantity);
+        }
+
+        // Phase 2: all validations passed. Apply every deduction and create
+        // its corresponding audit record. No stock is changed in Phase 1.
+        String reason = (explanation == null || explanation.isBlank())
+                ? "Sale inventory deduction" : explanation.trim();
+
+        for (Map.Entry<String, Double> entry : aggregated.entrySet()) {
+            String productCode = entry.getKey();
+            InventoryOfProduct inventory = inventoryRecords.get(productCode);
+            double previousStock = inventory.getProductStockInKG();
+            double newStock = resultingStock.get(productCode);
+
+            addHistoryRecord(inventory, StockRecordedChange.SALE_DEDUCTION,
+                    previousStock, newStock, nameOfUser, reason);
+            inventory.setProductStockInKG(newStock);
+        }
+    }
+
+    private void addHistoryRecord(
+            InventoryOfProduct inventory,
+            String changeType,
+            double previousStock,
+            double newStock,
+            String nameOfUser,
+            String explanation) {
+
+        String performedBy = (nameOfUser == null || nameOfUser.isBlank())
+                ? "Unknown" : nameOfUser.trim();
+        String reason = explanation == null ? "" : explanation.trim();
+
+        String generatedID = generateID();
+        StockRecordedChange record = new StockRecordedChange(
+                generatedID,
+                inventory.getProduct(),
+                changeType,
+                previousStock,
+                newStock,
+                LocalDateTime.now(),
+                performedBy,
+                reason);
+
+        history.put(generatedID, record);
+    }
+
+    // --------------------------------------------------
+    // Stock checking and monitoring
+    // --------------------------------------------------
+
+    public synchronized boolean hasSufficientStock(String productCode, double quantity) {
+        InventoryOfProduct inventory = inventoryRecords.get(productCode);
+        if (inventory == null || !Double.isFinite(quantity) || quantity <= 0
+                || quantity > MAX_STOCK_IN_KG) {
+            return false;
+        }
+
+        double currentStock = inventory.getProductStockInKG();
+        return Double.isFinite(currentStock)
+                && currentStock >= 0
+                && currentStock <= MAX_STOCK_IN_KG
+                && quantity <= currentStock;
+    }
+
+    public boolean isLowOnStock(String productCode) {
+        InventoryOfProduct inventory = inventoryRecords.get(productCode);
+        if (inventory == null) {
+            return false;
+        }
+
+        double stock = inventory.getProductStockInKG();
+        return Double.isFinite(stock) && stock > 0 && stock <= CRITICAL_LEVEL_IN_KG;
+    }
+
+    public ArrayList<InventoryOfProduct> getProductsLowOnStock() {
+        ArrayList<InventoryOfProduct> lowStock = new ArrayList<>();
+        for (InventoryOfProduct inventory : inventoryRecords.values()) {
+            double stock = inventory.getProductStockInKG();
+            if (Double.isFinite(stock) && stock > 0 && stock <= CRITICAL_LEVEL_IN_KG) {
+                lowStock.add(inventory);
+            }
+        }
+        return lowStock;
+    }
+
+    public ArrayList<InventoryOfProduct> getProductsOutOfStock() {
+        ArrayList<InventoryOfProduct> outOfStock = new ArrayList<>();
+        for (InventoryOfProduct inventory : inventoryRecords.values()) {
+            if (inventory.getProductStockInKG() == 0) {
+                outOfStock.add(inventory);
+            }
+        }
+        return outOfStock;
+    }
 }
