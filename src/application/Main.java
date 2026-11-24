@@ -280,9 +280,9 @@ public class Main extends Application {
         buyers.addBuyerToDatabase(
                 new Buyer("Apple", "Apple123", "Apples", 20000));
         buyers.addBuyerToDatabase(
-                new Buyer("Apple2", "Apple1234", "Apples", 120000));
+                new Buyer("Apple2", "Apple1234", "Apple2", 120000));
         buyers.addBuyerToDatabase(
-                new Buyer("Apple3", "Apple12345", "Apples", 22130000));
+                new Buyer("Apple3", "Apple12345", "Apple3", 22130000));
 
         syncInventoryRecords();
 
