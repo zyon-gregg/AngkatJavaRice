@@ -45,6 +45,15 @@ public class Main extends Application {
         primaryStage.setTitle("Angkat - Fish Port Management System");
         
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
+        
+        boolean succesfulLoad;
+        
+        succesfulLoad = dataManager.loadProducts();
+        
+        if(!succesfulLoad) {
+        	System.out.print("Unsuccesful load of products");
+        }
+        
 
         loadSampleData();
         loadDefaultAccounts();
