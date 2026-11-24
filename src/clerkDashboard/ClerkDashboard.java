@@ -3,7 +3,6 @@ package clerkDashboard;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import Products.Product;
@@ -284,8 +283,11 @@ public class ClerkDashboard {
                 new TableColumn<>("Product");
         productColumn.setCellValueFactory(cell -> {
             Product product = cell.getValue().getProduct();
-            return new ReadOnlyStringWrapper(
-                    product == null ? "Unknown" : product.getProductName());
+            if (product == null) {
+                return new ReadOnlyStringWrapper("Unknown");
+            }
+
+            return new ReadOnlyStringWrapper(product.getProductName());
         });
 
         TableColumn<InventoryOfProduct, String> stockColumn =
@@ -320,8 +322,11 @@ public class ClerkDashboard {
                 new TableColumn<>("Product");
         productColumn.setCellValueFactory(cell -> {
             Product product = cell.getValue().getProduct();
-            return new ReadOnlyStringWrapper(
-                    product == null ? "Unknown" : product.getProductName());
+            if (product == null) {
+                return new ReadOnlyStringWrapper("Unknown");
+            }
+
+            return new ReadOnlyStringWrapper(product.getProductName());
         });
 
         TableColumn<InventoryOfProduct, String> stockColumn =
@@ -333,8 +338,11 @@ public class ClerkDashboard {
                 new TableColumn<>("Status");
         statusColumn.setCellValueFactory(cell -> {
             double stock = cell.getValue().getProductStockInKG();
-            return new ReadOnlyStringWrapper(
-                    stock == 0 ? "Out of stock" : "Low stock");
+            if (stock == 0) {
+                return new ReadOnlyStringWrapper("Out of stock");
+            }
+
+            return new ReadOnlyStringWrapper("Low stock");
         });
 
         table.getColumns().addAll(productColumn, stockColumn, statusColumn);
@@ -356,7 +364,7 @@ public class ClerkDashboard {
     }
 
     private void openProductCatalog() {
-        ProductManagementView productView = new ProductManagementView(productDatabase, false);
+        ProductManagementView productView = new ProductManagementView(productDatabase, inventorySystem, false);
         displayPage("Product Catalog", productView);
     }
 
@@ -411,9 +419,27 @@ public class ClerkDashboard {
 
         List<StockRecordedChange> records =
                 new ArrayList<>(inventorySystem.getAllHistory());
-        records.sort(Comparator.comparing(
-                StockRecordedChange::getTime,
-                Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+        // Show the newest stock changes first.
+        for (int i = 0; i < records.size(); i++) {
+            for (int j = i + 1; j < records.size(); j++) {
+                LocalDateTime firstTime = records.get(i).getTime();
+                LocalDateTime secondTime = records.get(j).getTime();
+                boolean moveSecondRecord = false;
+
+                if (firstTime == null && secondTime != null) {
+                    moveSecondRecord = true;
+                } else if (firstTime != null && secondTime != null
+                        && firstTime.isBefore(secondTime)) {
+                    moveSecondRecord = true;
+                }
+
+                if (moveSecondRecord) {
+                    StockRecordedChange temporaryRecord = records.get(i);
+                    records.set(i, records.get(j));
+                    records.set(j, temporaryRecord);
+                }
+            }
+        }
 
         table.setItems(FXCollections.observableArrayList(records));
         table.setPlaceholder(new Label("No stock changes recorded yet."));
@@ -426,7 +452,11 @@ public class ClerkDashboard {
     }
 
     private String formatDateTime(LocalDateTime dateTime) {
-        return dateTime == null ? "" : dateTime.format(DATE_FORMAT);
+        if (dateTime == null) {
+            return "";
+        }
+
+        return dateTime.format(DATE_FORMAT);
     }
 
     private void confirmLogout() {

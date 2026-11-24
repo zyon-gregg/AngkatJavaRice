@@ -28,21 +28,56 @@ public class InventorySystem {
     }
 
     // Creates an inventory record with an opening stock of 0 kg.
-    public void createInventoryRecord(Product product) {
+    // Returns false if the product is invalid or already has a record.
+    public synchronized boolean createInventoryRecord(Product product) {
         if (product == null) {
-            System.out.println("No product was provided.");
-            return;
+            return false;
         }
 
         String productCode = product.getProductCode();
 
+        if (productCode == null || productCode.trim().isEmpty()) {
+            return false;
+        }
+
         if (inventoryRecords.containsKey(productCode)) {
-            System.out.println("This product already has an inventory record.");
-            return;
+            return false;
         }
 
         InventoryOfProduct inventory = new InventoryOfProduct(product);
         inventoryRecords.put(productCode, inventory);
+        return true;
+    }
+
+    // A product can only be removed when its current stock is 0 kg.
+    // A missing record is also safe to remove because there is nothing to delete.
+    public synchronized boolean canRemoveInventoryRecord(String productCode) {
+        if (productCode == null || productCode.trim().isEmpty()) {
+            return false;
+        }
+
+        InventoryOfProduct inventory = inventoryRecords.get(productCode);
+
+        if (inventory == null) {
+            return true;
+        }
+
+        if (inventory.getProductStockInKG() != 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Removes an empty inventory record. Stock history is kept separately,
+    // so previous stock changes are not deleted with the current record.
+    public synchronized boolean removeInventoryRecord(String productCode) {
+        if (!canRemoveInventoryRecord(productCode)) {
+            return false;
+        }
+
+        inventoryRecords.remove(productCode);
+        return true;
     }
 
     public InventoryOfProduct getProductInventoryByCode(String productCode) {
@@ -177,15 +212,15 @@ public class InventorySystem {
      * First, check every product. Only after all checks pass do we reduce stock.
      * This prevents a sale from deducting only some of its products.
      */
-    public synchronized void reduceStockForSale(Map<String, Double> quantitiesByProductCode,
+    public synchronized boolean reduceStockForSale(Map<String, Double> quantitiesByProductCode,
             String nameOfUser, String explanation) {
 
         if (quantitiesByProductCode == null || quantitiesByProductCode.isEmpty()) {
-            throw new IllegalArgumentException("There are no products in this sale.");
+            return false;
         }
 
         if (nameOfUser == null || nameOfUser.trim().isEmpty()) {
-            throw new IllegalArgumentException("The employee processing the sale could not be identified.");
+            return false;
         }
 
         String reason = "Sale inventory deduction";
@@ -202,28 +237,24 @@ public class InventorySystem {
 
             if (productCode == null || productCode.trim().isEmpty() || quantity == null
                     || quantity <= 0 || Double.isNaN(quantity) || Double.isInfinite(quantity)) {
-                throw new IllegalArgumentException("A sale contains an invalid product or quantity.");
+                return false;
             }
 
             InventoryOfProduct inventory = inventoryRecords.get(productCode);
 
             if (inventory == null) {
-                throw new IllegalArgumentException("No inventory record exists for product "
-                        + productCode + ".");
+                return false;
             }
 
             double currentStock = inventory.getProductStockInKG();
 
             if (currentStock < 0 || currentStock > MAX_STOCK_IN_KG
                     || Double.isNaN(currentStock) || Double.isInfinite(currentStock)) {
-                throw new IllegalArgumentException("Current stock for product " + productCode
-                        + " is invalid. Correct the inventory before completing this sale.");
+                return false;
             }
 
             if (quantity > currentStock) {
-                throw new IllegalArgumentException("Insufficient stock for product " + productCode
-                        + ". Available: " + String.format("%.2f", currentStock)
-                        + " kg; requested: " + String.format("%.2f", quantity) + " kg.");
+                return false;
             }
 
             double newStock = currentStock - quantity;
@@ -242,6 +273,8 @@ public class InventorySystem {
                     newStock, nameOfUser, reason);
             inventory.setProductStockInKG(newStock);
         }
+
+        return true;
     }
 
     private void addHistoryRecord(InventoryOfProduct inventory, String changeType,

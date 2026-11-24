@@ -11,56 +11,83 @@ public class ProductDatabase {
     private final Map<String, Product> database = new LinkedHashMap<>();
 
     public ProductDatabase(String databaseName) {
-        if (databaseName == null || databaseName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Database name is required.");
-        }
-
-        this.databaseName = databaseName.trim();
+        this.databaseName = databaseName;
     }
 
-    public void addProduct(Product product) {
+    // Adds a product to the catalog. Returns false if the product is invalid
+    // or its product code is already being used.
+    public boolean addProduct(Product product) {
         if (product == null) {
-            throw new IllegalArgumentException("Product cannot be null.");
+            return false;
         }
 
         String productCode = product.getProductCode();
 
+        if (productCode == null || productCode.trim().isEmpty()) {
+            return false;
+        }
+
         if (database.containsKey(productCode)) {
-            throw new IllegalArgumentException("Product code already exists: " + productCode);
+            return false;
         }
 
         database.put(productCode, product);
+        return true;
     }
 
-    public void removeProduct(Product product) {
+    // Removes a product from the catalog. Inventory removal is handled by
+    // the Product Management screen so both modules stay synchronized.
+    public boolean removeProduct(Product product) {
         if (product == null) {
-            return;
+            return false;
         }
 
-        database.remove(product.getProductCode());
+        String productCode = product.getProductCode();
+        Product savedProduct = database.get(productCode);
+
+        if (savedProduct == null) {
+            return false;
+        }
+
+        database.remove(productCode);
+        return true;
     }
 
-    public void editProduct(Product product, String productName, String productDescription,
-            String productSource, double productCostInKG, double productRawPrice,
+    // Updates the existing Product object instead of replacing it.
+    // InventoryOfProduct holds this same object, so its displayed details
+    // are updated without changing the stock quantity.
+    public boolean editProduct(Product product, String productName,
+            String productDescription, String productSource,
+            double productCostInKG, double productRawPrice,
             double productEstimatedMarketPrice) {
 
         if (product == null) {
-            throw new IllegalArgumentException("Select a product first.");
+            return false;
         }
 
-        if (!database.containsKey(product.getProductCode())) {
-            throw new IllegalArgumentException("Product was not found in the database.");
+        String productCode = product.getProductCode();
+        Product savedProduct = database.get(productCode);
+
+        if (savedProduct == null) {
+            return false;
         }
 
-        product.update(productName, productDescription, productSource, productCostInKG, productRawPrice, productEstimatedMarketPrice);
+        savedProduct.update(productName, productDescription, productSource,
+                productCostInKG, productRawPrice, productEstimatedMarketPrice);
+
+        return true;
     }
 
-    // Returns the product with this code. Returns null when it is not found.
+    // Returns null when the product code is not found.
     public Product searchProduct(String productCode) {
+        if (productCode == null) {
+            return null;
+        }
+
         return database.get(productCode);
     }
 
-    // Returns a new list so the caller cannot directly change the database map.
+    // Returns a new list so callers cannot directly change the database map.
     public List<Product> getAllProducts() {
         return new ArrayList<>(database.values());
     }
@@ -85,10 +112,6 @@ public class ProductDatabase {
     }
 
     public void setDatabaseName(String databaseName) {
-        if (databaseName == null || databaseName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Database name is required.");
-        }
-
-        this.databaseName = databaseName.trim();
+        this.databaseName = databaseName;
     }
 }

@@ -18,7 +18,7 @@ public class Cart {
     private User processing;
     private String employeeLevelofProcessing;
     private Receipt receipt;
-    private Boolean isPaid = false;
+    private boolean isPaid = false;
 
     Cart() {
     }
@@ -207,16 +207,16 @@ public class Cart {
         return cart.isEmpty();
     }
 
-    public Boolean getIsPaid() {
+    public boolean getIsPaid() {
         return isPaid;
     }
 
-    public void setIsPaid(Boolean isPaid) {
+    public void setIsPaid(boolean isPaid) {
         this.isPaid = isPaid;
     }
 
     private void ensureNotPaid() {
-        if (Boolean.TRUE.equals(isPaid)) {
+        if (isPaid) {
             throw new IllegalStateException("A completed sale cannot be modified.");
         }
     }

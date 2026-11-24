@@ -59,8 +59,11 @@ public class InventoryGUI {
         }
 
         this.inventorySystem = inventorySystem;
-        this.currentUsername = (currentUsername == null || currentUsername.trim().isEmpty())
-                ? "Unknown User" : currentUsername;
+        if (currentUsername == null || currentUsername.trim().isEmpty()) {
+            this.currentUsername = "Unknown User";
+        } else {
+            this.currentUsername = currentUsername;
+        }
         this.canManageStock = canManageStock;
 
         this.stage = new Stage();
@@ -73,8 +76,11 @@ public class InventoryGUI {
         VBox mainContainer = new VBox(10);
         mainContainer.setPadding(new Insets(15));
 
-        Label inventoryTitle = new Label(
-                canManageStock ? "Inventory Management" : "Inventory Overview");
+        String inventoryTitleText = "Inventory Overview";
+        if (canManageStock) {
+            inventoryTitleText = "Inventory Management";
+        }
+        Label inventoryTitle = new Label(inventoryTitleText);
 
         refreshButton = new Button("Refresh");
         HBox header = new HBox(10);
@@ -115,9 +121,11 @@ public class InventoryGUI {
         refreshButton.setOnAction(event -> refreshTables());
 
         root.setCenter(mainContainer);
-        stage.setTitle(canManageStock
-                ? "Angkat - Inventory Management"
-                : "Angkat - Inventory Overview (Read Only)");
+        if (canManageStock) {
+            stage.setTitle("Angkat - Inventory Management");
+        } else {
+            stage.setTitle("Angkat - Inventory Overview (Read Only)");
+        }
         stage.setScene(scene);
 
         refreshTables();
@@ -222,10 +230,14 @@ public class InventoryGUI {
 
         TableColumn<InventoryOfProduct, String> updatedColumn =
                 new TableColumn<>("Last Updated");
-        updatedColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getLastUpdated() == null
-                        ? "N/A"
-                        : data.getValue().getLastUpdated().format(dateFormat)));
+        updatedColumn.setCellValueFactory(data -> {
+            if (data.getValue().getLastUpdated() == null) {
+                return new ReadOnlyStringWrapper("N/A");
+            }
+
+            String updatedText = data.getValue().getLastUpdated().format(dateFormat);
+            return new ReadOnlyStringWrapper(updatedText);
+        });
 
         table.getColumns().addAll(
                 codeColumn, productColumn, stockColumn, statusColumn, updatedColumn);
@@ -271,9 +283,14 @@ public class InventoryGUI {
 
         TableColumn<StockRecordedChange, String> dateColumn =
                 new TableColumn<>("Date/Time");
-        dateColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getTime() == null
-                        ? "N/A" : data.getValue().getTime().format(dateFormat)));
+        dateColumn.setCellValueFactory(data -> {
+            if (data.getValue().getTime() == null) {
+                return new ReadOnlyStringWrapper("N/A");
+            }
+
+            String recordedTime = data.getValue().getTime().format(dateFormat);
+            return new ReadOnlyStringWrapper(recordedTime);
+        });
 
         TableColumn<StockRecordedChange, String> userColumn =
                 new TableColumn<>("Performed By");

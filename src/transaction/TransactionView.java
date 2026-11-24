@@ -3,7 +3,6 @@ package transaction;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +79,11 @@ public class TransactionView extends BorderPane {
         buyerBox.setConverter(new StringConverter<Buyer>() {
             @Override
             public String toString(Buyer buyer) {
-                return buyer == null ? "" : buyer.getName();
+                if (buyer == null) {
+                    return "";
+                }
+
+                return buyer.getName();
             }
 
             @Override
@@ -99,7 +102,11 @@ public class TransactionView extends BorderPane {
         productBox.setConverter(new StringConverter<Product>() {
             @Override
             public String toString(Product product) {
-                return product == null ? "" : product.getProductCode() + " - " + product.getProductName();
+                if (product == null) {
+                    return "";
+                }
+
+                return product.getProductCode() + " - " + product.getProductName();
             }
 
             @Override
@@ -169,9 +176,12 @@ public class TransactionView extends BorderPane {
                 new TableColumn<>("Product");
         productColumn.setCellValueFactory(data -> {
             Product product = data.getValue().getKey();
-            String name = currentCart == null
-                    ? product.getProductName()
-                    : currentCart.getProductName(product);
+            String name;
+            if (currentCart == null) {
+                name = product.getProductName();
+            } else {
+                name = currentCart.getProductName(product);
+            }
             return new ReadOnlyStringWrapper(name);
         });
 
@@ -184,9 +194,12 @@ public class TransactionView extends BorderPane {
                 new TableColumn<>("Price/kg");
         priceColumn.setCellValueFactory(data -> {
             Product product = data.getValue().getKey();
-            double price = currentCart == null
-                    ? Cart.unitPrice(product)
-                    : currentCart.getUnitPrice(product);
+            double price;
+            if (currentCart == null) {
+                price = Cart.unitPrice(product);
+            } else {
+                price = currentCart.getUnitPrice(product);
+            }
             return new ReadOnlyStringWrapper(String.format("%,.2f", price));
         });
 
@@ -194,9 +207,12 @@ public class TransactionView extends BorderPane {
                 new TableColumn<>("Subtotal");
         subtotalColumn.setCellValueFactory(data -> {
             Product product = data.getValue().getKey();
-            double subtotal = currentCart == null
-                    ? Cart.unitPrice(product) * data.getValue().getValue()
-                    : currentCart.getSubtotal(product);
+            double subtotal;
+            if (currentCart == null) {
+                subtotal = Cart.unitPrice(product) * data.getValue().getValue();
+            } else {
+                subtotal = currentCart.getSubtotal(product);
+            }
             return new ReadOnlyStringWrapper(String.format("%,.2f", subtotal));
         });
 
@@ -248,7 +264,11 @@ public class TransactionView extends BorderPane {
             }
 
             Double existingQuantity = currentCart.getCart().get(product);
-            double newQuantity = quantity + (existingQuantity == null ? 0.0 : existingQuantity);
+            double oldQuantity = 0.0;
+            if (existingQuantity != null) {
+                oldQuantity = existingQuantity;
+            }
+            double newQuantity = quantity + oldQuantity;
 
             if (!Double.isFinite(newQuantity)) {
                 showError("Combined quantity is invalid.");
@@ -314,6 +334,12 @@ public class TransactionView extends BorderPane {
         try {
             Receipt completedReceipt = sales.completeSale(
                     currentBuyer, paymentMethod, cashReceived);
+
+            if (completedReceipt == null) {
+                showError("The sale could not be completed. Please check the inventory and try again.");
+                return;
+            }
+
             showReceipt(completedReceipt, currentBuyer.getName());
             resetScreen();
         } catch (IllegalArgumentException | IllegalStateException ex) {
@@ -398,8 +424,11 @@ public class TransactionView extends BorderPane {
         budgetLabel.setText(String.format(
                 "Buyer spending limit: PHP %,.2f", currentBuyer.getBudget()));
         totalLabel.setText(String.format("Total: PHP %,.2f", total));
-        totalLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;"
-                + (overBudget ? " -fx-text-fill: #c0392b;" : ""));
+        String totalStyle = "-fx-font-size: 18px; -fx-font-weight: bold;";
+        if (overBudget) {
+            totalStyle = totalStyle + " -fx-text-fill: #c0392b;";
+        }
+        totalLabel.setStyle(totalStyle);
 
         updateStockLabel();
     }
@@ -418,22 +447,42 @@ public class TransactionView extends BorderPane {
 
     private List<Map.Entry<Product, Double>> sortedRows(Cart cart) {
         List<Map.Entry<Product, Double>> rows = new ArrayList<>(cart.getCart().entrySet());
-        rows.sort(Comparator.comparing(row -> row.getKey().getProductCode()));
+
+        // Sort cart rows by product code using simple nested loops.
+        for (int i = 0; i < rows.size(); i++) {
+            for (int j = i + 1; j < rows.size(); j++) {
+                String firstCode = rows.get(i).getKey().getProductCode();
+                String secondCode = rows.get(j).getKey().getProductCode();
+
+                if (firstCode.compareTo(secondCode) > 0) {
+                    Map.Entry<Product, Double> temporaryRow = rows.get(i);
+                    rows.set(i, rows.get(j));
+                    rows.set(j, temporaryRow);
+                }
+            }
+        }
+
         return rows;
     }
 
     private void showReceipt(Receipt receipt, String buyerName) {
         StringBuilder text = new StringBuilder();
         text.append("Receipt: ").append(receipt.getTransactionID()).append("\n");
-        text.append("Date:    ")
-                .append(receipt.getTransacTime() == null
-                        ? "-" : receipt.getTransacTime().format(timeFormat))
-                .append("\n");
+        text.append("Date:    ");
+        if (receipt.getTransacTime() == null) {
+            text.append("-");
+        } else {
+            text.append(receipt.getTransacTime().format(timeFormat));
+        }
+        text.append("\n");
         text.append("Buyer:   ").append(buyerName).append("\n");
-        text.append("Cashier: ")
-                .append(receipt.getEmployee() == null
-                        ? "-" : receipt.getEmployee().getName())
-                .append("\n\n");
+        text.append("Cashier: ");
+        if (receipt.getEmployee() == null) {
+            text.append("-");
+        } else {
+            text.append(receipt.getEmployee().getName());
+        }
+        text.append("\n\n");
 
         for (ReceiptItem item : receipt.getItems()) {
             text.append(String.format("%-14s %7.2f kg x %,9.2f = %,10.2f%n",

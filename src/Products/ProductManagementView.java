@@ -12,7 +12,11 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import java.util.Optional;
 import java.util.function.Function;
+
+import inventoryManagementSystem.InventoryOfProduct;
+import inventoryManagementSystem.InventorySystem;
 
 /**
  * Reusable Product Management screen.
@@ -25,6 +29,7 @@ import java.util.function.Function;
 public class ProductManagementView extends BorderPane {
 
 	private final ProductDatabase database;
+	private final InventorySystem inventorySystem;
 	private final ObservableList<Product> products = FXCollections.observableArrayList();
 	private final FilteredList<Product> filtered = new FilteredList<>(products, p -> true);
 	private final TableView<Product> table = new TableView<>();
@@ -36,8 +41,9 @@ public class ProductManagementView extends BorderPane {
 	private final TextField rawPriceField = new TextField();
 	private final TextField marketPriceField = new TextField();
 
-	public ProductManagementView(ProductDatabase database, boolean canEdit) {
+	public ProductManagementView(ProductDatabase database, InventorySystem inventorySystem, boolean canEdit) {
 		this.database = database;
+		this.inventorySystem = inventorySystem;
 		setPadding(new Insets(16));
 
 		setTop(buildHeader());
@@ -45,6 +51,8 @@ public class ProductManagementView extends BorderPane {
 		if (canEdit) {
 			setRight(buildForm());
 		}
+
+		syncInventoryRecords();
 		reload();
 	}
 
@@ -58,7 +66,11 @@ public class ProductManagementView extends BorderPane {
 		search.setPromptText("Search by code, name or source...");
 		search.setPrefWidth(280);
 		search.textProperty().addListener((obs, old, text) -> {
-			String q = text == null ? "" : text.trim().toLowerCase();
+			String searchText = "";
+			if (text != null) {
+				searchText = text.trim().toLowerCase();
+			}
+			final String q = searchText;
 			filtered.setPredicate(p -> q.isEmpty()
 					|| p.getProductCode().toLowerCase().contains(q)
 					|| p.getProductName().toLowerCase().contains(q)
@@ -163,18 +175,41 @@ public class ProductManagementView extends BorderPane {
 	
 	
 	private void handleAdd() {
-		try {
-			database.addProduct(new Product(database,nameField.getText(), descField.getText(),sourceField.getText(),
-					readNumber(costField, "Cost per kg"),
-					readNumber(rawPriceField, "Raw price"),
-					readNumber(marketPriceField, "Estimated market price")));
-			reload();
-			clearForm();
-		} catch (IllegalArgumentException ex) {
-			showError(ex.getMessage());
+		Double cost = readNumber(costField, "Cost per kg");
+		if (cost == null) {
+			return;
 		}
-	}
 
+		Double rawPrice = readNumber(rawPriceField, "Raw price");
+		if (rawPrice == null) {
+			return;
+		}
+
+		Double marketPrice = readNumber(marketPriceField, "Estimated market price");
+		if (marketPrice == null) {
+			return;
+		}
+
+		Product newProduct = new Product(database, nameField.getText(),
+				descField.getText(), sourceField.getText(), cost, rawPrice, marketPrice);
+
+		boolean productAdded = database.addProduct(newProduct);
+		if (!productAdded) {
+			showError("The product could not be added to the catalog.");
+			return;
+		}
+
+		// Every new catalog product must also receive an empty inventory record.
+		boolean inventoryCreated = inventorySystem.createInventoryRecord(newProduct);
+		if (!inventoryCreated) {
+			database.removeProduct(newProduct);
+			showError("The product could not be added because its inventory record could not be created.");
+			return;
+		}
+
+		reload();
+		clearForm();
+	}
 
 	private void handleUpdate() {
 		Product selected = table.getSelectionModel().getSelectedItem();
@@ -182,17 +217,34 @@ public class ProductManagementView extends BorderPane {
 			showError("Select a product from the table first.");
 			return;
 		}
-		try {
-			database.editProduct(selected, nameField.getText(), descField.getText(),
-					sourceField.getText(),
-					readNumber(costField, "Cost per kg"),
-					readNumber(rawPriceField, "Raw price"),
-					readNumber(marketPriceField, "Estimated market price"));
-			reload();
-			clearForm();
-		} catch (IllegalArgumentException ex) {
-			showError(ex.getMessage());
+
+		Double cost = readNumber(costField, "Cost per kg");
+		if (cost == null) {
+			return;
 		}
+
+		Double rawPrice = readNumber(rawPriceField, "Raw price");
+		if (rawPrice == null) {
+			return;
+		}
+
+		Double marketPrice = readNumber(marketPriceField, "Estimated market price");
+		if (marketPrice == null) {
+			return;
+		}
+
+		boolean productUpdated = database.editProduct(selected, nameField.getText(),
+				descField.getText(), sourceField.getText(), cost, rawPrice, marketPrice);
+
+		if (!productUpdated) {
+			showError("The selected product could not be updated.");
+			return;
+		}
+
+		// InventoryOfProduct holds the same Product object, so its details
+		// update automatically. The stock quantity is not changed here.
+		reload();
+		clearForm();
 	}
 
 	private void handleDelete() {
@@ -201,30 +253,70 @@ public class ProductManagementView extends BorderPane {
 			showError("Select a product from the table first.");
 			return;
 		}
+
 		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
 				"Delete \"" + selected.getProductName() + "\"?", ButtonType.YES, ButtonType.NO);
 		confirm.setHeaderText(null);
-		confirm.showAndWait().ifPresent(answer -> {
-			if (answer == ButtonType.YES) {
-				database.removeProduct(selected);
-				reload();
-				clearForm();
-			}
-		});
+		Optional<ButtonType> answer = confirm.showAndWait();
+
+		if (!answer.isPresent()) {
+			return;
+		}
+
+		if (answer.get() != ButtonType.YES) {
+			return;
+		}
+
+		String productCode = selected.getProductCode();
+
+		if (!inventorySystem.canRemoveInventoryRecord(productCode)) {
+			showError("This product still has stock. Reduce its inventory to 0 kg before deleting it.");
+			return;
+		}
+
+		boolean productRemoved = database.removeProduct(selected);
+		if (!productRemoved) {
+			showError("The selected product could not be removed from the catalog.");
+			return;
+		}
+
+		// Remove the now-empty inventory record. Previous stock history is kept.
+		inventorySystem.removeInventoryRecord(productCode);
+
+		reload();
+		clearForm();
 	}
 
-	// ---------- Helpers ----------
+	// Makes an inventory record for any catalog product that is missing one.
+	private void syncInventoryRecords() {
+		for (Product product : database.getAllProducts()) {
+			InventoryOfProduct inventoryRecord =
+					inventorySystem.getProductInventoryByCode(product.getProductCode());
+
+			if (inventoryRecord == null) {
+				inventorySystem.createInventoryRecord(product);
+			}
+		}
+	}
 
 	/** Pulls the latest products from the database into the table. */
 	public void reload() {
 		products.setAll(database.getAllProducts());
 	}
 
-	private double readNumber(TextField field, String label) {
+	private Double readNumber(TextField field, String label) {
 		try {
-			return Double.parseDouble(field.getText().trim());
-		} catch (NumberFormatException | NullPointerException ex) {
-			throw new IllegalArgumentException(label + " must be a valid number.");
+			double value = Double.parseDouble(field.getText().trim());
+
+			if (Double.isNaN(value) || Double.isInfinite(value)) {
+				showError(label + " must be a valid number.");
+				return null;
+			}
+
+			return value;
+		} catch (NumberFormatException ex) {
+			showError(label + " must be a valid number.");
+			return null;
 		}
 	}
 

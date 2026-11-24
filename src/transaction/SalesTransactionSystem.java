@@ -3,7 +3,6 @@ package transaction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +61,7 @@ public class SalesTransactionSystem {
 
         Cart oldCart = buyer.getBuyerCart();
 
-        if (oldCart != null && !Boolean.TRUE.equals(oldCart.getIsPaid())) {
+        if (oldCart != null && !oldCart.getIsPaid()) {
             throw new IllegalArgumentException("This buyer already has an unfinished sale. Complete or cancel it first.");
         }
 
@@ -160,7 +159,7 @@ public class SalesTransactionSystem {
             throw new IllegalArgumentException("The sale is missing its receipt record.");
         }
 
-        if (Boolean.TRUE.equals(cart.getIsPaid())) {
+        if (cart.getIsPaid()) {
             throw new IllegalArgumentException("This sale is already paid.");
         }
 
@@ -221,7 +220,12 @@ public class SalesTransactionSystem {
         String auditExplanation = "Sale " + cart.getSaleID() + " / Receipt " + receipt.getTransactionID();
 
         // InventorySystem checks all products before deducting any of them.
-        invSystem.reduceStockForSale(quantitiesByProductCode, employeeUsername, auditExplanation);
+        boolean stockReduced = invSystem.reduceStockForSale(
+                quantitiesByProductCode, employeeUsername, auditExplanation);
+
+        if (!stockReduced) {
+            return null;
+        }
 
         // Save the receipt only after the stock deduction succeeds.
         receipt.setItems(receiptItems);
@@ -358,7 +362,7 @@ public class SalesTransactionSystem {
 
             Cart cart = buyer.getBuyerCart();
 
-            if (cart != null && !Boolean.TRUE.equals(cart.getIsPaid())) {
+            if (cart != null && !cart.getIsPaid()) {
                 cancelSale(buyer);
                 cancelledCount++;
             }
@@ -379,7 +383,7 @@ public class SalesTransactionSystem {
             return false;
         }
 
-        if (Boolean.TRUE.equals(cart.getIsPaid())) {
+        if (cart.getIsPaid()) {
             throw new IllegalArgumentException("A completed sale cannot be cancelled as an unpaid cart.");
         }
 
@@ -395,7 +399,21 @@ public class SalesTransactionSystem {
 
     public ArrayList<Receipt> getAllReceiptByID() {
         ArrayList<Receipt> sortedByID = new ArrayList<>(receiptHashMap.values());
-        sortedByID.sort(Comparator.comparing(Receipt::getTransactionID));
+
+        // Sort by transaction ID using simple nested loops.
+        for (int i = 0; i < sortedByID.size(); i++) {
+            for (int j = i + 1; j < sortedByID.size(); j++) {
+                String firstID = sortedByID.get(i).getTransactionID();
+                String secondID = sortedByID.get(j).getTransactionID();
+
+                if (firstID.compareTo(secondID) > 0) {
+                    Receipt temporaryReceipt = sortedByID.get(i);
+                    sortedByID.set(i, sortedByID.get(j));
+                    sortedByID.set(j, temporaryReceipt);
+                }
+            }
+        }
+
         return sortedByID;
     }
 

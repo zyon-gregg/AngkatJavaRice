@@ -3,7 +3,6 @@ package managerDashboard;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import Products.ProductDatabase;
@@ -133,7 +132,11 @@ public class ManagerDashboard {
         if (value != null && !value.trim().isEmpty()) {
             return value;
         }
-        return fallback == null || fallback.trim().isEmpty() ? "Not assigned" : fallback;
+        if (fallback == null || fallback.trim().isEmpty()) {
+            return "Not assigned";
+        }
+
+        return fallback;
     }
 
     private HBox createHeader() {
@@ -310,7 +313,7 @@ public class ManagerDashboard {
     private void openProductManagement() {
 
         ProductManagementView productView =
-                new ProductManagementView(productDatabase, true);
+                new ProductManagementView(productDatabase, inventorySystem, true);
 
         Stage productStage = new Stage();
         productStage.initOwner(stage);
@@ -461,9 +464,27 @@ public class ManagerDashboard {
         List<StockRecordedChange> records =
                 new ArrayList<>(inventorySystem.getAllHistory());
 
-        records.sort(Comparator.comparing(
-                StockRecordedChange::getTime,
-                Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+        // Show the newest stock changes first.
+        for (int i = 0; i < records.size(); i++) {
+            for (int j = i + 1; j < records.size(); j++) {
+                LocalDateTime firstTime = records.get(i).getTime();
+                LocalDateTime secondTime = records.get(j).getTime();
+                boolean moveSecondRecord = false;
+
+                if (firstTime == null && secondTime != null) {
+                    moveSecondRecord = true;
+                } else if (firstTime != null && secondTime != null
+                        && firstTime.isBefore(secondTime)) {
+                    moveSecondRecord = true;
+                }
+
+                if (moveSecondRecord) {
+                    StockRecordedChange temporaryRecord = records.get(i);
+                    records.set(i, records.get(j));
+                    records.set(j, temporaryRecord);
+                }
+            }
+        }
 
         if (maximumRows > 0 && records.size() > maximumRows) {
             records = new ArrayList<>(records.subList(0, maximumRows));
@@ -499,7 +520,11 @@ public class ManagerDashboard {
     }
 
     private String formatDateTime(LocalDateTime dateTime) {
-        return dateTime == null ? "" : dateTime.format(DATE_FORMAT);
+        if (dateTime == null) {
+            return "";
+        }
+
+        return dateTime.format(DATE_FORMAT);
     }
 
     // -----------------------------------------------------------------

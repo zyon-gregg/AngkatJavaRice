@@ -41,6 +41,10 @@ public class Buyer extends User {
 
 	/** The receipt of the sale in progress (or the last sale), or null if there is no cart. */
 	public Receipt getBuyerReceipt() {
-		return buyerCart == null ? null : buyerCart.getReceipt();
+		if (buyerCart == null) {
+			return null;
+		}
+
+		return buyerCart.getReceipt();
 	}
 }
