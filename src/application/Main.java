@@ -51,14 +51,14 @@ public class Main extends Application {
         boolean loadProducts = dataManager.loadProducts();  
         boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
         boolean loadInventoryHistory = dataManager.loadInventoryHistory();
+        boolean loadBuyers = dataManager.loadBuyers();
          
         
-        if(!loadProducts && !loadInventoryProduct && !loadInventoryHistory) {
+        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers) {
         	System.out.print("Unsuccesful load of one of the data");
         }
+        
         */
-        
-        
 
         loadSampleData();
         loadDefaultAccounts();
@@ -104,13 +104,16 @@ public class Main extends Application {
     private void handleLogout() { //the acutal saving
     	
     	//add more here
+    	
+    	sales.cancelAllUnpaidSales();
 
         
         boolean saveProduct = dataManager.saveProducts();
         boolean saveInventoryProduct = dataManager.saveInventoryProducts();
         boolean saveInventoryHistory = dataManager.saveInventoryHistory();
+        boolean saveBuyers = dataManager.saveBuyers();
 
-        if (saveProduct && saveInventoryProduct && saveInventoryHistory) {
+        if (saveProduct && saveInventoryProduct && saveInventoryHistory && saveBuyers) {
             showLogin();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);

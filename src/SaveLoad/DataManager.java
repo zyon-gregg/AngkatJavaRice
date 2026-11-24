@@ -16,6 +16,7 @@ import inventoryManagementSystem.InventorySystem;
 import inventoryManagementSystem.StockRecordedChange;
 import login.LoginManager;
 import transaction.SalesTransactionSystem;
+import users.Buyer;
 import users.BuyerDatabase;
 import users.SourceDatabase;
 
@@ -225,6 +226,63 @@ public class DataManager {
 				boolean success = inventory.restoreInventoryHistory(restored);
 				
 				line = reader.readLine();
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public boolean saveBuyers() {
+		File file = new File("src/SaveLoad/Buyers.txt");
+		
+		try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
+			
+			ArrayList<Buyer> buyersToBeSaved = buyers.returnBuyerList();
+			
+			for (Buyer buyer : buyersToBeSaved) {
+	                String data = buyer.getUserName()
+	                        + "|" + buyer.getPassword()
+	                        + "|" + buyer.getName()
+	                        + "|" + buyer.getBudget();
+	                
+	                writer.write(data);
+	                writer.newLine();
+	                
+			}
+			
+			return true;
+			
+		} catch (IOException e) {            
+			e.printStackTrace();	            
+			return false;	        
+		}
+			
+	}
+	
+	public boolean loadBuyers() {
+		File file = new File("src/SaveLoad/Buyers.txt");
+		
+		try(BufferedReader reader = Files.newBufferedReader(file.toPath())){
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				String[] extractedData = line.split("\\|", -1);
+				
+				String username = extractedData[0];
+                String password = extractedData[1];
+                String name = extractedData[2];
+                double budget = Double.parseDouble(extractedData[3]);
+                
+
+                Buyer buyer = new Buyer(username, password, name, budget);
+                buyers.addBuyerToDatabase(buyer);
+                
+                line = reader.readLine();
 			}
 			
 		} catch (IOException e) {
