@@ -22,21 +22,20 @@ import users.BuyerDatabase;
 import users.Source;
 import users.SourceDatabase;
 import users.User;
+import SaveLoad.DataManager;
 
 public class Main extends Application {
 
     // Shared backend instances. These objects are passed to each dashboard.
-    private final ProductDatabase products =
-            new ProductDatabase("Angkat Fish Port");
-
+    private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
     private final InventorySystem inventory = new InventorySystem();
     private final BuyerDatabase buyers = new BuyerDatabase("Buyers");
     private final SourceDatabase sources = new SourceDatabase("Source");
     private final LoginManager loginManager = new LoginManager();
 
-    private final SalesTransactionSystem sales =
-            new SalesTransactionSystem(products, inventory, buyers, sources);
+    private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory, buyers, sources);
 
+    private DataManager dataManager;
     private Stage primaryStage;
     private User authenticatedUser;
 
@@ -44,6 +43,22 @@ public class Main extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Angkat - Fish Port Management System");
+        
+        dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
+        
+        
+        /*
+        boolean loadProducts = dataManager.loadProducts();  
+        boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
+        boolean loadInventoryHistory = dataManager.loadInventoryHistory();
+        boolean loadBuyers = dataManager.loadBuyers();
+         
+        
+        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers) {
+        	System.out.print("Unsuccesful load of one of the data");
+        }
+        
+        */
 
         loadSampleData();
         loadDefaultAccounts();
@@ -84,6 +99,33 @@ public class Main extends Application {
 
         primaryStage.setScene(new Scene(loginView, 1150, 600));
         primaryStage.setTitle("Angkat - Fish Port Management System");
+    }
+    
+    private void handleLogout() { //the acutal saving
+    	
+    	//add more here
+    	
+    	sales.cancelAllUnpaidSales();
+
+        
+        boolean saveProduct = dataManager.saveProducts();
+        boolean saveInventoryProduct = dataManager.saveInventoryProducts();
+        boolean saveInventoryHistory = dataManager.saveInventoryHistory();
+        boolean saveBuyers = dataManager.saveBuyers();
+
+        if (saveProduct && saveInventoryProduct && saveInventoryHistory && saveBuyers) {
+            showLogin();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Saving Error");
+            alert.setHeaderText("Unable to save some components");
+            alert.setContentText("Please try logging out again.");
+            alert.showAndWait();
+        }
+        
+        
+        
     }
 
     // Uses the existing LoginManager to authenticate the user.
@@ -205,7 +247,7 @@ public class Main extends Application {
                 sales,
                 buyers.returnBuyerList(),
                 loginManager,
-                this::showLogin
+                this::handleLogout
         );
 
         managerDashboard.show();
@@ -221,7 +263,7 @@ public class Main extends Application {
                 inventory,
                 sales,
                 buyers.returnBuyerList(),
-                this::showLogin
+                this::handleLogout
         );
 
         clerkDashboard.show();
@@ -239,6 +281,7 @@ public class Main extends Application {
             }
         }
     }
+    
 
     private void loadSampleData() {
         Product bangus = new Product(
@@ -260,7 +303,7 @@ public class Main extends Application {
         Product pusit = new Product(
                 products, "Pusit", "Fresh squid",
                 "Palawan", 200.00, 240.00, 280.00);
-
+        
         for (Product product : new Product[] {
                 bangus, tilapia, tuna, galunggong, pusit
         }) {
@@ -294,6 +337,22 @@ public class Main extends Application {
                 galunggong.getProductCode(), 800, "System", "Opening stock");
         inventory.restockProduct(
                 pusit.getProductCode(), 120, "System", "Opening stock");
+    }
+    
+    
+    @Override
+    public void stop() { //will update this for other save and load
+
+        if (dataManager != null) {
+
+            boolean saved = dataManager.saveProducts();
+
+            if (saved) {
+                System.out.println("Products saved successfully.");
+            } else {
+                System.out.println("Failed to save products.");
+            }
+        }
     }
 
     public static void main(String[] args) {

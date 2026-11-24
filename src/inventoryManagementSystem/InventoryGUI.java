@@ -67,54 +67,74 @@ public class InventoryGUI {
         mainContainer.setPadding(new Insets(15));
 
         String inventoryTitleText = "Inventory Overview";
-        
+
         if (canManageStock) {
             inventoryTitleText = "Inventory Management";
         }
-        
+
         Label inventoryTitle = new Label(inventoryTitleText);
 
         refreshButton = new Button("Refresh");
+
         HBox header = new HBox(10);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         header.getChildren().addAll(inventoryTitle, spacer, refreshButton);
 
+        // First tab: inventory records and stock operations.
         inventoryTable = createInventoryTable();
-        inventoryTable.setPrefHeight(250);
+        inventoryTable.setPrefHeight(350);
 
-        mainContainer.getChildren().addAll(header, inventoryTable, new Separator());
+        VBox inventoryTabContent = new VBox(10);
+        inventoryTabContent.setPadding(new Insets(10));
+        inventoryTabContent.getChildren().add(inventoryTable);
+        VBox.setVgrow(inventoryTable, Priority.ALWAYS);
 
         if (canManageStock) {
-            mainContainer.getChildren().add(createManagerOperationsSection());
-            mainContainer.getChildren().add(new Separator());
+            inventoryTabContent.getChildren().add(new Separator());
+            inventoryTabContent.getChildren().add(createManagerOperationsSection());
             registerInventorySelectionListener();
         } else {
-            Label readOnlyNotice = new Label("Read-only access: Clerks can view stock levels and history, " + "but only Managers can modify inventory.");
+            Label readOnlyNotice = new Label(
+                    "Read-only access: Clerks can view stock levels and history, "
+                    + "but only Managers can modify inventory.");
             readOnlyNotice.setWrapText(true);
-            mainContainer.getChildren().add(readOnlyNotice);
-            mainContainer.getChildren().add(new Separator());
+            inventoryTabContent.getChildren().add(readOnlyNotice);
         }
 
-        Label historyTitle = new Label("Stock Movement History");
-        historyTable = createHistoryTable();
-        historyTable.setPrefHeight(250);
+        Tab inventoryTab = new Tab("Inventory Records");
+        inventoryTab.setClosable(false);
+        inventoryTab.setContent(inventoryTabContent);
 
-        VBox.setVgrow(inventoryTable, Priority.ALWAYS);
+        // Second tab: history only.
+        historyTable = createHistoryTable();
+        historyTable.setPrefHeight(500);
+
+        VBox historyTabContent = new VBox(10);
+        historyTabContent.setPadding(new Insets(10));
+        historyTabContent.getChildren().add(historyTable);
         VBox.setVgrow(historyTable, Priority.ALWAYS);
 
-        mainContainer.getChildren().addAll(historyTitle, historyTable);
+        Tab historyTab = new Tab("Change History");
+        historyTab.setClosable(false);
+        historyTab.setContent(historyTabContent);
+
+        TabPane tabPane = new TabPane();
+        tabPane.getTabs().addAll(inventoryTab, historyTab);
+
+        VBox.setVgrow(tabPane, Priority.ALWAYS);
+        mainContainer.getChildren().addAll(header, tabPane);
 
         refreshButton.setOnAction(event -> refreshTables());
 
         root.setCenter(mainContainer);
-        
+
         if (canManageStock) {
             stage.setTitle("Angkat - Inventory Management");
         } else {
             stage.setTitle("Angkat - Inventory Overview (Read Only)");
         }
-        
+
         stage.setScene(scene);
 
         refreshTables();
