@@ -26,16 +26,13 @@ import users.User;
 public class Main extends Application {
 
     // Shared backend instances. These objects are passed to each dashboard.
-    private final ProductDatabase products =
-            new ProductDatabase("Angkat Fish Port");
-
+    private final ProductDatabase products = new ProductDatabase("Angkat Fish Port");
     private final InventorySystem inventory = new InventorySystem();
     private final BuyerDatabase buyers = new BuyerDatabase("Buyers");
     private final SourceDatabase sources = new SourceDatabase("Source");
     private final LoginManager loginManager = new LoginManager();
 
-    private final SalesTransactionSystem sales =
-            new SalesTransactionSystem(products, inventory, buyers, sources);
+    private final SalesTransactionSystem sales = new SalesTransactionSystem(products, inventory, buyers, sources);
 
     private Stage primaryStage;
     private User authenticatedUser;
