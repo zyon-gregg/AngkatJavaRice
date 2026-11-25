@@ -1,10 +1,5 @@
 package clerkDashboard;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-
 import Products.Product;
 import Products.ProductDatabase;
 import Products.ProductManagementView;
@@ -12,468 +7,413 @@ import inventoryManagementSystem.InventoryGUI;
 import inventoryManagementSystem.InventoryOfProduct;
 import inventoryManagementSystem.InventorySystem;
 import inventoryManagementSystem.StockRecordedChange;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import transaction.SalesTransactionSystem;
 import transaction.TransactionView;
 import users.Buyer;
 
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import java.net.URL;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public class ClerkDashboard {
 
-    private static final DateTimeFormatter DATE_FORMAT =
-            DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+    private static final double LOW_STOCK_THRESHOLD = 300.0;
 
     private final Stage stage;
-    private final String clerkName;
-    private final String clerkID;
+    private final String clerkFullName;
+    private final String clerkId;
     private final String clerkUsername;
-
-    private final ProductDatabase productDatabase;
-    private final InventorySystem inventorySystem;
-    private final SalesTransactionSystem salesSystem;
+    private final ProductDatabase products;
+    private final InventorySystem inventory;
+    private final SalesTransactionSystem sales;
     private final List<Buyer> buyers;
     private final Runnable onLogout;
 
     private BorderPane root;
-    private StackPane contentArea;
     private Label pageTitleLabel;
-    private String currentPage = "Overview";
+    private String activeTab = "OVERVIEW";
 
-    /**
-     * Preferred constructor. The username is kept separately from the
-     * display name and user ID because it is used in inventory audit records.
-     */
-    public ClerkDashboard(Stage stage,
-                          String clerkName,
-                          String clerkID,
-                          String clerkUsername,
-                          ProductDatabase productDatabase,
-                          InventorySystem inventorySystem,
-                          SalesTransactionSystem salesSystem,
-                          List<Buyer> buyers,
-                          Runnable onLogout) {
+    private Button overviewBtn;
+    private Button posBtn;
+    private Button catalogBtn;
+    private Button inventoryBtn;
+    private Button activityBtn;
+
+    public ClerkDashboard(
+            Stage stage,
+            String clerkFullName,
+            String clerkId,
+            String clerkUsername,
+            ProductDatabase products,
+            InventorySystem inventory,
+            SalesTransactionSystem sales,
+            List<Buyer> buyers,
+            Runnable onLogout
+    ) {
         this.stage = stage;
-        this.clerkName = clerkName;
-        this.clerkID = clerkID;
+        this.clerkFullName = clerkFullName;
+        this.clerkId = clerkId;
         this.clerkUsername = clerkUsername;
-        this.productDatabase = productDatabase;
-        this.inventorySystem = inventorySystem;
-        this.salesSystem = salesSystem;
+        this.products = products;
+        this.inventory = inventory;
+        this.sales = sales;
         this.buyers = buyers;
         this.onLogout = onLogout;
     }
 
-    /** Backward-compatible overload for any older callers. */
-    public ClerkDashboard(Stage stage,
-                          String clerkName,
-                          String clerkID,
-                          ProductDatabase productDatabase,
-                          InventorySystem inventorySystem,
-                          SalesTransactionSystem salesSystem,
-                          List<Buyer> buyers,
-                          Runnable onLogout) {
-        this(stage, clerkName, clerkID, clerkID,
-                productDatabase, inventorySystem, salesSystem, buyers, onLogout);
-    }
-
     public void show() {
         root = new BorderPane();
-        contentArea = new StackPane();
-        pageTitleLabel = new Label("Overview");
-
-        root.setTop(createTopBar());
-        root.setLeft(createSidebar());
-        root.setCenter(contentArea);
+        root.setLeft(buildSidebar());
+        root.setTop(buildTopBar());
 
         showOverview();
 
         Scene scene = new Scene(root, 1250, 780);
-        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm()); // this links to the css 
+        URL cssUrl = getClass().getResource("/clerkDashboard/ClerkDashboardDesign.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
         stage.setTitle("Angkat Fish Port - Clerk Dashboard");
-        stage.setMinWidth(1050);
-        stage.setMinHeight(650);
         stage.setScene(scene);
-        stage.show();
+        stage.centerOnScreen();
     }
 
-    private Node createTopBar() {
-        Label clerkDetails = new Label(
-                clerkName + "   |   ID: " + clerkID + "   |   Clerk");
+    // SIDEBAR & TOP BAR
 
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(event -> refreshCurrentPage());
+    private VBox buildSidebar() {
+        VBox sidebar = new VBox(8);
+        sidebar.setPrefWidth(235);
+        sidebar.getStyleClass().add("sidebar");
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox brandBox = new HBox(10);
+        brandBox.setAlignment(Pos.CENTER_LEFT);
+        URL logoUrl = getClass().getResource("/images/logo.png");
+        if (logoUrl != null) {
+            ImageView logoView = new ImageView(new Image(logoUrl.toExternalForm()));
+            logoView.setFitWidth(36);
+            logoView.setFitHeight(36);
+            logoView.setPreserveRatio(true);
+            brandBox.getChildren().add(logoView);
+        }
 
-        HBox topBar = new HBox(15,
-                pageTitleLabel,
-                spacer,
-                clerkDetails,
-                refreshButton);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(15, 20, 15, 20));
+        VBox titleStack = new VBox(2);
+        Label brandTitle = new Label("ANGKAT FISH PORT");
+        brandTitle.getStyleClass().add("brand-title");
+        Label brandSub = new Label("CLERK TERMINAL");
+        brandSub.getStyleClass().add("brand-subtitle");
+        titleStack.getChildren().addAll(brandTitle, brandSub);
+        brandBox.getChildren().add(titleStack);
 
-        return topBar;
-    }
+        Separator sep = new Separator();
+        sep.getStyleClass().add("sidebar-divider");
+        VBox.setMargin(sep, new Insets(8, 0, 8, 0));
 
-    private Node createSidebar() {
-        Label applicationName = new Label("ANGKAT FISH PORT");
-        Label roleLabel = new Label("CLERK TERMINAL");
+        overviewBtn = makeNavButton("Overview");
+        overviewBtn.setOnAction(e -> showOverview());
 
-        Button overviewButton = createNavigationButton("Overview");
-        Button posButton = createNavigationButton("Point of Sale (POS)");
-        Button productCatalogButton = createNavigationButton("Product Catalog");
-        Button inventoryButton = createNavigationButton("Check Inventory");
-        Button shiftHistoryButton = createNavigationButton("Recent Stock Activity");
-        Button logoutButton = createNavigationButton("Logout");
+        posBtn = makeNavButton("Point of Sale (POS)");
+        posBtn.setOnAction(e -> showPOS());
 
-        overviewButton.setOnAction(event -> showOverview());
-        posButton.setOnAction(event -> openPointOfSale());
-        productCatalogButton.setOnAction(event -> openProductCatalog());
-        inventoryButton.setOnAction(event -> openInventoryCheck());
-        shiftHistoryButton.setOnAction(event -> showShiftActivity());
-        logoutButton.setOnAction(event -> confirmLogout());
+        catalogBtn = makeNavButton("Product Catalog");
+        catalogBtn.setOnAction(e -> showCatalog());
+
+        inventoryBtn = makeNavButton("Check Inventory");
+        inventoryBtn.setOnAction(e -> showInventory());
+
+        activityBtn = makeNavButton("Recent Stock Activity");
+        activityBtn.setOnAction(e -> showStockActivity());
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        VBox sidebar = new VBox(10,
-                applicationName,
-                roleLabel,
-                new Separator(),
-                overviewButton,
-                posButton,
-                productCatalogButton,
-                inventoryButton,
-                shiftHistoryButton,
-                spacer,
-                new Separator(),
-                logoutButton);
-        sidebar.setPadding(new Insets(20, 12, 20, 12));
-        sidebar.setPrefWidth(225);
+        Button logoutBtn = new Button("Logout");
+        logoutBtn.setMaxWidth(Double.MAX_VALUE);
+        logoutBtn.getStyleClass().add("logout-btn");
+        logoutBtn.setOnAction(e -> confirmLogout());
+
+        sidebar.getChildren().addAll(
+                brandBox, sep,
+                overviewBtn, posBtn, catalogBtn, inventoryBtn, activityBtn,
+                spacer, logoutBtn
+        );
 
         return sidebar;
     }
 
-    private Button createNavigationButton(String text) {
-        Button button = new Button(text);
-        button.setMaxWidth(Double.MAX_VALUE);
-        button.setAlignment(Pos.CENTER_LEFT);
-        return button;
+    private Button makeNavButton(String text) {
+        Button btn = new Button(text);
+        btn.setMaxWidth(Double.MAX_VALUE);
+        btn.getStyleClass().add("nav-btn");
+        return btn;
     }
 
-    private void displayPage(String pageName, Node pageContent) {
-        currentPage = pageName;
-        pageTitleLabel.setText(pageName);
+    private void updateActiveNav(Button selected, String tabKey, String pageTitle) {
+        this.activeTab = tabKey;
+        if (pageTitleLabel != null) {
+            pageTitleLabel.setText(pageTitle);
+        }
 
-        ScrollPane scrollPane = new ScrollPane(pageContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPannable(true);
-
-        contentArea.getChildren().setAll(scrollPane);
-    }
-
-    private void refreshCurrentPage() {
-        switch (currentPage) {
-            case "Overview":
-                showOverview();
-                break;
-            case "Point of Sale (POS)":
-                openPointOfSale();
-                break;
-            case "Product Catalog":
-                openProductCatalog();
-                break;
-            case "Check Inventory":
-                openInventoryCheck();
-                break;
-            case "Recent Stock Activity":
-                showShiftActivity();
-                break;
+        for (Button b : new Button[]{overviewBtn, posBtn, catalogBtn, inventoryBtn, activityBtn}) {
+            b.getStyleClass().removeAll("nav-btn", "nav-btn-active");
+            b.getStyleClass().add(b == selected ? "nav-btn-active" : "nav-btn");
         }
     }
 
-    private void showOverview() {
-        int availableProducts = productDatabase.getAllProducts().size();
-        int lowStockCount = inventorySystem.getProductsLowOnStock().size();
-        int outOfStockCount = inventorySystem.getProductsOutOfStock().size();
+    private HBox buildTopBar() {
+        HBox topBar = new HBox(14);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.getStyleClass().add("topbar");
 
-        GridPane summaryCards = new GridPane();
-        summaryCards.setHgap(12);
-        summaryCards.setVgap(12);
-        summaryCards.add(createSummaryCard("Catalog Varieties", availableProducts), 0, 0);
-        summaryCards.add(createSummaryCard("Low-stock Items", lowStockCount), 1, 0);
-        summaryCards.add(createSummaryCard("Out-of-stock Items", outOfStockCount), 2, 0);
+        pageTitleLabel = new Label("Overview");
+        pageTitleLabel.getStyleClass().add("page-title");
 
-        Button startSaleBtn = new Button("Start New Sale (POS)");
-        startSaleBtn.setOnAction(e -> openPointOfSale());
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button checkPricesBtn = new Button("View Fish Prices & Catalog");
-        checkPricesBtn.setOnAction(e -> openProductCatalog());
+        String displayName = (clerkFullName != null && !clerkFullName.isBlank()) ? clerkFullName : clerkUsername;
+        Label userBadge = new Label(displayName + "   |   ID: " + clerkId + "   |   Clerk");
+        userBadge.getStyleClass().add("user-badge");
 
-        Button verifyStockBtn = new Button("Check Stock Levels");
-        verifyStockBtn.setOnAction(e -> openInventoryCheck());
+        Button refreshBtn = new Button("Refresh");
+        refreshBtn.getStyleClass().add("refresh-btn");
+        refreshBtn.setOnAction(e -> refreshCurrentScreen());
 
-        HBox quickActions = new HBox(12, startSaleBtn, checkPricesBtn, verifyStockBtn);
-
-        VBox stockTableSection = new VBox(8,
-                new Label("Current Catch & Stock Levels"),
-                createCurrentStockTable());
-
-        VBox lowStockSection = new VBox(8,
-                new Label("Low / Out-of-Stock Alerts (Verify Before Bulk Orders)"),
-                createInventoryAttentionTable());
-
-        HBox tablesRow = new HBox(15, stockTableSection, lowStockSection);
-        HBox.setHgrow(stockTableSection, Priority.ALWAYS);
-        HBox.setHgrow(lowStockSection, Priority.ALWAYS);
-        stockTableSection.setPrefWidth(600);
-        lowStockSection.setPrefWidth(480);
-
-        Label overviewDescription = new Label(
-                "Process buyer orders, verify seafood prices, and check available stock in kilograms.");
-
-        VBox page = new VBox(18,
-                overviewDescription,
-                quickActions,
-                summaryCards,
-                tablesRow);
-        page.setPadding(new Insets(22));
-        page.setFillWidth(true);
-
-        displayPage("Overview", page);
+        topBar.getChildren().addAll(pageTitleLabel, spacer, userBadge, refreshBtn);
+        return topBar;
     }
 
-    private VBox createSummaryCard(String title, int value) {
-        Label titleLabel = new Label(title);
-        Label valueLabel = new Label(String.valueOf(value));
-
-        VBox card = new VBox(8, titleLabel, valueLabel);
-        card.setPadding(new Insets(15));
-        card.setMinWidth(150);
-        card.setPrefWidth(220);
-        GridPane.setHgrow(card, Priority.ALWAYS);
-        return card;
-    }
-
-    private TableView<InventoryOfProduct> createCurrentStockTable() {
-        TableView<InventoryOfProduct> table = new TableView<>();
-
-        TableColumn<InventoryOfProduct, String> productColumn =
-                new TableColumn<>("Product");
-        productColumn.setCellValueFactory(cell -> {
-            Product product = cell.getValue().getProduct();
-            if (product == null) {
-                return new ReadOnlyStringWrapper("Unknown");
-            }
-
-            return new ReadOnlyStringWrapper(product.getProductName());
-        });
-
-        TableColumn<InventoryOfProduct, String> stockColumn =
-                new TableColumn<>("Available Stock");
-        stockColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                String.format("%.2f kg", cell.getValue().getProductStockInKG())));
-
-        TableColumn<InventoryOfProduct, String> statusColumn =
-                new TableColumn<>("Availability");
-        statusColumn.setCellValueFactory(cell -> {
-            double stock = cell.getValue().getProductStockInKG();
-            if (stock == 0) {
-                return new ReadOnlyStringWrapper("Out of stock");
-            } else if (inventorySystem.getProductsLowOnStock().contains(cell.getValue())) {
-                return new ReadOnlyStringWrapper("Low stock");
-            }
-            return new ReadOnlyStringWrapper("In stock");
-        });
-
-        table.getColumns().addAll(productColumn, stockColumn, statusColumn);
-        table.setItems(FXCollections.observableArrayList(inventorySystem.getAllInventory()));
-        table.setPlaceholder(new Label("No inventory records available."));
-        table.setPrefHeight(320);
-
-        return table;
-    }
-
-    private TableView<InventoryOfProduct> createInventoryAttentionTable() {
-        TableView<InventoryOfProduct> table = new TableView<>();
-
-        TableColumn<InventoryOfProduct, String> productColumn =
-                new TableColumn<>("Product");
-        productColumn.setCellValueFactory(cell -> {
-            Product product = cell.getValue().getProduct();
-            if (product == null) {
-                return new ReadOnlyStringWrapper("Unknown");
-            }
-
-            return new ReadOnlyStringWrapper(product.getProductName());
-        });
-
-        TableColumn<InventoryOfProduct, String> stockColumn =
-                new TableColumn<>("Stock");
-        stockColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                String.format("%.2f kg", cell.getValue().getProductStockInKG())));
-
-        TableColumn<InventoryOfProduct, String> statusColumn =
-                new TableColumn<>("Status");
-        statusColumn.setCellValueFactory(cell -> {
-            double stock = cell.getValue().getProductStockInKG();
-            if (stock == 0) {
-                return new ReadOnlyStringWrapper("Out of stock");
-            }
-
-            return new ReadOnlyStringWrapper("Low stock");
-        });
-
-        table.getColumns().addAll(productColumn, stockColumn, statusColumn);
-
-        ArrayList<InventoryOfProduct> attentionItems = new ArrayList<>();
-        attentionItems.addAll(inventorySystem.getProductsLowOnStock());
-        attentionItems.addAll(inventorySystem.getProductsOutOfStock());
-        table.setItems(FXCollections.observableArrayList(attentionItems));
-        table.setPlaceholder(new Label("All products are well-stocked."));
-        table.setPrefHeight(320);
-
-        return table;
-    }
-
-    private void openPointOfSale() {
-        syncInventoryRecords();
-        TransactionView posView = new TransactionView(salesSystem, productDatabase, buyers);
-        displayPage("Point of Sale (POS)", posView);
-    }
-
-    private void openProductCatalog() {
-        ProductManagementView productView = new ProductManagementView(productDatabase, inventorySystem, false);
-        displayPage("Product Catalog", productView);
-    }
-
-    private void openInventoryCheck() {
-
-        // Clerks can inspect inventory and history but cannot modify stock.
-        InventoryGUI inventoryGUI = new InventoryGUI(
-                inventorySystem, clerkUsername, false);
-        inventoryGUI.setStageComponents();
-    }
-
-    private void syncInventoryRecords() {
-        for (Product p : productDatabase.getAllProducts()) {
-            if (inventorySystem.getProductInventoryByCode(p.getProductCode()) == null) {
-                inventorySystem.createInventoryRecord(p);
-            }
+    private void refreshCurrentScreen() {
+        switch (activeTab) {
+            case "POS" -> showPOS();
+            case "CATALOG" -> showCatalog();
+            case "INVENTORY" -> showInventory();
+            case "ACTIVITY" -> showStockActivity();
+            default -> showOverview();
         }
-    }
-
-    private void showShiftActivity() {
-        Label description = new Label(
-                "View recent stock deductions and restocks.");
-
-        TableView<StockRecordedChange> table = new TableView<>();
-
-        TableColumn<StockRecordedChange, String> idColumn =
-                new TableColumn<>("Record ID");
-        idColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getRecordId()));
-
-        TableColumn<StockRecordedChange, String> productColumn =
-                new TableColumn<>("Product Code");
-        productColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getProductCode()));
-
-        TableColumn<StockRecordedChange, String> changeColumn =
-                new TableColumn<>("Change Type");
-        changeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getChangeType()));
-
-        TableColumn<StockRecordedChange, String> afterColumn =
-                new TableColumn<>("Remaining Stock");
-        afterColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                String.format("%.2f kg", cell.getValue().getNewStock())));
-
-        TableColumn<StockRecordedChange, String> timeColumn =
-                new TableColumn<>("Date and Time");
-        timeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                formatDateTime(cell.getValue().getTime())));
-
-        table.getColumns().addAll(idColumn, productColumn, changeColumn, afterColumn, timeColumn);
-
-        List<StockRecordedChange> records =
-                new ArrayList<>(inventorySystem.getAllHistory());
-        // Show the newest stock changes first.
-        for (int i = 0; i < records.size(); i++) {
-            for (int j = i + 1; j < records.size(); j++) {
-                LocalDateTime firstTime = records.get(i).getTime();
-                LocalDateTime secondTime = records.get(j).getTime();
-                boolean moveSecondRecord = false;
-
-                if (firstTime == null && secondTime != null) {
-                    moveSecondRecord = true;
-                } else if (firstTime != null && secondTime != null
-                        && firstTime.isBefore(secondTime)) {
-                    moveSecondRecord = true;
-                }
-
-                if (moveSecondRecord) {
-                    StockRecordedChange temporaryRecord = records.get(i);
-                    records.set(i, records.get(j));
-                    records.set(j, temporaryRecord);
-                }
-            }
-        }
-
-        table.setItems(FXCollections.observableArrayList(records));
-        table.setPlaceholder(new Label("No stock changes recorded yet."));
-        table.setPrefHeight(420);
-
-        VBox page = new VBox(18, description, table);
-        page.setPadding(new Insets(22));
-
-        displayPage("Recent Stock Activity", page);
-    }
-
-    private String formatDateTime(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return "";
-        }
-
-        return dateTime.format(DATE_FORMAT);
     }
 
     private void confirmLogout() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Logout");
-        alert.setHeaderText("Log out of Angkat Fish Port?");
-        alert.setContentText("You will be returned to the login screen.");
+        alert.initOwner(stage);
+        alert.setTitle("Confirm Logout");
+        alert.setHeaderText("Sign out of Clerk Terminal?");
+        alert.setContentText("Any unsaved screen changes will be closed.");
 
-        alert.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.OK) {
-                if (onLogout != null) {
-                    onLogout.run();
-                } else {
-                    stage.close();
-                }
-            }
-        });
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK && onLogout != null) {
+            onLogout.run();
+        }
     }
-}
+
+    // VIEWS / NAVIGATION
+
+    private void showOverview() {
+        updateActiveNav(overviewBtn, "OVERVIEW", "Overview");
+        syncInventoryRecords();
+
+        VBox content = new VBox(18);
+        content.setPadding(new Insets(22, 26, 22, 26));
+
+        Label subtitle = new Label("Process buyer orders, verify seafood prices, and check available stock in kilograms.");
+        subtitle.getStyleClass().add("subtitle-label");
+
+        // Quick Action Buttons
+        HBox quickActions = new HBox(12);
+        Button startSaleBtn = new Button("Start New Sale (POS)");
+        startSaleBtn.getStyleClass().add("action-primary-btn");
+        startSaleBtn.setOnAction(e -> showPOS());
+
+        Button viewPricesBtn = new Button("View Fish Prices & Catalog");
+        viewPricesBtn.getStyleClass().add("action-secondary-btn");
+        viewPricesBtn.setOnAction(e -> showCatalog());
+
+        Button checkStockBtn = new Button("Check Stock Levels");
+        checkStockBtn.getStyleClass().add("action-secondary-btn");
+        checkStockBtn.setOnAction(e -> showInventory());
+
+        quickActions.getChildren().addAll(startSaleBtn, viewPricesBtn, checkStockBtn);
+
+        // Metrics Calculation
+        List<Product> allProducts = products.getAllProducts();
+        int totalVarieties = allProducts.size();
+        int lowStockCount = 0;
+        int outOfStockCount = 0;
+
+        ObservableList<StockRow> allRows = FXCollections.observableArrayList();
+        ObservableList<StockRow> alertRows = FXCollections.observableArrayList();
+
+        for (Product p : allProducts) {
+            InventoryOfProduct inv = inventory.getProductInventoryByCode(p.getProductCode());
+            double qty = (inv != null) ? inv.getQuantity() : 0.0;
+
+            String status;
+            if (qty <= 0.0) {
+                status = "Out of stock";
+                outOfStockCount++;
+            } else if (qty < LOW_STOCK_THRESHOLD) {
+                status = "Low stock";
+                lowStockCount++;
+            } else {
+                status = "In stock";
+            }
+
+            StockRow row = new StockRow(
+                    p.getProductName(),
+                    String.format("₱%.2f / kg", p.getRawPrice()),
+                    String.format("%.2f kg", qty),
+                    status
+            );
+            allRows.add(row);
+
+            if (!status.equals("In stock")) {
+                alertRows.add(row);
+            }
+        }
+
+        // KPI Cards Row
+        HBox kpiRow = new HBox(16);
+        VBox card1 = makeStatCard("Catalog Varieties", String.valueOf(totalVarieties), "stat-value-blue");
+        VBox card2 = makeStatCard("Low-stock Items (< 300 kg)", String.valueOf(lowStockCount), "stat-value-amber");
+        VBox card3 = makeStatCard("Out-of-stock Items", String.valueOf(outOfStockCount), "stat-value-red");
+        HBox.setHgrow(card1, Priority.ALWAYS);
+        HBox.setHgrow(card2, Priority.ALWAYS);
+        HBox.setHgrow(card3, Priority.ALWAYS);
+        kpiRow.getChildren().addAll(card1, card2, card3);
+
+        // Side-by-Side Tables
+        HBox tablesRow = new HBox(18);
+        VBox.setVgrow(tablesRow, Priority.ALWAYS);
+
+        VBox leftPanel = buildStockTablePanel("Current Catch & Stock Levels", allRows, true);
+        VBox rightPanel = buildStockTablePanel("Low / Out-of-Stock Alerts (Verify Before Bulk Orders)", alertRows, false);
+        HBox.setHgrow(leftPanel, Priority.ALWAYS);
+        HBox.setHgrow(rightPanel, Priority.ALWAYS);
+
+        tablesRow.getChildren().addAll(leftPanel, rightPanel);
+
+        content.getChildren().addAll(subtitle, quickActions, kpiRow, tablesRow);
+        root.setCenter(content);
+    }
+
+    private void showPOS() {
+        updateActiveNav(posBtn, "POS", "Point of Sale (POS)");
+        syncInventoryRecords();
+        root.setCenter(new TransactionView(sales, products, buyers));
+    }
+
+    private void showCatalog() {
+        updateActiveNav(catalogBtn, "CATALOG", "Product Catalog (Read-Only)");
+        root.setCenter(new ProductManagementView(products, false));
+    }
+
+    private void showInventory() {
+        updateActiveNav(inventoryBtn, "INVENTORY", "Check Inventory");
+        syncInventoryRecords();
+        String actor = (clerkUsername != null && !clerkUsername.isBlank()) ? clerkUsername : clerkFullName;
+        root.setCenter(new InventoryGUI(inventory, actor, false));
+    }
+
+    private void showStockActivity() {
+        updateActiveNav(activityBtn, "ACTIVITY", "Recent Stock Activity");
+
+        VBox container = new VBox(14);
+        container.setPadding(new Insets(22, 26, 22, 26));
+
+        VBox card = new VBox(12);
+        card.getStyleClass().add("panel-card");
+        VBox.setVgrow(card, Priority.ALWAYS);
+
+        Label title = new Label("Inventory Restock & Deduction Log");
+        title.getStyleClass().add("panel-title");
+
+        TableView<StockRecordedChange> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        TableColumn<StockRecordedChange, String> timeCol = new TableColumn<>("Timestamp");
+        timeCol.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getTime() != null ? c.getValue().getTime().format(fmt) : "-"
+        ));
+
+        TableColumn<StockRecordedChange, String> prodCol = new TableColumn<>("Product");
+        prodCol.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getProduct() != null ? c.getValue().getProduct().getProductName() : c.getValue().getProductCode()
+        ));
+
+        TableColumn<StockRecordedChange, String> typeCol = new TableColumn<>("Action");
+        typeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getChangeType()));
+
+        TableColumn<StockRecordedChange, String> qtyCol = new TableColumn<>("Change (kg)");
+        qtyCol.setCellValueFactory(c -> new SimpleStringProperty(
+                String.format("%+.2f kg", c.getValue().getAmountChanged())
+        ));
+
+        TableColumn<StockRecordedChange, String> newStockCol = new TableColumn<>("New Stock (kg)");
+        newStockCol.setCellValueFactory(c -> new SimpleStringProperty(
+                String.format("%.2f kg", c.getValue().getNewStock())
+        ));
+
+        TableColumn<StockRecordedChange, String> userCol = new TableColumn<>("Recorded By");
+        userCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPerformedBy()));
+
+        TableColumn<StockRecordedChange, String> noteCol = new TableColumn<>("Notes");
+        noteCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getExplanation()));
+
+        table.getColumns().addAll(timeCol, prodCol, typeCol, qtyCol, newStockCol, userCol, noteCol);
+
+        List<StockRecordedChange> logs = new ArrayList<>(inventory.getStockChangeHistory());
+        logs.sort(Comparator.comparing(StockRecordedChange::getTime, Comparator.nullsLast(Comparator.reverseOrder())));
+        table.setItems(FXCollections.observableArrayList(logs));
+
+        card.getChildren().addAll(title, table);
+        container.getChildren().add(card);
+        root.setCenter(container);
+    }
+
+    // UI HELPERS
+
+    private VBox makeStatCard(String title, String value, String valueStyleClass) {
+        VBox card = new VBox(6);
+        card.getStyleClass().add("stat-card");
+
+        Label titleLbl = new Label(title);
+        titleLbl.getStyleClass().add("stat-title");
+
+        Label valLbl = new Label(value);
+        valLbl.getStyleClass().add(valueStyleClass);
+
+        card.getChildren().addAll(titleLbl, valLbl);
+        return card;
+    }
+
+    private VBox buildStockTablePanel(String heading, ObservableList<StockRow> rows, boolean includePriceColumn) {
+        VBox panel = new VBox(12);
+        panel.getStyleClass().add("
