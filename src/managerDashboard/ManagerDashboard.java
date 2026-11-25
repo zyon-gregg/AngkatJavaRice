@@ -114,28 +114,43 @@ public class ManagerDashboard {
     public void setStageComponents() {
 
         root = new BorderPane();
+        root.getStyleClass().add("manager-dashboard-root");
+
         mainContent = new VBox(24);
         mainContent.setPadding(new Insets(24));
         mainContent.setFillWidth(true);
-        mainContent.getStyleClass().add("main-content");
+        mainContent.getStyleClass().add("manager-main-content");
 
         // Add the dashboard sections from top to bottom.
         mainContent.getChildren().addAll(
                 createHeader(),
-                new Separator(),
+                createSectionDivider(),
                 createBusinessOverview(),
                 createManagementModules(),
+                createSectionDivider(),
                 createSystemActivity(),
                 createFooter());
 
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
         scrollPane.setPannable(true);
+        scrollPane.getStyleClass().add("manager-scroll-pane");
 
         root.setCenter(scrollPane);
 
         Scene scene = new Scene(root, 1250, 850);
-        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+
+        // Load the stylesheet using its actual filename in this package.
+        java.net.URL dashboardStylesheet =
+                getClass().getResource("ManagerDashboardDesign.css");
+
+        if (dashboardStylesheet != null) {
+            scene.getStylesheets().add(dashboardStylesheet.toExternalForm());
+        } else {
+            System.out.println(
+                    "ManagerDashboardDesign.css was not found in the managerDashboard package.");
+        }
+
         stage.setTitle("Angkat - Manager Dashboard");
         stage.setMinWidth(1050);
         stage.setMinHeight(650);
@@ -162,10 +177,11 @@ public class ManagerDashboard {
     private HBox createHeader() {
 
         Label applicationName = new Label("ANGKAT");
-        applicationName.getStyleClass().add("header-label"); 
+        applicationName.getStyleClass().add("manager-brand-name");
         Label applicationSubtitle = new Label("FISH PORT MANAGEMENT SYSTEM");
-        applicationSubtitle.getStyleClass().add("sub-header");
+        applicationSubtitle.getStyleClass().add("manager-brand-subtitle");
         VBox branding = new VBox(4, applicationName, applicationSubtitle);
+        branding.getStyleClass().add("manager-branding");
 
         String displayName = getDisplayValue(
                 manager.getName(), manager.getUserName());
@@ -173,17 +189,23 @@ public class ManagerDashboard {
                 manager.getUserID(), manager.getUserName());
 
         Label welcomeLabel = new Label("Welcome, " + displayName + "!");
-        welcomeLabel.getStyleClass().add("sub-header");
+        welcomeLabel.getStyleClass().add("manager-welcome");
         Label managerDetails = new Label(
                 "Manager ID: " + displayID
                 + "   |   Username: " + manager.getUserName());
+        managerDetails.getStyleClass().add("manager-details");
         VBox managerInformation = new VBox(4, welcomeLabel, managerDetails);
         managerInformation.setAlignment(Pos.CENTER_RIGHT);
+        managerInformation.getStyleClass().add("manager-information");
 
         Button refreshButton = new Button("Refresh");
+        refreshButton.getStyleClass().addAll(
+                "manager-header-button", "manager-refresh-button");
         refreshButton.setOnAction(event -> refreshDashboard());
 
         Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().addAll(
+                "manager-header-button", "manager-logout-button");
         logoutButton.setOnAction(event -> confirmLogout());
 
         Region spacer = new Region();
@@ -198,7 +220,14 @@ public class ManagerDashboard {
                 logoutButton);
 
         header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("manager-header");
         return header;
+    }
+
+    private Separator createSectionDivider() {
+        Separator divider = new Separator();
+        divider.getStyleClass().add("manager-section-divider");
+        return divider;
     }
 
     // -----------------------------------------------------------------
@@ -208,6 +237,7 @@ public class ManagerDashboard {
     private VBox createBusinessOverview() {
 
         Label sectionTitle = new Label("Business Overview");
+        sectionTitle.getStyleClass().add("manager-section-title");
 
         totalProductsValue = new Label("0");
         lowStockValue = new Label("0");
@@ -217,6 +247,15 @@ public class ManagerDashboard {
         GridPane cards = new GridPane();
         cards.setHgap(14);
         cards.setVgap(14);
+        cards.getStyleClass().add("manager-summary-grid");
+
+        for (int i = 0; i < 4; i++) {
+            javafx.scene.layout.ColumnConstraints column =
+                    new javafx.scene.layout.ColumnConstraints();
+            column.setPercentWidth(25);
+            column.setHgrow(Priority.ALWAYS);
+            cards.getColumnConstraints().add(column);
+        }
 
         cards.add(createSummaryCard("Total Products", totalProductsValue), 0, 0);
         cards.add(createSummaryCard("Low-stock Products", lowStockValue), 1, 0);
@@ -226,21 +265,32 @@ public class ManagerDashboard {
         updateSummaryCards();
 
         VBox section = new VBox(12, sectionTitle, cards);
+        section.getStyleClass().add("manager-section");
         return section;
     }
 
     private VBox createSummaryCard(String title, Label value) {
 
         Label titleLabel = new Label(title);
-        titleLabel.getStyleClass().add("sub-header"); 
-        
-        value.getStyleClass().add("total-price-label"); 
+        titleLabel.getStyleClass().add("manager-summary-title");
+
+        value.getStyleClass().add("manager-summary-value");
         VBox card = new VBox(10, titleLabel, value);
         card.setPadding(new Insets(18));
         card.setMinHeight(105);
         card.setMaxWidth(Double.MAX_VALUE);
+        card.getStyleClass().add("manager-summary-card");
 
-        card.getStyleClass().add("card"); 
+        if ("Total Products".equals(title)) {
+            card.getStyleClass().add("summary-blue");
+        } else if ("Low-stock Products".equals(title)) {
+            card.getStyleClass().add("summary-orange");
+        } else if ("Out-of-stock Products".equals(title)) {
+            card.getStyleClass().add("summary-red");
+        } else {
+            card.getStyleClass().add("summary-teal");
+        }
+
         GridPane.setHgrow(card, Priority.ALWAYS);
         return card;
     }
@@ -267,22 +317,27 @@ public class ManagerDashboard {
     private VBox createManagementModules() {
 
         Label sectionTitle = new Label("Management Modules");
+        sectionTitle.getStyleClass().add("manager-section-title");
 
         Button productButton = createModuleButton(
                 "Product Management",
-                "Manage seafood products and product information.");
+                "Manage seafood products and product information.",
+                "manager-module-blue");
 
         Button inventoryButton = createModuleButton(
                 "Inventory Management",
-                "Monitor stock, restock products, and adjust quantities.");
+                "Monitor stock, restock products, and adjust quantities.",
+                "manager-module-green");
 
         Button salesButton = createModuleButton(
                 "Sales & Transactions",
-                "Open the sales terminal and review payment records.");
+                "Open the sales terminal and review payment records.",
+                "manager-module-orange");
 
         Button userButton = createModuleButton(
                 "User Management",
-                "Review pending registrations and manage accounts.");
+                "Review pending registrations and manage accounts.",
+                "manager-module-purple");
 
         productButton.setOnAction(event -> openProductManagement());
         inventoryButton.setOnAction(event -> openInventoryManagement());
@@ -292,6 +347,7 @@ public class ManagerDashboard {
         GridPane moduleGrid = new GridPane();
         moduleGrid.setHgap(14);
         moduleGrid.setVgap(14);
+        moduleGrid.getStyleClass().add("manager-module-grid");
 
         moduleGrid.add(productButton, 0, 0);
         moduleGrid.add(inventoryButton, 1, 0);
@@ -302,6 +358,7 @@ public class ManagerDashboard {
                 createEqualColumn(), createEqualColumn());
 
         VBox section = new VBox(12, sectionTitle, moduleGrid);
+        section.getStyleClass().add("manager-section");
         return section;
     }
 
@@ -313,33 +370,50 @@ public class ManagerDashboard {
         return column;
     }
 
-    private Button createModuleButton(String title, String description) {
+    private Button createModuleButton(
+            String title, String description, String colorStyle) {
 
         Label titleLabel = new Label(title);
-        titleLabel.getStyleClass().add("sub-header");
+        titleLabel.getStyleClass().add("manager-module-title");
+        titleLabel.setAlignment(Pos.CENTER);
+        titleLabel.setWrapText(true);
+
         Label descriptionLabel = new Label(description);
+        descriptionLabel.getStyleClass().add("manager-module-description");
+        descriptionLabel.setAlignment(Pos.CENTER);
+        descriptionLabel.setWrapText(true);
+
         Label actionLabel = new Label("OPEN MODULE  >");
+        actionLabel.getStyleClass().add("manager-module-action");
+        actionLabel.setAlignment(Pos.CENTER);
 
         VBox buttonContent = new VBox(
                 9,
                 titleLabel,
                 descriptionLabel,
                 actionLabel);
+        buttonContent.setAlignment(Pos.CENTER);
+        buttonContent.setFillWidth(true);
+        buttonContent.setMaxWidth(Double.MAX_VALUE);
+        titleLabel.setMaxWidth(Double.MAX_VALUE);
+        descriptionLabel.setMaxWidth(Double.MAX_VALUE);
+        actionLabel.setMaxWidth(Double.MAX_VALUE);
+        buttonContent.getStyleClass().add("manager-module-content");
 
         Button button = new Button();
         button.setGraphic(buttonContent);
-        button.setAlignment(Pos.CENTER_LEFT);
+        button.setAlignment(Pos.CENTER);
         button.setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
         button.setMaxWidth(Double.MAX_VALUE);
-        button.setMinHeight(125);
-        button.setPrefHeight(135);
-        button.getStyleClass().add("card"); 
+        button.setMinHeight(145);
+        button.setPrefHeight(155);
+        button.getStyleClass().addAll("manager-module-button", colorStyle);
 
         return button;
     }
 
 
-private void openProductManagement() {
+    private void openProductManagement() {
 
     ProductManagementView productView =
             new ProductManagementView(productDatabase, inventorySystem, true);
@@ -418,11 +492,14 @@ private void openProductManagement() {
     private VBox createSystemActivity() {
 
         Label sectionTitle = new Label("System Activity");
+        sectionTitle.getStyleClass().add("manager-section-title");
 
         ToggleGroup activityGroup = new ToggleGroup();
 
         ToggleButton inventoryButton = new ToggleButton("Inventory Changes");
+        inventoryButton.getStyleClass().add("manager-activity-toggle");
         ToggleButton transactionButton = new ToggleButton("Transactions");
+        transactionButton.getStyleClass().add("manager-activity-toggle");
 
         inventoryButton.setToggleGroup(activityGroup);
         transactionButton.setToggleGroup(activityGroup);
@@ -430,8 +507,10 @@ private void openProductManagement() {
 
         HBox selectors = new HBox(10, inventoryButton, transactionButton);
         selectors.setAlignment(Pos.CENTER_LEFT);
+        selectors.getStyleClass().add("manager-activity-selectors");
 
         activityTableArea = new StackPane();
+        activityTableArea.getStyleClass().add("manager-activity-table-area");
         refreshActivityTable();
 
         inventoryButton.setOnAction(event -> {
@@ -445,6 +524,7 @@ private void openProductManagement() {
         });
 
         VBox section = new VBox(12, sectionTitle, selectors, activityTableArea);
+        section.getStyleClass().add("manager-section");
         return section;
     }
 
@@ -468,6 +548,7 @@ private void openProductManagement() {
     private TableView<StockRecordedChange> createInventoryHistoryTable(int maximumRows) {
 
         TableView<StockRecordedChange> table = new TableView<>();
+        table.getStyleClass().add("manager-activity-table");
 
         TableColumn<StockRecordedChange, String> idColumn =
                 new TableColumn<>("Record ID");
@@ -563,6 +644,7 @@ private void openProductManagement() {
     private Node createTransactionHistoryTable(int maximumRows) {
 
         TableView<Receipt> table = new TableView<>();
+        table.getStyleClass().add("manager-activity-table");
 
         TableColumn<Receipt, String> receiptIDColumn =
                 new TableColumn<>("Receipt ID");
@@ -642,6 +724,7 @@ private void openProductManagement() {
         table.setPrefHeight(350);
 
         Button viewReceiptButton = new Button("View Selected Receipt");
+        viewReceiptButton.getStyleClass().add("manager-view-receipt-button");
         viewReceiptButton.setOnAction(event -> {
             Receipt selectedReceipt = table.getSelectionModel().getSelectedItem();
             showReceiptDetails(selectedReceipt);
@@ -649,8 +732,10 @@ private void openProductManagement() {
 
         HBox tableActions = new HBox(10, viewReceiptButton);
         tableActions.setAlignment(Pos.CENTER_LEFT);
+        tableActions.getStyleClass().add("manager-table-actions");
 
         VBox transactionHistory = new VBox(10, table, tableActions);
+        transactionHistory.getStyleClass().add("manager-transaction-history");
         return transactionHistory;
     }
 
@@ -772,15 +857,18 @@ private void openProductManagement() {
 
         Label applicationName =
                 new Label("Angkat Fish Port Management System");
+        applicationName.getStyleClass().add("manager-footer-label");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label portalName = new Label("Manager Portal");
+        portalName.getStyleClass().add("manager-footer-label");
 
         HBox footer = new HBox(12, applicationName, spacer, portalName);
         footer.setAlignment(Pos.CENTER_LEFT);
         footer.setPadding(new Insets(10, 0, 5, 0));
+        footer.getStyleClass().add("manager-footer");
 
         return footer;
     }
