@@ -58,7 +58,7 @@ public class ManagerDashboard {
     private final SalesTransactionSystem salesSystem;
     private final List<Buyer> buyers;
     private final LoginManager loginManager;
-
+    
     // Main JavaFX components
     private BorderPane root;
     private VBox mainContent;
@@ -117,6 +117,7 @@ public class ManagerDashboard {
         mainContent = new VBox(24);
         mainContent.setPadding(new Insets(24));
         mainContent.setFillWidth(true);
+        mainContent.getStyleClass().add("main-content");
 
         // Add the dashboard sections from top to bottom.
         mainContent.getChildren().addAll(
@@ -134,6 +135,7 @@ public class ManagerDashboard {
         root.setCenter(scrollPane);
 
         Scene scene = new Scene(root, 1250, 850);
+        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
         stage.setTitle("Angkat - Manager Dashboard");
         stage.setMinWidth(1050);
         stage.setMinHeight(650);
@@ -160,7 +162,9 @@ public class ManagerDashboard {
     private HBox createHeader() {
 
         Label applicationName = new Label("ANGKAT");
+        applicationName.getStyleClass().add("header-label"); 
         Label applicationSubtitle = new Label("FISH PORT MANAGEMENT SYSTEM");
+        applicationSubtitle.getStyleClass().add("sub-header");
         VBox branding = new VBox(4, applicationName, applicationSubtitle);
 
         String displayName = getDisplayValue(
@@ -169,6 +173,7 @@ public class ManagerDashboard {
                 manager.getUserID(), manager.getUserName());
 
         Label welcomeLabel = new Label("Welcome, " + displayName + "!");
+        welcomeLabel.getStyleClass().add("sub-header");
         Label managerDetails = new Label(
                 "Manager ID: " + displayID
                 + "   |   Username: " + manager.getUserName());
@@ -227,12 +232,15 @@ public class ManagerDashboard {
     private VBox createSummaryCard(String title, Label value) {
 
         Label titleLabel = new Label(title);
-
+        titleLabel.getStyleClass().add("sub-header"); 
+        
+        value.getStyleClass().add("total-price-label"); 
         VBox card = new VBox(10, titleLabel, value);
         card.setPadding(new Insets(18));
         card.setMinHeight(105);
         card.setMaxWidth(Double.MAX_VALUE);
 
+        card.getStyleClass().add("card"); 
         GridPane.setHgrow(card, Priority.ALWAYS);
         return card;
     }
@@ -308,6 +316,7 @@ public class ManagerDashboard {
     private Button createModuleButton(String title, String description) {
 
         Label titleLabel = new Label(title);
+        titleLabel.getStyleClass().add("sub-header");
         Label descriptionLabel = new Label(description);
         Label actionLabel = new Label("OPEN MODULE  >");
 
@@ -324,6 +333,7 @@ public class ManagerDashboard {
         button.setMaxWidth(Double.MAX_VALUE);
         button.setMinHeight(125);
         button.setPrefHeight(135);
+        button.getStyleClass().add("card"); 
 
         return button;
     }
@@ -336,7 +346,13 @@ public class ManagerDashboard {
         Stage productStage = new Stage();
         productStage.initOwner(stage);
         productStage.setTitle("Angkat - Product Management");
-        productStage.setScene(new Scene(productView, 1000, 560));
+        Scene productScene = new Scene(productView, 1000, 560);
+
+        productScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm()); // way to access the css design
+     	Scene scene = new Scene(root, 1250, 850);
+     	stage.setTitle("Angkat - Manager Dashboard");
+     	stage.setScene(scene);
+     	stage.show();
         productStage.setOnHidden(event -> refreshDashboard());
         productStage.show();
     }
@@ -359,7 +375,9 @@ public class ManagerDashboard {
         Stage transactionStage = new Stage();
         transactionStage.initOwner(stage);
         transactionStage.setTitle("Angkat - Sales & Transactions");
-        transactionStage.setScene(new Scene(transactionView, 1150, 700));
+        Scene transactionScene = new Scene(transactionView, 1150, 700);
+        transactionScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+        transactionStage.setScene(transactionScene);
         transactionStage.setOnHidden(event -> refreshDashboard());
         transactionStage.show();
     }
@@ -381,7 +399,9 @@ public class ManagerDashboard {
         Stage userStage = new Stage();
         userStage.initOwner(stage);
         userStage.setTitle("Angkat - User Management");
-        userStage.setScene(new Scene(userManagementView, 1050, 760));
+        Scene userScene = new Scene(userManagementView, 1050, 760);
+        userScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+        userStage.setScene(userScene);
         userStage.show();
     }
 

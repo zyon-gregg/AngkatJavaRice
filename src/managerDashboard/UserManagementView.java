@@ -39,8 +39,7 @@ public class UserManagementView extends BorderPane {
 
     private VBox createHeader() {
         Label title = new Label("User Management");
-        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
-
+        title.getStyleClass().add("header-label");
         Label subtitle = new Label(
                 "Review registration requests and manage registered accounts.");
 
@@ -56,8 +55,8 @@ public class UserManagementView extends BorderPane {
         VBox content = new VBox(18);
 
         Label pendingTitle = new Label("Pending Registration Requests");
-        pendingTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
+        pendingTitle.getStyleClass().add("sub-header");
+        
         pendingTable = createPendingTable();
 
         Button approveClerkButton = new Button("Approve as Clerk");
@@ -82,7 +81,6 @@ public class UserManagementView extends BorderPane {
 
         Label accountTitle = new Label("Registered Accounts");
         accountTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
         accountTable = createAccountTable();
 
         Button deactivateButton = new Button("Deactivate Account");
@@ -194,8 +192,9 @@ public class UserManagementView extends BorderPane {
         User selectedUser = pendingTable.getSelectionModel().getSelectedItem();
 
         if (selectedUser == null) {
-            messageLabel.setText("Select a pending registration first.");
-            return;
+        	Label  messageLabel = new Label("Select a pending registration first.");
+        	messageLabel.getStyleClass().add("sub-header");
+        	return;
         }
 
         boolean approved = loginManager.approvePendingUser(selectedUser, role);
