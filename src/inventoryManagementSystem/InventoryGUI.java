@@ -9,6 +9,9 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+
 import java.time.format.DateTimeFormatter;
 
 public class InventoryGUI {
@@ -58,12 +61,24 @@ public class InventoryGUI {
 
         this.stage = new Stage();
         this.root = new BorderPane();
+        this.root.getStyleClass().add("inventory-root");
         this.scene = new Scene(root, 1100, 750);
+
+        // Load the stylesheet from the same package as InventoryGUI.
+        java.net.URL stylesheet = getClass().getResource("InventoryGUIDesign.css");
+
+        if (stylesheet == null) {
+            throw new IllegalStateException(
+                    "InventoryGUIDesign.css was not found in inventoryManagementSystem.");
+        }
+
+        scene.getStylesheets().add(stylesheet.toExternalForm());
     }
 
     public void setStageComponents() {
 
         VBox mainContainer = new VBox(10);
+        mainContainer.getStyleClass().add("inventory-main-container");
         mainContainer.setPadding(new Insets(15));
 
         String inventoryTitleText = "Inventory Overview";
@@ -73,31 +88,37 @@ public class InventoryGUI {
         }
 
         Label inventoryTitle = new Label(inventoryTitleText);
+        inventoryTitle.getStyleClass().add("inventory-title");
 
         refreshButton = new Button("Refresh");
+        refreshButton.getStyleClass().add("inventory-refresh-button");
 
-        HBox header = new HBox(10);
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        header.getChildren().addAll(inventoryTitle, spacer, refreshButton);
+        // StackPane keeps the title centered while Refresh stays on the right.
+        StackPane header = new StackPane();
+        header.getStyleClass().add("inventory-header");
+        StackPane.setAlignment(refreshButton, javafx.geometry.Pos.CENTER_RIGHT);
+        header.getChildren().addAll(inventoryTitle, refreshButton);
 
         // First tab: inventory records and stock operations.
         inventoryTable = createInventoryTable();
         inventoryTable.setPrefHeight(350);
 
         VBox inventoryTabContent = new VBox(10);
+        inventoryTabContent.getStyleClass().add("inventory-tab-content");
         inventoryTabContent.setPadding(new Insets(10));
         inventoryTabContent.getChildren().add(inventoryTable);
         VBox.setVgrow(inventoryTable, Priority.ALWAYS);
 
         if (canManageStock) {
-            inventoryTabContent.getChildren().add(new Separator());
+            Separator operationsDivider = new Separator();
+            operationsDivider.getStyleClass().add("inventory-operations-divider");
+            inventoryTabContent.getChildren().add(operationsDivider);
             inventoryTabContent.getChildren().add(createManagerOperationsSection());
             registerInventorySelectionListener();
+            
         } else {
-            Label readOnlyNotice = new Label(
-                    "Read-only access: Clerks can view stock levels and history, "
-                    + "but only Managers can modify inventory.");
+            Label readOnlyNotice = new Label("Read-only access: Clerks can view stock levels and history, but only Managers can modify inventory.");
+            readOnlyNotice.getStyleClass().add("inventory-read-only-notice");
             readOnlyNotice.setWrapText(true);
             inventoryTabContent.getChildren().add(readOnlyNotice);
         }
@@ -111,6 +132,7 @@ public class InventoryGUI {
         historyTable.setPrefHeight(500);
 
         VBox historyTabContent = new VBox(10);
+        historyTabContent.getStyleClass().add("inventory-tab-content");
         historyTabContent.setPadding(new Insets(10));
         historyTabContent.getChildren().add(historyTable);
         VBox.setVgrow(historyTable, Priority.ALWAYS);
@@ -120,6 +142,17 @@ public class InventoryGUI {
         historyTab.setContent(historyTabContent);
 
         TabPane tabPane = new TabPane();
+        tabPane.getStyleClass().add("inventory-tab-pane");
+
+        // Makes the two tabs equally wide across the available window width.
+        DoubleBinding tabWidth = Bindings.createDoubleBinding(
+                () -> Math.max(0, (tabPane.getWidth() - 24) / 2),
+                tabPane.widthProperty()
+        );
+
+        tabPane.tabMinWidthProperty().bind(tabWidth);
+        tabPane.tabMaxWidthProperty().bind(tabWidth);
+        
         tabPane.getTabs().addAll(inventoryTab, historyTab);
 
         VBox.setVgrow(tabPane, Priority.ALWAYS);
@@ -141,11 +174,14 @@ public class InventoryGUI {
         stage.show();
     }
 
-    /** Builds stock-operation controls. This section is created for Managers only. */
+    //This one is a method to build the portion of the stock operations for manager only
     private VBox createManagerOperationsSection() {
 
         Label operationTitle = new Label("Inventory Operations");
+        operationTitle.getStyleClass().add("inventory-operations-title");
+
         selectedProductLabel = new Label("Select a product from the table above.");
+        selectedProductLabel.getStyleClass().add("inventory-selected-product");
 
         quantityField = new TextField();
         quantityField.setPromptText("Enter quantity in kilograms");
@@ -154,6 +190,7 @@ public class InventoryGUI {
         explanationField.setPromptText("Reason for stock change");
 
         GridPane operationForm = new GridPane();
+        operationForm.getStyleClass().add("inventory-operation-form");
         operationForm.setHgap(10);
         operationForm.setVgap(8);
         operationForm.add(new Label("Quantity (kg):"), 0, 0);
@@ -169,9 +206,18 @@ public class InventoryGUI {
         adjustButton.setOnAction(event -> handleAdjustment());
         deductButton.setOnAction(event -> handleDeduction());
 
-        HBox operationButtons = new HBox(10, restockButton, adjustButton, deductButton);
+        restockButton.getStyleClass().add("inventory-restock-button");
+        adjustButton.getStyleClass().add("inventory-adjust-button");
+        deductButton.getStyleClass().add("inventory-deduct-button");
 
-        return new VBox(10, operationTitle, selectedProductLabel, operationForm, operationButtons);
+        HBox operationButtons = new HBox(10, restockButton, adjustButton, deductButton);
+        operationButtons.getStyleClass().add("inventory-operation-buttons");
+
+        VBox operationsSection = new VBox(
+                10, operationTitle, selectedProductLabel, operationForm, operationButtons);
+        operationsSection.getStyleClass().add("inventory-operations-section");
+
+        return operationsSection;
     }
 
     private void registerInventorySelectionListener() {
@@ -193,6 +239,7 @@ public class InventoryGUI {
     private TableView<InventoryOfProduct> createInventoryTable() {
 
         TableView<InventoryOfProduct> table = new TableView<>();
+        table.getStyleClass().add("inventory-table");
 
         TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");
         
@@ -250,6 +297,7 @@ public class InventoryGUI {
     private TableView<StockRecordedChange> createHistoryTable() {
 
         TableView<StockRecordedChange> table = new TableView<>();
+        table.getStyleClass().add("inventory-table");
 
         TableColumn<StockRecordedChange, String> idColumn =
                 new TableColumn<>("Record ID");

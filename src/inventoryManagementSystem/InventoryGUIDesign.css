@@ -1,0 +1,297 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+
+.inventory-root {
+    -fx-background-color: #F4F7F9;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+}
+
+.inventory-main-container {
+    -fx-spacing: 12px;
+    -fx-padding: 16px;
+}
+
+/* Header */
+.inventory-header {
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+    -fx-padding: 0 2px 4px 2px;
+    -fx-alignment: center;
+}
+
+.inventory-title {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #203747;
+    -fx-alignment: center;
+}
+
+.inventory-root .button {
+    -fx-background-color: #E8EEF2;
+    -fx-text-fill: #263B4A;
+    -fx-font-size: 13px;
+    -fx-padding: 7px 15px;
+    -fx-background-radius: 5px;
+    -fx-border-color: #C9D4DC;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.inventory-root .button:hover {
+    -fx-background-color: #DCE7EC;
+}
+
+.inventory-root .button:pressed {
+    -fx-background-color: #CFDDE4;
+}
+
+.inventory-refresh-button {
+    -fx-background-color: #DDEFEF;
+    -fx-border-color: #A9CECD;
+    -fx-text-fill: #245B5B;
+    -fx-font-weight: bold;
+}
+
+.inventory-refresh-button:hover {
+    -fx-background-color: #CBE5E3;
+}
+
+.inventory-tab-pane {
+    -fx-background-color: transparent;
+    -fx-tab-min-width: 180;
+}
+
+.inventory-tab-pane > .tab-header-area {
+    -fx-background-color: #E8EDF1;
+    -fx-padding: 0;
+}
+
+.inventory-tab-pane > .tab-header-area > .headers-region {
+    -fx-spacing: 0;
+}
+
+.inventory-tab-pane .tab {
+    -fx-background-color: #E8EDF1;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: #D1DAE1;
+    -fx-border-width: 1px 1px 0 1px;
+    -fx-padding: 9px 16px;
+    -fx-cursor: hand;
+}
+
+.inventory-tab-pane .tab:hover {
+    -fx-background-color: #DDE7EC;
+}
+
+.inventory-tab-pane .tab:selected {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C9D5DD;
+    -fx-border-width: 1px 1px 0 1px;
+}
+
+.inventory-tab-pane .tab .tab-label {
+    -fx-text-fill: #405665;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+}
+
+.inventory-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #176B69;
+}
+
+.inventory-tab-pane > .tab-content-area {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #D1DAE1;
+    -fx-border-width: 0 1px 1px 1px;
+}
+
+.inventory-tab-content {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 14px;
+    -fx-spacing: 12px;
+}
+
+.inventory-read-only-notice {
+    -fx-text-fill: #647784;
+    -fx-font-size: 12px;
+    -fx-padding: 8px 2px 2px 2px;
+}
+
+.inventory-table {
+    -fx-background-color: #FFFFFF;
+    -fx-control-inner-background: #FFFFFF;
+    -fx-table-cell-border-color: #E6EBEF;
+    -fx-border-color: #D7E0E6;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 0;
+}
+
+.inventory-table .column-header-background {
+    -fx-background-color: #EAF0F3;
+}
+
+.inventory-table .column-header,
+.inventory-table .column-header .filler {
+    -fx-background-color: #EAF0F3;
+    -fx-border-color: #D8E1E7;
+    -fx-border-width: 0 1px 1px 0;
+    -fx-size: 36px;
+}
+
+.inventory-table .column-header .label {
+    -fx-text-fill: #304B5A;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+}
+
+.inventory-table .table-row-cell {
+    -fx-cell-size: 31px;
+    -fx-background-color: #FFFFFF;
+}
+
+.inventory-table .table-row-cell:odd {
+    -fx-background-color: #F7F9FA;
+}
+
+.inventory-table .table-row-cell:hover {
+    -fx-background-color: #EDF5F5;
+}
+
+.inventory-table .table-row-cell:selected {
+    -fx-background-color: #D6EAE8;
+}
+
+.inventory-table .table-row-cell:selected .table-cell {
+    -fx-text-fill: #1D4548;
+}
+
+.inventory-table .table-cell {
+    -fx-text-fill: #344955;
+    -fx-font-size: 12px;
+    -fx-padding: 5px 7px;
+    -fx-border-color: transparent #E6EBEF transparent transparent;
+}
+
+.inventory-table .placeholder .label {
+    -fx-text-fill: #82919B;
+    -fx-font-size: 13px;
+}
+
+.inventory-operations-divider .line {
+    -fx-border-color: #D5DEE4;
+    -fx-border-width: 1px 0 0 0;
+}
+
+/* Manager stock operations section */
+.inventory-operations-section {
+    -fx-background-color: #F8FAFB;
+    -fx-background-radius: 6px;
+    -fx-border-color: #E1E8EC;
+    -fx-border-radius: 6px;
+    -fx-padding: 15px 18px 17px 18px;
+    -fx-spacing: 11px;
+    -fx-alignment: center;
+}
+
+.inventory-operations-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #203F50;
+    -fx-alignment: center;
+}
+
+.inventory-selected-product {
+    -fx-text-fill: #526B78;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.inventory-operation-form {
+    -fx-alignment: center;
+    -fx-hgap: 12px;
+    -fx-vgap: 9px;
+    -fx-padding: 2px 0 2px 0;
+}
+
+.inventory-operation-form .label {
+    -fx-text-fill: #405766;
+    -fx-font-size: 12px;
+}
+
+.inventory-operation-form .text-field {
+    -fx-pref-width: 230px;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 4px;
+    -fx-border-color: #CBD6DD;
+    -fx-border-radius: 4px;
+    -fx-padding: 7px 9px;
+    -fx-text-fill: #263B49;
+    -fx-prompt-text-fill: #91A0AA;
+}
+
+.inventory-operation-form .text-field:focused {
+    -fx-border-color: #4B9995;
+    -fx-border-width: 1.5px;
+}
+
+.inventory-operation-buttons {
+    -fx-alignment: center;
+    -fx-spacing: 10px;
+    -fx-padding: 3px 0 0 0;
+}
+
+.inventory-operation-buttons .button {
+    -fx-min-width: 115px;
+    -fx-font-weight: bold;
+}
+
+/* Slightly distinguish the three stock actions */
+.inventory-restock-button {
+    -fx-background-color: #DDEFE6;
+    -fx-border-color: #B5D8C5;
+    -fx-text-fill: #286246;
+}
+
+.inventory-restock-button:hover {
+    -fx-background-color: #CBE6D8;
+}
+
+.inventory-adjust-button {
+    -fx-background-color: #E5EDF5;
+    -fx-border-color: #C3D3E2;
+    -fx-text-fill: #345C7A;
+}
+
+.inventory-adjust-button:hover {
+    -fx-background-color: #D5E2EF;
+}
+
+.inventory-deduct-button {
+    -fx-background-color: #F6E6E3;
+    -fx-border-color: #E7C6C0;
+    -fx-text-fill: #8A4338;
+}
+
+.inventory-deduct-button:hover {
+    -fx-background-color: #F0D6D1;
+}
+
+/* Scroll bars */
+.inventory-root .scroll-bar:vertical,
+.inventory-root .scroll-bar:horizontal {
+    -fx-background-color: #F4F7F9;
+}
+
+.inventory-root .scroll-bar .thumb {
+    -fx-background-color: #C4D0D7;
+    -fx-background-radius: 5px;
+}
+
+.inventory-root .scroll-bar .thumb:hover {
+    -fx-background-color: #AABBC5;
+}
