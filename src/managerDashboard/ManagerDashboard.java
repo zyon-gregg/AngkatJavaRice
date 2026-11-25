@@ -338,24 +338,30 @@ public class ManagerDashboard {
         return button;
     }
 
-    private void openProductManagement() {
 
-        ProductManagementView productView =
-                new ProductManagementView(productDatabase, inventorySystem, true);
+private void openProductManagement() {
 
-        Stage productStage = new Stage();
-        productStage.initOwner(stage);
-        productStage.setTitle("Angkat - Product Management");
-        Scene productScene = new Scene(productView, 1000, 560);
+    ProductManagementView productView =
+            new ProductManagementView(productDatabase, inventorySystem, true);
 
-        productScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm()); // way to access the css design
-     	Scene scene = new Scene(root, 1250, 850);
-     	stage.setTitle("Angkat - Manager Dashboard");
-     	stage.setScene(scene);
-     	stage.show();
-        productStage.setOnHidden(event -> refreshDashboard());
-        productStage.show();
-    }
+    Stage productStage = new Stage();
+    productStage.initOwner(stage);
+    productStage.setTitle("Angkat - Product Management");
+
+    Scene productScene = new Scene(productView, 1000, 560);
+
+    productScene.getStylesheets().add(
+            getClass().getResource("/application/application.css").toExternalForm());
+
+    // Display Product Management in its own window.
+    productStage.setScene(productScene);
+
+    // Refresh the dashboard after Product Management closes.
+    productStage.setOnHidden(event -> refreshDashboard());
+
+    productStage.show();
+}
+
 
     private void openInventoryManagement() {
 
