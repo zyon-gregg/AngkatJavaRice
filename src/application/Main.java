@@ -5,6 +5,7 @@ import Products.ProductDatabase;
 import clerkDashboard.ClerkDashboard;
 import inventoryManagementSystem.InventorySystem;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -38,6 +39,7 @@ public class Main extends Application {
     private DataManager dataManager;
     private Stage primaryStage;
     private User authenticatedUser;
+    private boolean startupSuccessful = false;
 
     @Override
     public void start(Stage stage) {
@@ -47,24 +49,69 @@ public class Main extends Application {
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
         
-        /*
-        boolean loadProducts = dataManager.loadProducts();  
-        boolean loadInventoryProduct = dataManager.loadInventoryProducts();  
-        boolean loadInventoryHistory = dataManager.loadInventoryHistory();
-        boolean loadBuyers = dataManager.loadBuyers();
-         
-        
-        if(!loadProducts || !loadInventoryProduct || !loadInventoryHistory || !loadBuyers) {
-        	System.out.print("Unsuccesful load of one of the data");
+
+        // Load products first because inventory and sources reference Product objects.
+        boolean loadProducts = dataManager.loadProducts();
+        boolean loadInventoryProduct = false;
+        boolean loadInventoryHistory = false;
+        boolean loadBuyers = false;
+        boolean loadSources = false;
+        boolean loadAccounts = false;
+        boolean loadPendingAccounts = false;
+        boolean loadReceipts = false;
+
+        if (loadProducts) {
+            loadInventoryProduct = dataManager.loadInventoryProducts();
+        }
+
+        if (loadProducts && loadInventoryProduct) {
+            loadInventoryHistory = dataManager.loadInventoryHistory();
+        }
+
+        if (loadProducts && loadInventoryProduct && loadInventoryHistory) {
+            loadBuyers = dataManager.loadBuyers();
+            loadSources = dataManager.loadSources();
+        }
+
+        if (loadProducts && loadInventoryProduct && loadInventoryHistory
+                && loadBuyers && loadSources) {
+            loadAccounts = dataManager.loadAccounts();
+            loadPendingAccounts = dataManager.loadPendingAccounts();
+        }
+
+        if (loadProducts && loadInventoryProduct && loadInventoryHistory
+                && loadBuyers && loadSources && loadAccounts && loadPendingAccounts) {
+            loadReceipts = dataManager.loadSalesReceipts();
+        }
+
+        if (!loadProducts || !loadInventoryProduct || !loadInventoryHistory
+                || !loadBuyers || !loadSources || !loadAccounts
+                || !loadPendingAccounts || !loadReceipts) {
+
+            System.out.println("Unsuccessful load of one or more data files. The application will not continue loading.");
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Data Loading Error");
+            alert.setHeaderText("Unable to load saved application data.");
+            alert.setContentText("Check the console for the data file that could not be loaded. No data will be saved during this failed startup.");
+            primaryStage.show();
+            alert.showAndWait();
+            Platform.exit();
+            return;
         }
         
-        */
+        
+       
+        // Create the sample accounts only when no registered accounts were loaded.
+        if (loginManager.getAccounts().isEmpty()) {
+            loadDefaultAccounts();
+        }
 
-        loadSampleData();
-        loadDefaultAccounts();
         showLogin();
 
         primaryStage.show();
+        startupSuccessful = true;
     }
 
     // -----------------------------------------------------------------
@@ -101,26 +148,29 @@ public class Main extends Application {
         primaryStage.setTitle("Angkat - Fish Port Management System");
     }
     
-    private void handleLogout() { //the acutal saving
-    	
-    	//add more here
-    	
+    private void handleLogout() { // Save application data before returning to Login.
+		
     	sales.cancelAllUnpaidSales();
 
-        
         boolean saveProduct = dataManager.saveProducts();
         boolean saveInventoryProduct = dataManager.saveInventoryProducts();
         boolean saveInventoryHistory = dataManager.saveInventoryHistory();
         boolean saveBuyers = dataManager.saveBuyers();
+        boolean saveSources = dataManager.saveSources();
+        boolean saveAccounts = dataManager.saveAccounts();
+        boolean savePendingAccounts = dataManager.savePendingAccounts();
+        boolean saveReceipts = dataManager.saveSalesReceipts();
 
-        if (saveProduct && saveInventoryProduct && saveInventoryHistory && saveBuyers) {
+        if (saveProduct && saveInventoryProduct && saveInventoryHistory
+                && saveBuyers && saveSources && saveAccounts
+                && savePendingAccounts && saveReceipts) {
             showLogin();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(primaryStage);
             alert.setTitle("Saving Error");
             alert.setHeaderText("Unable to save some components");
-            alert.setContentText("Please try logging out again.");
+            alert.setContentText("Some data could not be saved. Please check the console before closing the application.");
             alert.showAndWait();
         }
         
@@ -341,16 +391,26 @@ public class Main extends Application {
     
     
     @Override
-    public void stop() { //will update this for other save and load
+    public void stop() { // Save application data before closing.
 
-        if (dataManager != null) {
+        if (dataManager != null && startupSuccessful) {
+        	sales.cancelAllUnpaidSales();
 
-            boolean saved = dataManager.saveProducts();
+            boolean saveProduct = dataManager.saveProducts();
+            boolean saveInventoryProduct = dataManager.saveInventoryProducts();
+            boolean saveInventoryHistory = dataManager.saveInventoryHistory();
+            boolean saveBuyers = dataManager.saveBuyers();
+            boolean saveSources = dataManager.saveSources();
+            boolean saveAccounts = dataManager.saveAccounts();
+            boolean savePendingAccounts = dataManager.savePendingAccounts();
+            boolean saveReceipts = dataManager.saveSalesReceipts();
 
-            if (saved) {
-                System.out.println("Products saved successfully.");
+            if (saveProduct && saveInventoryProduct && saveInventoryHistory
+                    && saveBuyers && saveSources && saveAccounts
+                    && savePendingAccounts && saveReceipts) {
+                System.out.println("All data saved successfully.");
             } else {
-                System.out.println("Failed to save products.");
+                System.out.println("Some data could not be saved. Check the error messages above.");
             }
         }
     }

@@ -1,1 +1,2 @@
-
+CLK001|clerk|clerk123|Test Clerk|CLERK|true
+MGR001|manager|manager123|Test Manager|MANAGER|true

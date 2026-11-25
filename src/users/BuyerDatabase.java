@@ -17,11 +17,11 @@ public class BuyerDatabase {
 	}
 	
 	public void addBuyerToDatabase(Buyer buyer) {
-		this.database.put(buyer.getName(), buyer);
+		this.database.put(buyer.getUserName(), buyer);
 	}
 
 	public void removeBuyerFromDatabase(Buyer buyer) {
-		this.database.remove(buyer.getName());
+		this.database.remove(buyer.getUserName());
 	}
 	
 	public Collection<Buyer> returnBuyers(){

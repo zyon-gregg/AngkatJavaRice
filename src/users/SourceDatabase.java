@@ -14,11 +14,11 @@ public class SourceDatabase {
 	}
 	
 	public void addSourceToDatabase(Source source) {
-		this.database.put(source.getName(), source);
+		this.database.put(source.getUserName(), source);
 	}
 
 	public void removeSourceFromDatabase(Source source) {
-		this.database.remove(source.getName());
+		this.database.remove(source.getUserName());
 	}
 	
 	public Collection<Source> returnSources(){

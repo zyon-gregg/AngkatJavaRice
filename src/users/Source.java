@@ -27,5 +27,9 @@ public class Source extends User{
 		this.listOfSourceProductsAndQuantity.remove(product);
 	}
 	
+	public HashMap<Product, Double> getSourceProductsAndQuantity() {
+		return new HashMap<Product, Double>(this.listOfSourceProductsAndQuantity);
+	}
+	
 	
 }
