@@ -44,6 +44,8 @@ public class InventoryGUI {
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public InventoryGUI(InventorySystem inventorySystem, String currentUsername, boolean canManageStock) {
+    	
+    	//update
 
         if (inventorySystem == null) {
             throw new IllegalArgumentException("InventorySystem cannot be null.");
@@ -63,7 +65,7 @@ public class InventoryGUI {
         this.root = new BorderPane();
         this.root.getStyleClass().add("inventory-root");
         this.scene = new Scene(root, 1100, 750);
-
+        
         // Load the stylesheet from the same package as InventoryGUI.
         java.net.URL stylesheet = getClass().getResource("InventoryGUIDesign.css");
 
@@ -73,6 +75,7 @@ public class InventoryGUI {
         }
 
         scene.getStylesheets().add(stylesheet.toExternalForm());
+        
     }
 
     public void setStageComponents() {
