@@ -59,6 +59,7 @@ public class InventoryGUI {
         this.stage = new Stage();
         this.root = new BorderPane();
         this.scene = new Scene(root, 1100, 750);
+        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
     }
 
     public void setStageComponents() {

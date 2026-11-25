@@ -148,7 +148,9 @@ public class Main extends Application {
                 this::showRegistrationDialog
         );
 
-        primaryStage.setScene(new Scene(loginView, 1150, 600));
+        Scene scene = new Scene(loginView, 1150, 600);
+        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm()); // this is the link to the css
+        primaryStage.setScene(scene);
         primaryStage.setTitle("Angkat - Fish Port Management System");
     }
     
@@ -202,7 +204,7 @@ public class Main extends Application {
         if (authenticatedUser == null) {
             return null;
         }
-
+ 
         return authenticatedUser.getUserAccessLevel();
     }
 
