@@ -1,9 +1,3 @@
-<<<<<<< HEAD
 Apple|Apple123|Apples|20000.0
 Apple3|Apple12345|Apple3|2.213E7
 Apple2|Apple1234|Apple2|120000.0
-=======
-Apple3|Apple12345|Apples|2.213E7
-Apple2|Apple1234|Apples|120000.0
-Apple|Apple123|Apples|20000.0
->>>>>>> refs/remotes/origin/main
