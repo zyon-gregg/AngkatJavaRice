@@ -40,30 +40,44 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Main dashboard interface for Clerks in the Angkat Fish Port Management System.
+ * Provides navigation to Overview metrics, Point of Sale (POS), read-only Product Catalog,
+ * Inventory levels, and Stock Activity logs.
+ */
 public class ClerkDashboard {
 
+    // Stock quantity threshold (in kg) below which an item is flagged as "Low stock"
     private static final double LOW_STOCK_THRESHOLD = 300.0;
 
+    // Stage and logged-in clerk details
     private final Stage stage;
     private final String clerkFullName;
     private final String clerkId;
     private final String clerkUsername;
+
+    // Shared backend systems passed from Main.java
     private final ProductDatabase products;
     private final InventorySystem inventory;
     private final SalesTransactionSystem sales;
     private final List<Buyer> buyers;
     private final Runnable onLogout;
 
+    // Layout and navigation tracking
     private BorderPane root;
     private Label pageTitleLabel;
     private String activeTab = "OVERVIEW";
 
+    // Sidebar navigation buttons
     private Button overviewBtn;
     private Button posBtn;
     private Button catalogBtn;
     private Button inventoryBtn;
     private Button activityBtn;
 
+    /**
+     * Initializes the Clerk Dashboard with the active stage, clerk profile, and backend services.
+     */
     public ClerkDashboard(
             Stage stage,
             String clerkFullName,
@@ -86,11 +100,15 @@ public class ClerkDashboard {
         this.onLogout = onLogout;
     }
 
+    /**
+     * Builds the main dashboard layout, loads the CSS stylesheet, and displays it on the stage.
+     */
     public void show() {
         root = new BorderPane();
         root.setLeft(buildSidebar());
         root.setTop(buildTopBar());
 
+        // Load Overview as the default landing view
         showOverview();
 
         Scene scene = new Scene(root, 1250, 780);
@@ -104,13 +122,19 @@ public class ClerkDashboard {
         stage.centerOnScreen();
     }
 
+    // -----------------------------------------------------------------
     // SIDEBAR & TOP BAR
+    // -----------------------------------------------------------------
 
+    /**
+     * Creates the left navigation sidebar with branding, module buttons, and a logout button.
+     */
     private VBox buildSidebar() {
         VBox sidebar = new VBox(8);
         sidebar.setPrefWidth(235);
         sidebar.getStyleClass().add("sidebar");
 
+        // Brand header with optional port logo
         HBox brandBox = new HBox(10);
         brandBox.setAlignment(Pos.CENTER_LEFT);
         URL logoUrl = getClass().getResource("/images/logo.png");
@@ -134,6 +158,7 @@ public class ClerkDashboard {
         sep.getStyleClass().add("sidebar-divider");
         VBox.setMargin(sep, new Insets(8, 0, 8, 0));
 
+        // Navigation buttons
         overviewBtn = makeNavButton("Overview");
         overviewBtn.setOnAction(e -> showOverview());
 
@@ -149,6 +174,7 @@ public class ClerkDashboard {
         activityBtn = makeNavButton("Recent Stock Activity");
         activityBtn.setOnAction(e -> showStockActivity());
 
+        // Pushes the logout button to the bottom of the sidebar
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
@@ -166,6 +192,9 @@ public class ClerkDashboard {
         return sidebar;
     }
 
+    /**
+     * Helper to create a full-width styled sidebar navigation button.
+     */
     private Button makeNavButton(String text) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
@@ -173,6 +202,9 @@ public class ClerkDashboard {
         return btn;
     }
 
+    /**
+     * Highlights the currently selected sidebar button and updates the top bar page title.
+     */
     private void updateActiveNav(Button selected, String tabKey, String pageTitle) {
         this.activeTab = tabKey;
         if (pageTitleLabel != null) {
@@ -185,6 +217,9 @@ public class ClerkDashboard {
         }
     }
 
+    /**
+     * Builds the top header bar showing the current view title, clerk badge, and refresh button.
+     */
     private HBox buildTopBar() {
         HBox topBar = new HBox(14);
         topBar.setAlignment(Pos.CENTER_LEFT);
@@ -208,6 +243,9 @@ public class ClerkDashboard {
         return topBar;
     }
 
+    /**
+     * Reloads whichever screen is currently open to reflect the latest data.
+     */
     private void refreshCurrentScreen() {
         switch (activeTab) {
             case "POS" -> showPOS();
@@ -218,6 +256,9 @@ public class ClerkDashboard {
         }
     }
 
+    /**
+     * Displays a confirmation prompt before logging out and returning to the login screen.
+     */
     private void confirmLogout() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.initOwner(stage);
@@ -231,8 +272,13 @@ public class ClerkDashboard {
         }
     }
 
+    // -----------------------------------------------------------------
     // VIEWS / NAVIGATION
+    // -----------------------------------------------------------------
 
+    /**
+     * Displays the Overview home screen with quick actions, stock summary cards, and stock tables.
+     */
     private void showOverview() {
         updateActiveNav(overviewBtn, "OVERVIEW", "Overview");
         syncInventoryRecords();
@@ -243,7 +289,7 @@ public class ClerkDashboard {
         Label subtitle = new Label("Process buyer orders, verify seafood prices, and check available stock in kilograms.");
         subtitle.getStyleClass().add("subtitle-label");
 
-        // Quick Action Buttons
+        // Quick-action shortcut buttons
         HBox quickActions = new HBox(12);
         Button startSaleBtn = new Button("Start New Sale (POS)");
         startSaleBtn.getStyleClass().add("action-primary-btn");
@@ -259,7 +305,7 @@ public class ClerkDashboard {
 
         quickActions.getChildren().addAll(startSaleBtn, viewPricesBtn, checkStockBtn);
 
-        // Metrics Calculation
+        // Compute stock counts and populate table rows
         List<Product> allProducts = products.getAllProducts();
         int totalVarieties = allProducts.size();
         int lowStockCount = 0;
@@ -291,12 +337,13 @@ public class ClerkDashboard {
             );
             allRows.add(row);
 
+            // Add to alerts table if stock is low or depleted
             if (!status.equals("In stock")) {
                 alertRows.add(row);
             }
         }
 
-        // KPI Cards Row
+        // Summary KPI cards
         HBox kpiRow = new HBox(16);
         VBox card1 = makeStatCard("Catalog Varieties", String.valueOf(totalVarieties), "stat-value-blue");
         VBox card2 = makeStatCard("Low-stock Items (< 300 kg)", String.valueOf(lowStockCount), "stat-value-amber");
@@ -306,7 +353,7 @@ public class ClerkDashboard {
         HBox.setHgrow(card3, Priority.ALWAYS);
         kpiRow.getChildren().addAll(card1, card2, card3);
 
-        // Side-by-Side Tables
+        // Side-by-side catch overview and low-stock alert tables
         HBox tablesRow = new HBox(18);
         VBox.setVgrow(tablesRow, Priority.ALWAYS);
 
@@ -321,17 +368,26 @@ public class ClerkDashboard {
         root.setCenter(content);
     }
 
+    /**
+     * Opens the Point of Sale (POS) transaction screen in the center area.
+     */
     private void showPOS() {
         updateActiveNav(posBtn, "POS", "Point of Sale (POS)");
         syncInventoryRecords();
         root.setCenter(new TransactionView(sales, products, buyers));
     }
 
+    /**
+     * Opens the Product Catalog in read-only mode (clerks cannot add, edit, or delete products).
+     */
     private void showCatalog() {
         updateActiveNav(catalogBtn, "CATALOG", "Product Catalog (Read-Only)");
         root.setCenter(new ProductManagementView(products, false));
     }
 
+    /**
+     * Opens the Inventory view in read-only clerk mode.
+     */
     private void showInventory() {
         updateActiveNav(inventoryBtn, "INVENTORY", "Check Inventory");
         syncInventoryRecords();
@@ -339,6 +395,9 @@ public class ClerkDashboard {
         root.setCenter(new InventoryGUI(inventory, actor, false));
     }
 
+    /**
+     * Displays the chronological audit log of inventory restocks, sales deductions, and adjustments.
+     */
     private void showStockActivity() {
         updateActiveNav(activityBtn, "ACTIVITY", "Recent Stock Activity");
 
@@ -389,6 +448,7 @@ public class ClerkDashboard {
 
         table.getColumns().addAll(timeCol, prodCol, typeCol, qtyCol, newStockCol, userCol, noteCol);
 
+        // Sort logs newest first
         List<StockRecordedChange> logs = new ArrayList<>(inventory.getStockChangeHistory());
         logs.sort(Comparator.comparing(StockRecordedChange::getTime, Comparator.nullsLast(Comparator.reverseOrder())));
         table.setItems(FXCollections.observableArrayList(logs));
@@ -398,8 +458,13 @@ public class ClerkDashboard {
         root.setCenter(container);
     }
 
+    // -----------------------------------------------------------------
     // UI HELPERS
+    // -----------------------------------------------------------------
 
+    /**
+     * Builds a styled metric card for the Overview summary row.
+     */
     private VBox makeStatCard(String title, String value, String valueStyleClass) {
         VBox card = new VBox(6);
         card.getStyleClass().add("stat-card");
@@ -414,6 +479,84 @@ public class ClerkDashboard {
         return card;
     }
 
+    /**
+     * Builds a titled card containing a stock table with color-coded availability status.
+     */
     private VBox buildStockTablePanel(String heading, ObservableList<StockRow> rows, boolean includePriceColumn) {
         VBox panel = new VBox(12);
-        panel.getStyleClass().add("
+        panel.getStyleClass().add("panel-card");
+
+        Label title = new Label(heading);
+        title.getStyleClass().add("panel-title");
+
+        TableView<StockRow> table = new TableView<>(rows);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        TableColumn<StockRow, String> nameCol = new TableColumn<>("Product");
+        nameCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().productName));
+
+        table.getColumns().add(nameCol);
+
+        if (includePriceColumn) {
+            TableColumn<StockRow, String> priceCol = new TableColumn<>("Selling Price");
+            priceCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().price));
+            table.getColumns().add(priceCol);
+        }
+
+        TableColumn<StockRow, String> stockCol = new TableColumn<>("Available Stock");
+        stockCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().stock));
+
+        TableColumn<StockRow, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status));
+        statusCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    switch (item) {
+                        case "Out of stock" -> setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
+                        case "Low stock" -> setStyle("-fx-text-fill: #d97706; -fx-font-weight: bold;");
+                        default -> setStyle("-fx-text-fill: #16a34a; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
+
+        table.getColumns().addAll(stockCol, statusCol);
+        panel.getChildren().addAll(title, table);
+        return panel;
+    }
+
+    /**
+     * Ensures every product in ProductDatabase has a corresponding record in InventorySystem.
+     */
+    private void syncInventoryRecords() {
+        for (Product p : products.getAllProducts()) {
+            if (inventory.getProductInventoryByCode(p.getProductCode()) == null) {
+                inventory.createInventoryRecord(p);
+            }
+        }
+    }
+
+    /**
+     * Lightweight row model used to display stock levels and status in Overview tables.
+     */
+    private static class StockRow {
+        final String productName;
+        final String price;
+        final String stock;
+        final String status;
+
+        StockRow(String productName, String price, String stock, String status) {
+            this.productName = productName;
+            this.price = price;
+            this.stock = stock;
+            this.status = status;
+        }
+    }
+}
