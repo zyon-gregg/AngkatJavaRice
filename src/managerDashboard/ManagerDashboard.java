@@ -43,58 +43,44 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class ManagerDashboard {
+	//the manager dashboard
 
-    private static final DateTimeFormatter DATE_FORMAT =
-            DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
-    // Window and manager information
+    //Setting the stage, the specific manager to be associated with the dash board and a runnable for logout
     private final Stage stage;
     private final User manager;
     private final Runnable onLogout;
 
-    // Shared backend instances
+    //Imported the back end of all the Angkat system
     private final ProductDatabase productDatabase;
     private final InventorySystem inventorySystem;
     private final SalesTransactionSystem salesSystem;
     private final List<Buyer> buyers;
     private final LoginManager loginManager;
     
-    // Main JavaFX components
+    //Other contents
     private BorderPane root;
     private VBox mainContent;
     private StackPane activityTableArea;
 
-    // Summary card values, retained so they can be refreshed
+    //Labels for the overview cards un the business overview
     private Label totalProductsValue;
     private Label lowStockValue;
     private Label outOfStockValue;
     private Label inventoryRecordsValue;
 
-    // Currently selected activity table
+    //Currently selected activity table
     private String currentActivity = "INVENTORY";
 
-    public ManagerDashboard(
-            Stage stage,
-            User manager,
-            ProductDatabase productDatabase,
-            InventorySystem inventorySystem,
-            SalesTransactionSystem salesSystem,
-            List<Buyer> buyers,
-            Runnable onLogout) {
-        this(stage, manager, productDatabase, inventorySystem,
-                salesSystem, buyers, null, onLogout);
+    public ManagerDashboard(Stage stage, User manager, ProductDatabase productDatabase, InventorySystem inventorySystem, SalesTransactionSystem salesSystem, List<Buyer> buyers, Runnable onLogout) { 
+    	
+    	
+    	this(stage, manager, productDatabase, inventorySystem, salesSystem, buyers, null, onLogout);
+           
     }
 
-    public ManagerDashboard(
-            Stage stage,
-            User manager,
-            ProductDatabase productDatabase,
-            InventorySystem inventorySystem,
-            SalesTransactionSystem salesSystem,
-            List<Buyer> buyers,
-            LoginManager loginManager,
-            Runnable onLogout) {
-
+    public ManagerDashboard(Stage stage, User manager, ProductDatabase productDatabase, InventorySystem inventorySystem, SalesTransactionSystem salesSystem, List<Buyer> buyers, LoginManager loginManager, Runnable onLogout) {
         this.stage = stage;
         this.manager = manager;
         this.productDatabase = productDatabase;
@@ -105,32 +91,28 @@ public class ManagerDashboard {
         this.onLogout = onLogout;
     }
 
-    /** Alias retained so Main.java can call dashboard.show(). */
+    //added this method show() so that the main can call the actual setStageComponents
     public void show() {
         setStageComponents();
     }
 
-    /** Builds and displays the dashboard window. */
+    //this is where the construction of the manager dashboard happens
     public void setStageComponents() {
 
+    	//setting the root
         root = new BorderPane();
         root.getStyleClass().add("manager-dashboard-root");
 
+        //the main contents of the GUI will be in vBox, so its layout is top to bottom
         mainContent = new VBox(24);
         mainContent.setPadding(new Insets(24));
         mainContent.setFillWidth(true);
         mainContent.getStyleClass().add("manager-main-content");
 
-        // Add the dashboard sections from top to bottom.
-        mainContent.getChildren().addAll(
-                createHeader(),
-                createSectionDivider(),
-                createBusinessOverview(),
-                createManagementModules(),
-                createSectionDivider(),
-                createSystemActivity(),
-                createFooter());
+        //Adding the children
+        mainContent.getChildren().addAll(createHeader(), createSectionDivider(), createBusinessOverview(), createManagementModules(), createSectionDivider(), createSystemActivity(), createFooter());
 
+        //added scroll panes
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
         scrollPane.setPannable(true);
@@ -140,15 +122,13 @@ public class ManagerDashboard {
 
         Scene scene = new Scene(root, 1250, 850);
 
-        // Load the stylesheet using its actual filename in this package.
-        java.net.URL dashboardStylesheet =
-                getClass().getResource("ManagerDashboardDesign.css");
+        // Loading the stylesheet using its actual filename in this package.
+        java.net.URL dashboardStylesheet = getClass().getResource("ManagerDashboardDesign.css");
 
-        if (dashboardStylesheet != null) {
+        if (dashboardStylesheet != null) { //ensures proper load of the style sheet
             scene.getStylesheets().add(dashboardStylesheet.toExternalForm());
         } else {
-            System.out.println(
-                    "ManagerDashboardDesign.css was not found in the managerDashboard package.");
+            System.out.println("ManagerDashboardDesign.css was not found in the managerDashboard package.");
         }
 
         stage.setTitle("Angkat - Manager Dashboard");
@@ -158,12 +138,11 @@ public class ManagerDashboard {
         stage.show();
     }
 
-    // -----------------------------------------------------------------
-    // 1. Header
-    // -----------------------------------------------------------------
-
-    /** Uses a fallback when an optional User field has not been assigned yet. */
+    //==================== Header layout ====================
+    
+    //uses a fall back when the user field is empty (user field is optional in the creation
     private String getDisplayValue(String value, String fallback) {
+    	
         if (value != null && !value.trim().isEmpty()) {
             return value;
         }
@@ -176,82 +155,88 @@ public class ManagerDashboard {
 
     private HBox createHeader() {
 
+    	//title
         Label applicationName = new Label("ANGKAT");
         applicationName.getStyleClass().add("manager-brand-name");
+        
+        //subtitle
         Label applicationSubtitle = new Label("FISH PORT MANAGEMENT SYSTEM");
         applicationSubtitle.getStyleClass().add("manager-brand-subtitle");
+        
+        //grouping the title and subtitle together in a vbox layout
         VBox branding = new VBox(4, applicationName, applicationSubtitle);
         branding.getStyleClass().add("manager-branding");
 
-        String displayName = getDisplayValue(
-                manager.getName(), manager.getUserName());
-        String displayID = getDisplayValue(
-                manager.getUserID(), manager.getUserName());
+        String displayName = getDisplayValue(manager.getName(), manager.getUserName());
+        String displayID = getDisplayValue(manager.getUserID(), manager.getUserName());
 
-        Label welcomeLabel = new Label("Welcome, " + displayName + "!");
+        Label welcomeLabel = new Label("Welcome back, " + displayName + "!");
         welcomeLabel.getStyleClass().add("manager-welcome");
-        Label managerDetails = new Label(
-                "Manager ID: " + displayID
-                + "   |   Username: " + manager.getUserName());
+        
+        //the details of the manager (ID and username)
+        Label managerDetails = new Label("Manager ID: " + displayID + "   |   Username: " + manager.getUserName());
         managerDetails.getStyleClass().add("manager-details");
+        
+        //grouped them together in a vBox and placed it right of the header
         VBox managerInformation = new VBox(4, welcomeLabel, managerDetails);
         managerInformation.setAlignment(Pos.CENTER_RIGHT);
         managerInformation.getStyleClass().add("manager-information");
 
+        //refresh button
         Button refreshButton = new Button("Refresh");
-        refreshButton.getStyleClass().addAll(
-                "manager-header-button", "manager-refresh-button");
         refreshButton.setOnAction(event -> refreshDashboard());
-
+        refreshButton.getStyleClass().addAll("manager-header-button", "manager-refresh-button");
+       
+        //logout button
         Button logoutButton = new Button("Logout");
-        logoutButton.getStyleClass().addAll(
-                "manager-header-button", "manager-logout-button");
         logoutButton.setOnAction(event -> confirmLogout());
+        logoutButton.getStyleClass().addAll("manager-header-button", "manager-logout-button");
+        
 
+        //added space between them
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox header = new HBox(
-                18,
-                branding,
-                spacer,
-                managerInformation,
-                refreshButton,
-                logoutButton);
+        //constructing the header
+        HBox header = new HBox(18, branding, spacer, managerInformation, refreshButton, logoutButton);
 
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("manager-header");
         return header;
     }
 
+    //added a divider. Used it to separate the header, the buttons, and the table view below
     private Separator createSectionDivider() {
         Separator divider = new Separator();
         divider.getStyleClass().add("manager-section-divider");
         return divider;
     }
+    
+    //=======================================================
+    
+    //==================== Overview Layout ====================
 
-    // -----------------------------------------------------------------
-    // 2. Business overview
-    // -----------------------------------------------------------------
+    private VBox createBusinessOverview() {//creates the portion of the business overview
 
-    private VBox createBusinessOverview() {
-
+    	//title
         Label sectionTitle = new Label("Business Overview");
         sectionTitle.getStyleClass().add("manager-section-title");
 
+        //initializing the numbers to be displayed
         totalProductsValue = new Label("0");
         lowStockValue = new Label("0");
         outOfStockValue = new Label("0");
         inventoryRecordsValue = new Label("0");
 
+        //added cards
         GridPane cards = new GridPane();
         cards.setHgap(14);
         cards.setVgap(14);
         cards.getStyleClass().add("manager-summary-grid");
 
+        //a loop to initialize column constraints. Adjusting the spacing between the cards
         for (int i = 0; i < 4; i++) {
-            javafx.scene.layout.ColumnConstraints column =
-                    new javafx.scene.layout.ColumnConstraints();
+            javafx.scene.layout.ColumnConstraints column = new javafx.scene.layout.ColumnConstraints();
             column.setPercentWidth(25);
             column.setHgrow(Priority.ALWAYS);
             cards.getColumnConstraints().add(column);
@@ -269,24 +254,31 @@ public class ManagerDashboard {
         return section;
     }
 
-    private VBox createSummaryCard(String title, Label value) {
+    private VBox createSummaryCard(String title, Label value) { //creation of the summary cards
 
+    	//title
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("manager-summary-title");
 
         value.getStyleClass().add("manager-summary-value");
+        
+        //cards
         VBox card = new VBox(10, titleLabel, value);
         card.setPadding(new Insets(18));
         card.setMinHeight(105);
         card.setMaxWidth(Double.MAX_VALUE);
         card.getStyleClass().add("manager-summary-card");
 
+        //setting the colors of each card
         if ("Total Products".equals(title)) {
             card.getStyleClass().add("summary-blue");
+            
         } else if ("Low-stock Products".equals(title)) {
             card.getStyleClass().add("summary-orange");
+            
         } else if ("Out-of-stock Products".equals(title)) {
             card.getStyleClass().add("summary-red");
+            
         } else {
             card.getStyleClass().add("summary-teal");
         }
@@ -295,24 +287,18 @@ public class ManagerDashboard {
         return card;
     }
 
+    //updating the summary cards for each in product and stock
     private void updateSummaryCards() {
-
-        totalProductsValue.setText(
-                String.valueOf(productDatabase.getAllProducts().size()));
-
-        lowStockValue.setText(
-                String.valueOf(inventorySystem.getProductsLowOnStock().size()));
-
-        outOfStockValue.setText(
-                String.valueOf(inventorySystem.getProductsOutOfStock().size()));
-
-        inventoryRecordsValue.setText(
-                String.valueOf(inventorySystem.getAllInventory().size()));
+        totalProductsValue.setText(String.valueOf(productDatabase.getAllProducts().size()));
+        lowStockValue.setText(String.valueOf(inventorySystem.getProductsLowOnStock().size()));
+        outOfStockValue.setText(String.valueOf(inventorySystem.getProductsOutOfStock().size()));
+        inventoryRecordsValue.setText(String.valueOf(inventorySystem.getAllInventory().size()));
     }
+    
+    //=========================================================
 
-    // -----------------------------------------------------------------
-    // 3. Management module buttons
-    // -----------------------------------------------------------------
+   
+    //==================== Products, Inventory, Sales, User management buttons ====================
 
     private VBox createManagementModules() {
 
@@ -411,84 +397,90 @@ public class ManagerDashboard {
 
         return button;
     }
-
-
+    
+    //=============================================================================================
+    
+    //========== The functionalities of the buttons ==========
+    
+    //opening of the product management window
     private void openProductManagement() {
+    	ProductManagementView productView = new ProductManagementView(productDatabase, inventorySystem, true);
+    	
+    	Stage productStage = new Stage();
+    	productStage.initOwner(stage);
+    	productStage.setTitle("Angkat - Product Management");
+    	
+    	Scene productScene = new Scene(productView, 1000, 560);
+    	
+    	productScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
 
-    ProductManagementView productView =
-            new ProductManagementView(productDatabase, inventorySystem, true);
+    	// Display Product Management in its own window.
+    	productStage.setScene(productScene);
 
-    Stage productStage = new Stage();
-    productStage.initOwner(stage);
-    productStage.setTitle("Angkat - Product Management");
-
-    Scene productScene = new Scene(productView, 1000, 560);
-
-    productScene.getStylesheets().add(
-            getClass().getResource("/application/application.css").toExternalForm());
-
-    // Display Product Management in its own window.
-    productStage.setScene(productScene);
-
-    // Refresh the dashboard after Product Management closes.
-    productStage.setOnHidden(event -> refreshDashboard());
-
-    productStage.show();
-}
+    	// Refresh the dashboard after Product Management closes.
+    	productStage.setOnHidden(event -> refreshDashboard());
+    	productStage.show();
+    	
+    }
 
 
+    //for inventory window
     private void openInventoryManagement() {
-
-        InventoryGUI inventoryGUI = new InventoryGUI(
-                inventorySystem, manager.getUserName(), true);
+    	InventoryGUI inventoryGUI = new InventoryGUI(inventorySystem, manager.getUserName(), true);
 
         // Refresh the dashboard after the Manager closes Inventory Management.
         inventoryGUI.getStage().setOnHidden(event -> refreshDashboard());
         inventoryGUI.setStageComponents();
     }
 
+    //for sales management
     private void openSalesManagement() {
+    	
+    	TransactionView transactionView = new TransactionView(salesSystem, productDatabase, buyers);
 
-        TransactionView transactionView =
-                new TransactionView(salesSystem, productDatabase, buyers);
-
+    	//setting the stage
         Stage transactionStage = new Stage();
         transactionStage.initOwner(stage);
         transactionStage.setTitle("Angkat - Sales & Transactions");
+        
+        //setting the scene
         Scene transactionScene = new Scene(transactionView, 1150, 700);
         transactionScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
         transactionStage.setScene(transactionScene);
         transactionStage.setOnHidden(event -> refreshDashboard());
         transactionStage.show();
     }
+    
+    
 
+    //for user management window
     private void openUserManagement() {
-        if (loginManager == null) {
+    	
+        if (loginManager == null) {//checks if login manager is properly integrated
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("User Management");
             alert.setHeaderText("Login manager is not connected.");
-            alert.setContentText("Please connect LoginManager in Main.java.");
+            alert.setContentText("Please connect LoginManager");
             alert.initOwner(stage);
             alert.showAndWait();
             return;
         }
 
-        UserManagementView userManagementView =
-                new UserManagementView(loginManager, manager);
+        UserManagementView userManagementView = new UserManagementView(loginManager, manager);
 
         Stage userStage = new Stage();
         userStage.initOwner(stage);
         userStage.setTitle("Angkat - User Management");
+        
         Scene userScene = new Scene(userManagementView, 1050, 760);
         userScene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
         userStage.setScene(userScene);
         userStage.show();
     }
+    
+    //========================================================
 
-    // -----------------------------------------------------------------
-    // 4. System activity
-    // -----------------------------------------------------------------
-
+    //creates the system activity. Located at the bottom of the manager dashboard
     private VBox createSystemActivity() {
 
         Label sectionTitle = new Label("System Activity");
@@ -498,6 +490,7 @@ public class ManagerDashboard {
 
         ToggleButton inventoryButton = new ToggleButton("Inventory Changes");
         inventoryButton.getStyleClass().add("manager-activity-toggle");
+        
         ToggleButton transactionButton = new ToggleButton("Transactions");
         transactionButton.getStyleClass().add("manager-activity-toggle");
 
@@ -528,92 +521,72 @@ public class ManagerDashboard {
         return section;
     }
 
+    //refreshing the table
     private void refreshActivityTable() {
 
-        if (activityTableArea == null) {
+        if (activityTableArea == null) {//checks first if the table exists
             return;
         }
 
-        if ("INVENTORY".equals(currentActivity)) {
+        if ("INVENTORY".equals(currentActivity)) { //refreshes the inventory history table
             activityTableArea.getChildren().setAll(createInventoryHistoryTable(8));
-        } else {
+        } else { //refreshes the transaction history table
             activityTableArea.getChildren().setAll(createTransactionHistoryTable(8));
         }
     }
 
-    /**
-     * Shows the latest inventory changes.
-     * maximumRows = 0 means show all history records.
-     */
+    
+    //creates the tableview of the changes in the stocks of the product, the inventory
     private TableView<StockRecordedChange> createInventoryHistoryTable(int maximumRows) {
 
+    	//setting the table
         TableView<StockRecordedChange> table = new TableView<>();
         table.getStyleClass().add("manager-activity-table");
 
-        TableColumn<StockRecordedChange, String> idColumn =
-                new TableColumn<>("Record ID");
-        idColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getRecordId()));
+        //column for id
+        TableColumn<StockRecordedChange, String> idColumn = new TableColumn<>("Record ID");
+        idColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getRecordId()));
 
-        TableColumn<StockRecordedChange, String> productColumn =
-                new TableColumn<>("Product Code");
-        productColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getProductCode()));
+        //product code
+        TableColumn<StockRecordedChange, String> productColumn = new TableColumn<>("Product Code");
+        productColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getProductCode()));
 
-        TableColumn<StockRecordedChange, String> changeColumn =
-                new TableColumn<>("Change Type");
-        changeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getChangeType()));
+        //change type
+        TableColumn<StockRecordedChange, String> changeColumn = new TableColumn<>("Change Type");
+        changeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getChangeType()));
 
-        TableColumn<StockRecordedChange, String> beforeColumn =
-                new TableColumn<>("Previous Stock");
-        beforeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                String.format("%.2f kg", cell.getValue().getPreviousStock())));
+        //previous stock
+        TableColumn<StockRecordedChange, String> beforeColumn = new TableColumn<>("Previous Stock");
+        beforeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(String.format("%.2f kg", cell.getValue().getPreviousStock())));
 
-        TableColumn<StockRecordedChange, String> afterColumn =
-                new TableColumn<>("New Stock");
-        afterColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                String.format("%.2f kg", cell.getValue().getNewStock())));
+        TableColumn<StockRecordedChange, String> afterColumn = new TableColumn<>("New Stock");
+        afterColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(String.format("%.2f kg", cell.getValue().getNewStock())));
 
-        TableColumn<StockRecordedChange, String> employeeColumn =
-                new TableColumn<>("Performed By");
-        employeeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getPerformedBy()));
+        TableColumn<StockRecordedChange, String> employeeColumn = new TableColumn<>("Performed By");
+        employeeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getPerformedBy()));
 
-        TableColumn<StockRecordedChange, String> dateColumn =
-                new TableColumn<>("Date and Time");
-        dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                formatDateTime(cell.getValue().getTime())));
+        TableColumn<StockRecordedChange, String> dateColumn = new TableColumn<>("Date and Time");
+        dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(formatDateTime(cell.getValue().getTime())));
 
-        TableColumn<StockRecordedChange, String> explanationColumn =
-                new TableColumn<>("Explanation");
-        explanationColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getExplanation()));
+        TableColumn<StockRecordedChange, String> explanationColumn = new TableColumn<>("Explanation");
+        explanationColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getExplanation()));
 
-        table.getColumns().addAll(
-                idColumn,
-                productColumn,
-                changeColumn,
-                beforeColumn,
-                afterColumn,
-                employeeColumn,
-                dateColumn,
-                explanationColumn);
+        table.getColumns().addAll(idColumn, productColumn, changeColumn, beforeColumn, afterColumn, employeeColumn, dateColumn, explanationColumn);
 
-        List<StockRecordedChange> records =
-                new ArrayList<>(inventorySystem.getAllHistory());
+        List<StockRecordedChange> records = new ArrayList<>(inventorySystem.getAllHistory());
 
-        // Show the newest stock changes first.
+        //Shows the newest stock changes first.
         for (int i = 0; i < records.size(); i++) {
             for (int j = i + 1; j < records.size(); j++) {
+            	
                 LocalDateTime firstTime = records.get(i).getTime();
                 LocalDateTime secondTime = records.get(j).getTime();
                 boolean moveSecondRecord = false;
 
                 if (firstTime == null && secondTime != null) {
                     moveSecondRecord = true;
-                } else if (firstTime != null && secondTime != null
-                        && firstTime.isBefore(secondTime)) {
+                    
+                } else if (firstTime != null && secondTime != null && firstTime.isBefore(secondTime)) {
                     moveSecondRecord = true;
                 }
 
