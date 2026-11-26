@@ -559,15 +559,19 @@ public class ManagerDashboard {
         TableColumn<StockRecordedChange, String> beforeColumn = new TableColumn<>("Previous Stock");
         beforeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(String.format("%.2f kg", cell.getValue().getPreviousStock())));
 
+        //new stock
         TableColumn<StockRecordedChange, String> afterColumn = new TableColumn<>("New Stock");
         afterColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(String.format("%.2f kg", cell.getValue().getNewStock())));
 
+        //employee column
         TableColumn<StockRecordedChange, String> employeeColumn = new TableColumn<>("Performed By");
         employeeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getPerformedBy()));
 
+        //date and time
         TableColumn<StockRecordedChange, String> dateColumn = new TableColumn<>("Date and Time");
         dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(formatDateTime(cell.getValue().getTime())));
 
+        //explanation for the change
         TableColumn<StockRecordedChange, String> explanationColumn = new TableColumn<>("Explanation");
         explanationColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getExplanation()));
 
@@ -610,17 +614,13 @@ public class ManagerDashboard {
         return table;
     }
 
-    /**
-     * Shows the latest completed sales transactions.
-     * maximumRows = 0 means show all transactions.
-     */
+    //creates the table view for transaction table
     private Node createTransactionHistoryTable(int maximumRows) {
 
         TableView<Receipt> table = new TableView<>();
         table.getStyleClass().add("manager-activity-table");
 
-        TableColumn<Receipt, String> receiptIDColumn =
-                new TableColumn<>("Receipt ID");
+        TableColumn<Receipt, String> receiptIDColumn = new TableColumn<>("Receipt ID");
         receiptIDColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
                 cell.getValue().getTransactionID()));
 
