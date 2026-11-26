@@ -1,5 +1,6 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
 
+/* For the main layout*/
 .inventory-root {
     -fx-background-color: #F3F7FA;
     -fx-font-family: "Segoe UI";
@@ -25,7 +26,7 @@
     -fx-font-weight: bold;
 }
 
-/* General buttons */
+/* Buttons */
 .inventory-root .button {
     -fx-background-color: #DCEAF5;
     -fx-text-fill: #14456D;
@@ -162,8 +163,7 @@
     -fx-background-color: #D6E6F2;
 }
 
-.inventory-table .column-header,
-.inventory-table .column-header .filler {
+.inventory-table .column-header, .inventory-table .column-header .filler {
     -fx-background-color: #D6E6F2;
     -fx-border-color: #B8D0E2;
     -fx-border-width: 0 1px 1px 0;
@@ -210,7 +210,7 @@
     -fx-font-size: 13px;
 }
 
-/* Divider and stock operations section */
+/* Divider and the stock operations section */
 .inventory-operations-divider .line {
     -fx-border-color: #B8D0E2;
     -fx-border-width: 1px 0 0 0;
@@ -280,7 +280,7 @@
     -fx-text-fill: #FFFFFF;
 }
 
-/* Restock: darkest blue */
+/* Restock button */
 .inventory-root .inventory-operation-buttons .inventory-restock-button {
     -fx-background-color: #14456D;
     -fx-border-color: #103A5D;
@@ -295,7 +295,7 @@
     -fx-background-color: #0C2E4A;
 }
 
-/* Adjust Stock: medium blue */
+/* Adjust Stock button */
 .inventory-root .inventory-operation-buttons .inventory-adjust-button {
     -fx-background-color: #205D90;
     -fx-border-color: #14456D;
@@ -310,7 +310,7 @@
     -fx-background-color: #14456D;
 }
 
-/* Deduct Stock: light blue with dark text for readability */
+/* Deduct Stock button */
 .inventory-root .inventory-operation-buttons .inventory-deduct-button {
     -fx-background-color: #5798C8;
     -fx-border-color: #397BAE;
@@ -326,8 +326,7 @@
 }
 
 /* Scroll bars */
-.inventory-root .scroll-bar:vertical,
-.inventory-root .scroll-bar:horizontal {
+.inventory-root .scroll-bar:vertical, .inventory-root .scroll-bar:horizontal {
     -fx-background-color: #EAF2F8;
 }
 
