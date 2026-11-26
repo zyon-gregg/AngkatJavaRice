@@ -18,10 +18,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 
 public class UserManagementView extends BorderPane {
+	
+	//the GUI for managing account requests by Managers
 
+	//imported the back end of login, as well as the manager
     private final LoginManager loginManager;
     private final User currentManager;
 
+    //the tables for pending and current accounts
     private TableView<User> pendingTable;
     private TableView<User> accountTable;
     private Label messageLabel;
@@ -37,68 +41,82 @@ public class UserManagementView extends BorderPane {
         refreshTables();
     }
 
-    private VBox createHeader() {
+    private VBox createHeader() { //method for creating the header of the user management window
+    	
+    	//the title
         Label title = new Label("User Management");
         title.getStyleClass().add("header-label");
-        Label subtitle = new Label(
-                "Review registration requests and manage registered accounts.");
+        
+        //The subtitle
+        Label subtitle = new Label("Approve or disapprove pending accounts. Manage current accounts as well!");
 
+        //message label
         messageLabel = new Label("Select an account to perform an action.");
         messageLabel.setStyle("-fx-text-fill: #555555;");
 
+        //vBox as the layout of the header
         VBox header = new VBox(6, title, subtitle, messageLabel);
         header.setPadding(new Insets(0, 0, 16, 0));
         return header;
     }
 
-    private VBox createContent() {
+    private VBox createContent() { //creating the main window
         VBox content = new VBox(18);
 
-        Label pendingTitle = new Label("Pending Registration Requests");
+        //title for pending
+        Label pendingTitle = new Label("Pending Account requests");
         pendingTitle.getStyleClass().add("sub-header");
         
         pendingTable = createPendingTable();
 
+        //the buttons
+        
+        //approve the request as clerk button
         Button approveClerkButton = new Button("Approve as Clerk");
-        Button approveManagerButton = new Button("Approve as Manager");
-        Button rejectButton = new Button("Reject Request");
-        Button refreshPendingButton = new Button("Refresh");
-
         approveClerkButton.setOnAction(event -> approveSelectedUser("CLERK"));
+        
+        //approve the request as manager button
+        Button approveManagerButton = new Button("Approve as Manager");
         approveManagerButton.setOnAction(event -> approveSelectedUser("MANAGER"));
+        
+        
+        //reject account button
+        Button rejectButton = new Button("Reject Request");
         rejectButton.setOnAction(event -> rejectSelectedUser());
+        
+        //refresh the pending table button
+        Button refreshPendingButton = new Button("Refresh");
         refreshPendingButton.setOnAction(event -> refreshTables());
 
-        HBox pendingButtons = new HBox(10,
-                approveClerkButton,
-                approveManagerButton,
-                rejectButton,
-                refreshPendingButton);
+        //laid them out in a horizontal order
+        HBox pendingButtons = new HBox(10, approveClerkButton, approveManagerButton, rejectButton, refreshPendingButton);
         pendingButtons.setAlignment(Pos.CENTER_LEFT);
 
-        VBox pendingSection = new VBox(10,
-                pendingTitle, pendingTable, pendingButtons);
+        //pending section uses the vBox layout
+        VBox pendingSection = new VBox(10, pendingTitle, pendingTable, pendingButtons);
 
         Label accountTitle = new Label("Registered Accounts");
         accountTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        
         accountTable = createAccountTable();
-
+        
+        //the buttons for the managing registered account portion
+        //deactivate button
         Button deactivateButton = new Button("Deactivate Account");
-        Button activateButton = new Button("Activate Account");
-        Button refreshAccountsButton = new Button("Refresh");
-
         deactivateButton.setOnAction(event -> deactivateSelectedUser());
+        
+        //activate account button
+        Button activateButton = new Button("Activate Account");
         activateButton.setOnAction(event -> activateSelectedUser());
+        
+        //refresh
+        Button refreshAccountsButton = new Button("Refresh");
         refreshAccountsButton.setOnAction(event -> refreshTables());
 
-        HBox accountButtons = new HBox(10,
-                deactivateButton,
-                activateButton,
-                refreshAccountsButton);
+        HBox accountButtons = new HBox(10, deactivateButton, activateButton, refreshAccountsButton);
         accountButtons.setAlignment(Pos.CENTER_LEFT);
 
-        VBox accountSection = new VBox(10,
-                accountTitle, accountTable, accountButtons);
+        VBox accountSection = new VBox(10, accountTitle, accountTable, accountButtons);
 
         content.getChildren().addAll(pendingSection, accountSection);
         VBox.setVgrow(accountTable, Priority.ALWAYS);
@@ -106,50 +124,52 @@ public class UserManagementView extends BorderPane {
         return content;
     }
 
-    private TableView<User> createPendingTable() {
+    private TableView<User> createPendingTable() { //creates a table view for pending accounts table
+    	
         TableView<User> table = new TableView<User>();
 
+        //column for names
         TableColumn<User, String> nameColumn = new TableColumn<User, String>("Full Name");
-        nameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getName())));
+        nameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getName())));
 
-        TableColumn<User, String> usernameColumn =
-                new TableColumn<User, String>("Username");
-        usernameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getUserName())));
+        //column for username associated with the pending account
+        TableColumn<User, String> usernameColumn = new TableColumn<User, String>("Username");
+        usernameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getUserName())));
 
+        //column for the role requested by the pending account
         TableColumn<User, String> roleColumn = new TableColumn<User, String>("Requested Role");
-        roleColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getUserAccessLevel())));
+        roleColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getUserAccessLevel())));
 
+        //adding the columns
         table.getColumns().addAll(nameColumn, usernameColumn, roleColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPrefHeight(190);
-        table.setPlaceholder(new Label("There are no pending registration requests."));
+        table.setPlaceholder(new Label("No pending account requests so far!"));
 
         return table;
     }
 
-    private TableView<User> createAccountTable() {
-        TableView<User> table = new TableView<User>();
+    private TableView<User> createAccountTable() { //this one creates the table view for current accounts within the angkat system
+    	
+    	TableView<User> table = new TableView<User>();
 
+    	//column for user ID
         TableColumn<User, String> idColumn = new TableColumn<User, String>("User ID");
-        idColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getUserID())));
+        idColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getUserID())));
 
+        //column for names
         TableColumn<User, String> nameColumn = new TableColumn<User, String>("Full Name");
-        nameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getName())));
+        nameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getName())));
 
-        TableColumn<User, String> usernameColumn =
-                new TableColumn<User, String>("Username");
-        usernameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getUserName())));
+        //column for username associated with the account
+        TableColumn<User, String> usernameColumn = new TableColumn<User, String>("Username");
+        usernameColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getUserName())));
 
+        //columns for role of the account
         TableColumn<User, String> roleColumn = new TableColumn<User, String>("Role");
-        roleColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getDisplayValue(cell.getValue().getUserAccessLevel())));
+        roleColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getDisplayValue(cell.getValue().getUserAccessLevel())));
 
+        //Columns for the status
         TableColumn<User, String> statusColumn = new TableColumn<User, String>("Status");
         statusColumn.setCellValueFactory(cell -> {
             String status = "INACTIVE";
@@ -160,9 +180,10 @@ public class UserManagementView extends BorderPane {
 
             return new ReadOnlyStringWrapper(status);
         });
+        
+        //no column for the passwords for privacy
 
-        table.getColumns().addAll(
-                idColumn, nameColumn, usernameColumn, roleColumn, statusColumn);
+        table.getColumns().addAll(idColumn, nameColumn, usernameColumn, roleColumn, statusColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPrefHeight(230);
         table.setPlaceholder(new Label("There are no registered accounts."));
@@ -170,13 +191,16 @@ public class UserManagementView extends BorderPane {
         return table;
     }
 
-    private void refreshTables() {
+    private void refreshTables() {//refreshes the tables
+    	
         ObservableList<User> pendingUsers = FXCollections.observableArrayList();
+        
         for (User user : loginManager.getPending()) {
             if (user != null) {
                 pendingUsers.add(user);
             }
         }
+        
         pendingTable.setItems(pendingUsers);
 
         ObservableList<User> registeredUsers = FXCollections.observableArrayList();
@@ -185,13 +209,14 @@ public class UserManagementView extends BorderPane {
                 registeredUsers.add(user);
             }
         }
+        
         accountTable.setItems(registeredUsers);
     }
 
-    private void approveSelectedUser(String role) {
+    private void approveSelectedUser(String role) {//method for approving an account in pending acounts
         User selectedUser = pendingTable.getSelectionModel().getSelectedItem();
 
-        if (selectedUser == null) {
+        if (selectedUser == null) { //ensures a pending account is selected
         	Label  messageLabel = new Label("Select a pending registration first.");
         	messageLabel.getStyleClass().add("sub-header");
         	return;
@@ -208,7 +233,8 @@ public class UserManagementView extends BorderPane {
         refreshTables();
     }
 
-    private void rejectSelectedUser() {
+    private void rejectSelectedUser() {//method for rejecting a pending account
+    	
         User selectedUser = pendingTable.getSelectionModel().getSelectedItem();
 
         if (selectedUser == null) {
@@ -227,7 +253,7 @@ public class UserManagementView extends BorderPane {
         refreshTables();
     }
 
-    private void deactivateSelectedUser() {
+    private void deactivateSelectedUser() { //method for the deactivating an account
         User selectedUser = accountTable.getSelectionModel().getSelectedItem();
 
         if (selectedUser == null) {
@@ -251,7 +277,7 @@ public class UserManagementView extends BorderPane {
         refreshTables();
     }
 
-    private void activateSelectedUser() {
+    private void activateSelectedUser() { //method for activating a selected user
         User selectedUser = accountTable.getSelectionModel().getSelectedItem();
 
         if (selectedUser == null) {
