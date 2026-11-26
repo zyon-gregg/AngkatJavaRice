@@ -1,3 +1,13 @@
+//TEAM NAME: JAVARICE
+//MEMBERS:
+//John Carlo Pastor
+//Igii Lualhati
+//Zyon Greg Manlulu
+//Gavin Jacob P. Perez
+//UV-4L
+
+//A database management system dedicated to fisheries and aquaculture business. This is to make their business flow efficient
+
 package application;
 
 import Products.Product;
@@ -49,7 +59,7 @@ public class Main extends Application {
         dataManager = new DataManager(products, inventory, buyers, sources, loginManager, sales);
         
         
-        /*
+        
         // Load products first because inventory and sources reference Product objects.
         boolean loadProducts = dataManager.loadProducts();
         boolean loadInventoryProduct = false;
@@ -108,10 +118,14 @@ public class Main extends Application {
             loadDefaultAccounts();
         }
         
-        */
         
+        
+        /* test we used before we had the save and load
         loadSampleData();
         loadDefaultAccounts();
+        showLogin();
+        */
+        
         showLogin();
 
         primaryStage.show();
@@ -157,7 +171,7 @@ public class Main extends Application {
     private void handleLogout() { // Save application data before returning to Login.
     	
     	//Uncomment this to enable the save feature. DO NOT FORGET TO UNCOMMENT THET SNIPPET IN THE stop(). Scroll down
-		/*
+		
     	sales.cancelAllUnpaidSales();
 
         boolean saveProduct = dataManager.saveProducts();
@@ -182,7 +196,7 @@ public class Main extends Application {
             alert.showAndWait();
         }
         
-        */
+        
     	
     	showLogin();
         
@@ -405,7 +419,7 @@ public class Main extends Application {
     @Override
     public void stop() { // Save application data before closing.
     	
-    	/*UNCOMMENT THIS TO ENABLE THE SAVE FEATURE. do not forget to uncomment the snippet in the handleLogouut()
+    	//UNCOMMENT THIS TO ENABLE THE SAVE FEATURE. do not forget to uncomment the snippet in the handleLogouut()
 
         if (dataManager != null && startupSuccessful) {
         	sales.cancelAllUnpaidSales();
@@ -428,7 +442,7 @@ public class Main extends Application {
             }
         }
         
-        */
+        
     }
 
     public static void main(String[] args) {
