@@ -1,5 +1,5 @@
-AppleF|TheFarm|AppleFarms|P00003|100000.0
 AppleF|TheFarm|AppleFarms|P00005|100000.0
-AppleF|TheFarm|AppleFarms|P00004|100000.0
+AppleF|TheFarm|AppleFarms|P00003|100000.0
 AppleF|TheFarm|AppleFarms|P00001|100000.0
+AppleF|TheFarm|AppleFarms|P00004|100000.0
 AppleF|TheFarm|AppleFarms|P00002|100000.0

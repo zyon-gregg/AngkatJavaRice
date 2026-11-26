@@ -1,5 +1,6 @@
+P00006|Dilis|Salty|Batangas Fisheries|10000.0|250.0|300.0|0.0|2026-11-26T12:35:45.534125500
 P00004|Galunggong|Round scad|Navotas Fish Port|110.0|140.0|160.0|431.0|2026-11-25T11:29:26.941438959
 P00005|Pusit|Fresh squid|Palawan|200.0|240.0|280.0|8.0|2026-11-25T11:29:26.941423260
-P00002|Tilapia|Fresh tilapia, whole|Taal Lake fish cages|80.0|100.0|120.0|250.0|2026-11-25T11:26:59.212364303
+P00002|Tilapia|Fresh tilapia, whole|Taal Lake fish cages|70.0|100.0|120.0|30.0|2026-11-26T12:34:13.570744400
 P00003|Tuna|Yellowfin tuna, sliced|General Santos|230.0|280.0|320.0|0.0|2026-11-25T11:26:59.211982012
-P00001|Bangus|Fresh milkfish, whole|Dagupan fish pens|120.0|150.0|180.0|377.0|2026-11-25T11:28:59.901785497
+P00001|Bangus|Fresh milkfish, whole|Dagupan fish pens|120.0|150.0|180.0|300.0|2026-11-26T12:33:48.374100700
