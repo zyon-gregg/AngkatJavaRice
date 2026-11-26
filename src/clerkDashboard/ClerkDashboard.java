@@ -67,6 +67,8 @@ public class ClerkDashboard {
     private BorderPane root;
     private Label pageTitleLabel;
     private String activeTab = "OVERVIEW";
+    private Stage inventoryWindow;
+    private String inventoryPreviousTab;
 
     // Sidebar navigation buttons
     private Button overviewBtn;
@@ -112,7 +114,7 @@ public class ClerkDashboard {
         showOverview();
 
         Scene scene = new Scene(root, 1250, 780);
-        URL cssUrl = getClass().getResource("/clerkDashboard/ClerkDashboardDesign.css");
+        URL cssUrl = getClass().getResource("/clerkDashboard/clerkDashboardDesign.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
@@ -267,8 +269,16 @@ public class ClerkDashboard {
         alert.setContentText("Any unsaved screen changes will be closed.");
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK && onLogout != null) {
-            onLogout.run();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+
+            // Close the separate Inventory window before leaving the Clerk Dashboard.
+            if (inventoryWindow != null && inventoryWindow.isShowing()) {
+                inventoryWindow.close();
+            }
+
+            if (onLogout != null) {
+                onLogout.run();
+            }
         }
     }
 
@@ -316,7 +326,7 @@ public class ClerkDashboard {
 
         for (Product p : allProducts) {
             InventoryOfProduct inv = inventory.getProductInventoryByCode(p.getProductCode());
-            double qty = (inv != null) ? inv.getQuantity() : 0.0;
+            double qty = (inv != null) ? inv.getProductStockInKG() : 0.0;
 
             String status;
             if (qty <= 0.0) {
@@ -331,7 +341,7 @@ public class ClerkDashboard {
 
             StockRow row = new StockRow(
                     p.getProductName(),
-                    String.format("₱%.2f / kg", p.getRawPrice()),
+                    String.format("₱%.2f / kg", p.getProductRawPrice()),
                     String.format("%.2f kg", qty),
                     status
             );
@@ -382,17 +392,61 @@ public class ClerkDashboard {
      */
     private void showCatalog() {
         updateActiveNav(catalogBtn, "CATALOG", "Product Catalog (Read-Only)");
-        root.setCenter(new ProductManagementView(products, false));
+        root.setCenter(new ProductManagementView(products, inventory, false));
     }
 
     /**
-     * Opens the Inventory view in read-only clerk mode.
+     * Opens the Inventory view in a separate read-only window for clerks.
      */
     private void showInventory() {
+
+        // InventoryGUI is a standalone window, not a JavaFX Node that can be
+        // inserted into the Clerk Dashboard's BorderPane.
+        if (inventoryWindow != null && inventoryWindow.isShowing()) {
+            updateActiveNav(inventoryBtn, "INVENTORY", "Check Inventory");
+            inventoryWindow.toFront();
+            return;
+        }
+
+        inventoryPreviousTab = activeTab;
         updateActiveNav(inventoryBtn, "INVENTORY", "Check Inventory");
         syncInventoryRecords();
-        String actor = (clerkUsername != null && !clerkUsername.isBlank()) ? clerkUsername : clerkFullName;
-        root.setCenter(new InventoryGUI(inventory, actor, false));
+
+        String actor = clerkUsername;
+        if (actor == null || actor.isBlank()) {
+            actor = clerkFullName;
+        }
+
+        InventoryGUI inventoryGUI = new InventoryGUI(inventory, actor, false);
+        inventoryWindow = inventoryGUI.getStage();
+        inventoryWindow.initOwner(stage);
+
+        inventoryWindow.setOnHidden(event -> {
+            inventoryWindow = null;
+
+            // Return to the dashboard screen that was open before Inventory.
+            // Do not reopen Inventory when the separate window is closed.
+            if ("INVENTORY".equals(activeTab)) {
+                restorePreviousScreen(inventoryPreviousTab);
+            }
+
+            inventoryPreviousTab = null;
+        });
+
+        inventoryGUI.setStageComponents();
+    }
+
+    /** Restores the dashboard view that was active before opening Inventory. */
+    private void restorePreviousScreen(String previousTab) {
+        if ("POS".equals(previousTab)) {
+            showPOS();
+        } else if ("CATALOG".equals(previousTab)) {
+            showCatalog();
+        } else if ("ACTIVITY".equals(previousTab)) {
+            showStockActivity();
+        } else {
+            showOverview();
+        }
     }
 
     /**
@@ -449,7 +503,7 @@ public class ClerkDashboard {
         table.getColumns().addAll(timeCol, prodCol, typeCol, qtyCol, newStockCol, userCol, noteCol);
 
         // Sort logs newest first
-        List<StockRecordedChange> logs = new ArrayList<>(inventory.getStockChangeHistory());
+        List<StockRecordedChange> logs = new ArrayList<>(inventory.getAllHistory());
         logs.sort(Comparator.comparing(StockRecordedChange::getTime, Comparator.nullsLast(Comparator.reverseOrder())));
         table.setItems(FXCollections.observableArrayList(logs));
 

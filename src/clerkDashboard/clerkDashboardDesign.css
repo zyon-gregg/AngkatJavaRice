@@ -1,10 +1,10 @@
-/* ROOT & GLOBAL
+/* ROOT & GLOBAL */
 .root {
     -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
     -fx-background-color: #f1f5f9;
 }
 
-/* SIDEBAR
+/* SIDEBAR */
 .sidebar {
     -fx-background-color: linear-gradient(to bottom, #0f2942, #163b5c);
     -fx-padding: 22 14 20 14;
@@ -75,7 +75,7 @@
     -fx-text-fill: #ffffff;
 }
 
-/* TOP HEADER BAR
+/* TOP HEADER BAR */
 .topbar {
     -fx-background-color: #ffffff;
     -fx-padding: 14 24 14 24;
@@ -114,7 +114,7 @@
     -fx-background-color: #e2e8f0;
 }
 
-/* OVERVIEW CONTENT
+/* OVERVIEW CONTENT */
 .subtitle-label {
     -fx-text-fill: #475569;
     -fx-font-size: 13.5px;
