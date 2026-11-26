@@ -31,7 +31,14 @@ import java.io.IOException;
 
 
 public class DataManager {
+	//the main program for saving and loading all the data of the Angkat database system
+	//Saves the accounts (current and pending)
+	//Saves the buyers and sources
+	//Saves each product's stock and the history of changes in stock
+	//Saves Products
+	//Saves the receipts and receipt item
 	
+	//All the back end imported to access its stored data
 	private ProductDatabase products;
 	private InventorySystem inventory;
 	private BuyerDatabase buyers;
@@ -48,12 +55,21 @@ public class DataManager {
 		this.sale = sa;
 	}
 	
+	//Each save and load feature follows a similar syntax, adjusted accordingly to what kind of data it's dealing with
+	
+	//==================== SAVE AND LOAD FOR PRODUCT ====================
+	//===================================================================
 	public boolean saveProducts() { 
-		File file = new File("src/SaveLoad/Products.txt");
+		File file = new File("src/SaveLoad/Products.txt"); //opens the right file
 		
-		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){
+		if (file == null || !file.exists()) { //checks if loaded successfully
+			System.out.println("Cannot open file");
+			return false;
+		}
+		
+		try(BufferedWriter writer = Files.newBufferedWriter(file.toPath())){ ///try and catch as the usual
 			
-			List<Product> productsToBeSaved = products.getAllProducts();
+			List<Product> productsToBeSaved = products.getAllProducts(); //creates a list of products to be saved
 			
 			for (Product product : productsToBeSaved) {
 				writer.write(product.viewState());
@@ -73,15 +89,20 @@ public class DataManager {
 		
 	}
 	
-	public boolean loadProducts() {
+	public boolean loadProducts() { //for load products
 		
 		File file = new File("src/SaveLoad/Products.txt");
+		
+		if (file == null || !file.exists()) { //checks if loaded successfully
+			System.out.println("Cannot open file");
+			return false;
+		}
 		
 		try(BufferedReader reader = Files.newBufferedReader(file.toPath())){
 			
 			String line = reader.readLine();
 			
-			while (line != null) {
+			while (line != null) { //extracts the data. The data is split by "|". Every text file follows this format.
 				String[] extractedData = line.split("\\|", -1);
 				
 				String code = extractedData[0];
@@ -108,6 +129,13 @@ public class DataManager {
 		return true;
 		
 	}
+	
+	//===================================================================
+	
+	//Every other save and load function follows the same logic. It is adjusted according to their data
+	
+	
+	//==================== InventoryOfProduct and StockRecordedChange ====================	
 	
 	public boolean saveInventoryProducts() {
 		File file = new File("src/SaveLoad/Inventory.txt");
@@ -164,7 +192,7 @@ public class DataManager {
 		}
 		
 		return true;
-	}
+	}	
 	
 	public boolean saveInventoryHistory() {
 		File file = new File("src/SaveLoad/StockRecordedHistory.txt");
@@ -240,6 +268,10 @@ public class DataManager {
 		return true;
 	}
 	
+	//====================================================================================
+	
+	//==================== Save and load for buyers ====================
+	
 	public boolean saveBuyers() {
 		File file = new File("src/SaveLoad/Buyers.txt");
 		
@@ -297,92 +329,98 @@ public class DataManager {
 		return true;
 	}
 	
-	 public boolean saveSources() {
-		 File file = new File("src/SaveLoad/Sources2.txt");
+	//==================================================================
+	
+	//==================== Save and load for sources ====================
+	
+	public boolean saveSources() {
+		File file = new File("src/SaveLoad/Sources2.txt");
 		 
-		 try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
+		try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
 			 
-			 Collection<Source> sourcesToBeSaved = sources.returnSources();
+			Collection<Source> sourcesToBeSaved = sources.returnSources();
 			 
-			 for (Source source : sourcesToBeSaved) {
+			for (Source source : sourcesToBeSaved) {
 				 
-				 HashMap<Product, Double> sourceProducts = source.getSourceProductsAndQuantity();
+				HashMap<Product, Double> sourceProducts = source.getSourceProductsAndQuantity();
+				
+				if (sourceProducts.isEmpty()) {
+					
+					String data = source.getUserName() + "|" + source.getPassword() + "|" + source.getName() + "||";
 
-	                if (sourceProducts.isEmpty()) {
-	                    String data = source.getUserName()
-	                            + "|" + source.getPassword()
-	                            + "|" + source.getName() + "||";
-
-	                    writer.write(data);
-	                    writer.newLine();
+					writer.write(data);
+					writer.newLine();
 	                    
-	                } else {
+				} else {
 	                	
-	                    for (Map.Entry<Product, Double> entry : sourceProducts.entrySet()) {
-	                        String data = source.getUserName()
-	                                + "|" + source.getPassword()
-	                                + "|" + source.getName()
-	                                + "|" + entry.getKey().getProductCode()
-	                                + "|" + entry.getValue();
-
-	                        writer.write(data);
-	                        writer.newLine();
-	                    }
-	                }
-	            }
-
-	            return true;
-
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	            return false;
-	        }
-	    }
-
-	    public boolean loadSources() {
-        File file = new File("src/SaveLoad/Sources2.txt");
-
-        HashMap<String, Source> restoredSources = new HashMap<String, Source>();
-
-        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
-
-            String line = reader.readLine();
-
-            while (line != null) {
-
-                if (line.trim().isEmpty()) {
-                    line = reader.readLine();
-                    continue;
-                }
-
-                String[] extractedData = line.split("\\|", -1);
+					for (Map.Entry<Product, Double> entry : sourceProducts.entrySet()) {
+						String data = source.getUserName() + "|" + source.getPassword() + "|" + source.getName() + "|" + entry.getKey().getProductCode() + "|" + entry.getValue();
+						
+						writer.write(data);
+						writer.newLine();
+						
+					}
+					
+				}
+				
+			}
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+			
+		}
+		
+	}
+	
+	public boolean loadSources() {
+		
+		File file = new File("src/SaveLoad/Sources2.txt");
+		
+		HashMap<String, Source> restoredSources = new HashMap<String, Source>();
+		
+		try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
+			
+			String line = reader.readLine();
+			
+			while (line != null) {
+				
+				if (line.trim().isEmpty()) {
+					line = reader.readLine();
+					continue;
+					
+				}
+				
+				String[] extractedData = line.split("\\|", -1);
 
                 String username = extractedData[0];
                 String password = extractedData[1];
                 String name = extractedData[2];
                 String productCode = extractedData[3];
                 String quantityText = extractedData[4];
-
+                
                 if (username.trim().isEmpty() || password.trim().isEmpty() || name.trim().isEmpty()) {
-                    System.out.println("Source information is incomplete: " + line);
-                    return false;
+                	System.out.println("Source information is incomplete: " + line);
+                	return false;
+                	
                 }
-
-                // Create each Source object only once.
+                
                 Source source = restoredSources.get(username);
 
                 if (source == null) {
                     source = new Source(username, password, name);
                     restoredSources.put(username, source);
                 }
-
-                // An empty product code and quantity represent a source with no products.
+                
+                
                 if (productCode.trim().isEmpty() && quantityText.trim().isEmpty()) {
                     line = reader.readLine();
                     continue;
                 }
 
-                // A product code and quantity must either both exist or both be empty.
+                
                 if (productCode.trim().isEmpty() || quantityText.trim().isEmpty()) {
                     System.out.println("Incomplete source product record: " + line);
                     return false;
@@ -413,7 +451,6 @@ public class DataManager {
                 line = reader.readLine();
             }
 
-            // Add the reconstructed sources to SourceDatabase after reading succeeds.
             for (Source source : restoredSources.values()) {
                 sources.addSourceToDatabase(source);
             }
@@ -425,8 +462,12 @@ public class DataManager {
             return false;
         }
     }
-
-
+	    
+	
+	//===================================================================
+	
+	//==================== Save and load for Accounts and Pending Accounts ====================
+	
 	public boolean saveAccounts() {
 		File file = new File("src/SaveLoad/Accounts.txt");
 		
@@ -569,6 +610,9 @@ public class DataManager {
 		}
 	}
 	
+	//=========================================================================================
+	
+	//==================== Save and load for Receipts ====================
 	public boolean saveSalesReceipts() {
 		File receiptFile = new File("src/SaveLoad/Receipt.txt");
 		File itemFile = new File("src/SaveLoad/ReceiptItem.txt");
