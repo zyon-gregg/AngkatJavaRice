@@ -233,7 +233,7 @@ public class ClerkDashboard {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        String displayName = (clerkFullName != null && !clerkFullName.isBlank()) ? clerkFullName : clerkUsername;
+        String displayName = (clerkFullName != null && !clerkFullName.trim().isEmpty()) ? clerkFullName : clerkUsername;
         Label userBadge = new Label(displayName + "   |   ID: " + clerkId + "   |   Clerk");
         userBadge.getStyleClass().add("user-badge");
 
@@ -250,11 +250,21 @@ public class ClerkDashboard {
      */
     private void refreshCurrentScreen() {
         switch (activeTab) {
-            case "POS" -> showPOS();
-            case "CATALOG" -> showCatalog();
-            case "INVENTORY" -> showInventory();
-            case "ACTIVITY" -> showStockActivity();
-            default -> showOverview();
+            case "POS":
+                showPOS();
+                break;
+            case "CATALOG":
+                showCatalog();
+                break;
+            case "INVENTORY":
+                showInventory();
+                break;
+            case "ACTIVITY":
+                showStockActivity();
+                break;
+            default:
+                showOverview();
+                break;
         }
     }
 
@@ -413,7 +423,7 @@ public class ClerkDashboard {
         syncInventoryRecords();
 
         String actor = clerkUsername;
-        if (actor == null || actor.isBlank()) {
+        if (actor == null || actor.trim().isEmpty()) {
             actor = clerkFullName;
         }
 
@@ -563,7 +573,7 @@ public class ClerkDashboard {
 
         TableColumn<StockRow, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status));
-        statusCol.setCellFactory(col -> new TableCell<>() {
+        statusCol.setCellFactory(col -> new TableCell<StockRow, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -573,9 +583,15 @@ public class ClerkDashboard {
                 } else {
                     setText(item);
                     switch (item) {
-                        case "Out of stock" -> setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
-                        case "Low stock" -> setStyle("-fx-text-fill: #d97706; -fx-font-weight: bold;");
-                        default -> setStyle("-fx-text-fill: #16a34a; -fx-font-weight: bold;");
+                        case "Out of stock":
+                            setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
+                            break;
+                        case "Low stock":
+                            setStyle("-fx-text-fill: #d97706; -fx-font-weight: bold;");
+                            break;
+                        default:
+                            setStyle("-fx-text-fill: #16a34a; -fx-font-weight: bold;");
+                            break;
                     }
                 }
             }
