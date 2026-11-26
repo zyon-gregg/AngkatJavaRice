@@ -16,38 +16,40 @@ import java.time.format.DateTimeFormatter;
 
 public class InventoryGUI {
 
-    // Window components
+    //The main components of the GUI
     private Stage stage;
     private Scene scene;
     private BorderPane root;
 
-    // Backend and access context
+    //integrating the back end of the inventory system
+    //This is abstraction because we separated the duties of the back end and the GUI instead of combining them in a one large class
     private final InventorySystem inventorySystem;
     private final String currentUsername;
-    private final boolean canManageStock;
+    private final boolean canManageStock; //this is a checker to check who is using the inventory window since only managers can access the operations while clerks can only view.
 
-    // Tables
+    //Tables
     private TableView<InventoryOfProduct> inventoryTable;
     private TableView<StockRecordedChange> historyTable;
-
-    // Manager-only controls (remain null in read-only mode)
+    
+    //This attributes are only when manager is using the inventory window
+    //This sets to be null when a clerk accesses it
     private TextField quantityField;
     private TextField explanationField;
     private Label selectedProductLabel;
-
+    
+    //the buttons
     private Button restockButton;
     private Button adjustButton;
     private Button deductButton;
     private Button refreshButton;
 
-    private static final double MAX_STOCK_IN_KG = 1000.00;
+    private static final double MAX_STOCK_IN_KG = 1000.00; //max stock constant
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public InventoryGUI(InventorySystem inventorySystem, String currentUsername, boolean canManageStock) {
     	
-    	//update
 
-        if (inventorySystem == null) {
+        if (inventorySystem == null) {//ensures that the back end exists
             throw new IllegalArgumentException("InventorySystem cannot be null.");
         }
 
@@ -66,12 +68,11 @@ public class InventoryGUI {
         this.root.getStyleClass().add("inventory-root");
         this.scene = new Scene(root, 1100, 750);
         
-        // Load the stylesheet from the same package as InventoryGUI.
+        // Loading the css from the same package as InventoryGUI.
         java.net.URL stylesheet = getClass().getResource("InventoryGUIDesign.css");
 
         if (stylesheet == null) {
-            throw new IllegalStateException(
-                    "InventoryGUIDesign.css was not found in inventoryManagementSystem.");
+            throw new IllegalStateException("InventoryGUIDesign.css was not found in inventoryManagementSystem.");
         }
 
         scene.getStylesheets().add(stylesheet.toExternalForm());
@@ -96,13 +97,13 @@ public class InventoryGUI {
         refreshButton = new Button("Refresh");
         refreshButton.getStyleClass().add("inventory-refresh-button");
 
-        // StackPane keeps the title centered while Refresh stays on the right.
+        //StackPane keeps the title centered while the refresh button stays on the right.
         StackPane header = new StackPane();
         header.getStyleClass().add("inventory-header");
         StackPane.setAlignment(refreshButton, javafx.geometry.Pos.CENTER_RIGHT);
         header.getChildren().addAll(inventoryTitle, refreshButton);
 
-        // First tab: inventory records and stock operations.
+        //The tab for the product's inventory table
         inventoryTable = createInventoryTable();
         inventoryTable.setPrefHeight(350);
 
@@ -113,24 +114,24 @@ public class InventoryGUI {
         VBox.setVgrow(inventoryTable, Priority.ALWAYS);
 
         if (canManageStock) {
-            Separator operationsDivider = new Separator();
+            Separator operationsDivider = new Separator(); //adding a divider between the table view and the stock operation
             operationsDivider.getStyleClass().add("inventory-operations-divider");
             inventoryTabContent.getChildren().add(operationsDivider);
             inventoryTabContent.getChildren().add(createManagerOperationsSection());
             registerInventorySelectionListener();
             
         } else {
-            Label readOnlyNotice = new Label("Read-only access: Clerks can view stock levels and history, but only Managers can modify inventory.");
+            Label readOnlyNotice = new Label("Inventory window is read only for Clerks. Managers are only the one's who can perform the stock operations");
             readOnlyNotice.getStyleClass().add("inventory-read-only-notice");
             readOnlyNotice.setWrapText(true);
             inventoryTabContent.getChildren().add(readOnlyNotice);
         }
 
-        Tab inventoryTab = new Tab("Inventory Records");
+        Tab inventoryTab = new Tab("Stock of Products");
         inventoryTab.setClosable(false);
         inventoryTab.setContent(inventoryTabContent);
 
-        // Second tab: history only.
+        //the second tab is for the history table view
         historyTable = createHistoryTable();
         historyTable.setPrefHeight(500);
 
@@ -140,7 +141,7 @@ public class InventoryGUI {
         historyTabContent.getChildren().add(historyTable);
         VBox.setVgrow(historyTable, Priority.ALWAYS);
 
-        Tab historyTab = new Tab("Change History");
+        Tab historyTab = new Tab("History");
         historyTab.setClosable(false);
         historyTab.setContent(historyTabContent);
 
@@ -168,7 +169,7 @@ public class InventoryGUI {
         if (canManageStock) {
             stage.setTitle("Angkat - Inventory Management");
         } else {
-            stage.setTitle("Angkat - Inventory Overview (Read Only)");
+            stage.setTitle("Angkat - Inventory Overview (Read Only for Clerks)");
         }
 
         stage.setScene(scene);
@@ -177,10 +178,10 @@ public class InventoryGUI {
         stage.show();
     }
 
-    //This one is a method to build the portion of the stock operations for manager only
+    //This one is a method to build the portion of the stock operations in the window for manager use
     private VBox createManagerOperationsSection() {
 
-        Label operationTitle = new Label("Inventory Operations");
+        Label operationTitle = new Label("----- Inventory Operations -----");
         operationTitle.getStyleClass().add("inventory-operations-title");
 
         selectedProductLabel = new Label("Select a product from the table above.");
@@ -201,35 +202,39 @@ public class InventoryGUI {
         operationForm.add(new Label("Explanation:"), 0, 1);
         operationForm.add(explanationField, 1, 1);
 
+        //restock button
         restockButton = new Button("Restock");
-        adjustButton = new Button("Adjust Stock");
-        deductButton = new Button("Deduct Stock");
-
         restockButton.setOnAction(event -> handleRestock());
-        adjustButton.setOnAction(event -> handleAdjustment());
-        deductButton.setOnAction(event -> handleDeduction());
-
         restockButton.getStyleClass().add("inventory-restock-button");
+        
+        //adjust stock button
+        adjustButton = new Button("Adjust Stock");
+        adjustButton.setOnAction(event -> handleAdjustment());
         adjustButton.getStyleClass().add("inventory-adjust-button");
+        
+        
+        //deduct stock button
+        deductButton = new Button("Deduct Stock");           
+        deductButton.setOnAction(event -> handleDeduction());
         deductButton.getStyleClass().add("inventory-deduct-button");
 
         HBox operationButtons = new HBox(10, restockButton, adjustButton, deductButton);
         operationButtons.getStyleClass().add("inventory-operation-buttons");
 
-        VBox operationsSection = new VBox(
-                10, operationTitle, selectedProductLabel, operationForm, operationButtons);
+        VBox operationsSection = new VBox(10, operationTitle, selectedProductLabel, operationForm, operationButtons);
         operationsSection.getStyleClass().add("inventory-operations-section");
 
         return operationsSection;
     }
-
+    
+    //a listener for selecting a product in the inventory record table view
     private void registerInventorySelectionListener() {
-        inventoryTable.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> {
+        inventoryTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                     if (newValue == null) {
                         selectedProductLabel.setText(
                                 "Select a product from the table above.");
                     } else {
+                    	
                         String productName = newValue.getProduct().getProductName();
                         String productCode = newValue.getProduct().getProductCode();
                         double stock = newValue.getProductStockInKG();
@@ -238,35 +243,34 @@ public class InventoryGUI {
                     }
                 });
     }
-
+    
+    //creates a table view for all the product's stock
     private TableView<InventoryOfProduct> createInventoryTable() {
 
         TableView<InventoryOfProduct> table = new TableView<>();
         table.getStyleClass().add("inventory-table");
 
-        TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");
-        
-        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getProduct().getProductCode()));
+        //Column for code
+        TableColumn<InventoryOfProduct, String> codeColumn = new TableColumn<>("Product Code");      
+        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductCode()));
 
-        TableColumn<InventoryOfProduct, String> productColumn =
-                new TableColumn<>("Product Name");
-        productColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getProduct().getProductName()));
+        //Column for product's name
+        TableColumn<InventoryOfProduct, String> productColumn = new TableColumn<>("Product Name");
+        productColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProduct().getProductName()));
 
-        TableColumn<InventoryOfProduct, String> stockColumn =
-                new TableColumn<>("Current Stock (kg)");
-        stockColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                String.format("%.2f", data.getValue().getProductStockInKG())));
+        //Column for the current stock of a product
+        TableColumn<InventoryOfProduct, String> stockColumn = new TableColumn<>("Current Stock (kg)");
+        stockColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f", data.getValue().getProductStockInKG())));
 
-        TableColumn<InventoryOfProduct, String> statusColumn =
-                new TableColumn<>("Stock Status");
+        //Column for the status of the product's stock (low, in stock, out)
+        TableColumn<InventoryOfProduct, String> statusColumn =new TableColumn<>("Stock Status");
         statusColumn.setCellValueFactory(data -> {
             InventoryOfProduct record = data.getValue();
             String productCode = record.getProduct().getProductCode();
             double stock = record.getProductStockInKG();
 
             String status;
+            
             if (stock == 0) {
                 status = "OUT OF STOCK";
             } else if (inventorySystem.isLowOnStock(productCode)) {
@@ -277,10 +281,12 @@ public class InventoryGUI {
 
             return new ReadOnlyStringWrapper(status);
         });
-
-        TableColumn<InventoryOfProduct, String> updatedColumn =
-                new TableColumn<>("Last Updated");
+        
+        
+        //Column for date and time for the most recent edit of that product's stock
+        TableColumn<InventoryOfProduct, String> updatedColumn = new TableColumn<>("Last Updated");
         updatedColumn.setCellValueFactory(data -> {
+        	
             if (data.getValue().getLastUpdated() == null) {
                 return new ReadOnlyStringWrapper("N/A");
             }
@@ -289,104 +295,101 @@ public class InventoryGUI {
             return new ReadOnlyStringWrapper(updatedText);
         });
 
-        table.getColumns().addAll(
-                codeColumn, productColumn, stockColumn, statusColumn, updatedColumn);
+        table.getColumns().addAll(codeColumn, productColumn, stockColumn, statusColumn, updatedColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No inventory records available."));
+        table.setPlaceholder(new Label("No inventory records available.")); //when the table view is empty
 
         return table;
     }
-
+    
+    //creates a table view for the history (recorded changes of stocks across all products)
     private TableView<StockRecordedChange> createHistoryTable() {
 
         TableView<StockRecordedChange> table = new TableView<>();
         table.getStyleClass().add("inventory-table");
 
-        TableColumn<StockRecordedChange, String> idColumn =
-                new TableColumn<>("Record ID");
-        idColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getRecordId()));
+        //Column for record Id
+        TableColumn<StockRecordedChange, String> idColumn = new TableColumn<>("Record ID");
+        idColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getRecordId()));
 
-        TableColumn<StockRecordedChange, String> codeColumn =
-                new TableColumn<>("Product Code");
-        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getProductCode()));
+        //Column for product Id
+        TableColumn<StockRecordedChange, String> codeColumn = new TableColumn<>("Product Code");
+        codeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getProductCode()));
 
-        TableColumn<StockRecordedChange, String> typeColumn =
-                new TableColumn<>("Change Type");
-        typeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getChangeType()));
+        //Column for what kind of change performed on a stock
+        TableColumn<StockRecordedChange, String> typeColumn = new TableColumn<>("Change Type");
+        typeColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getChangeType()));
 
-        TableColumn<StockRecordedChange, String> previousColumn =
-                new TableColumn<>("Previous Stock");
-        previousColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                String.format("%.2f", data.getValue().getPreviousStock())));
+        //Column for the product's previous stock
+        TableColumn<StockRecordedChange, String> previousColumn = new TableColumn<>("Previous Stock");
+        previousColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f", data.getValue().getPreviousStock())));
 
-        TableColumn<StockRecordedChange, String> newColumn =
-                new TableColumn<>("New Stock");
-        newColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                String.format("%.2f", data.getValue().getNewStock())));
+        //Column for the product's new stock after a stock operation
+        TableColumn<StockRecordedChange, String> newColumn = new TableColumn<>("New Stock");
+        newColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%.2f", data.getValue().getNewStock())));
 
-        TableColumn<StockRecordedChange, String> amountColumn =
-                new TableColumn<>("Amount Changed");
-        amountColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                String.format("%+.2f", data.getValue().getAmountChanged())));
+        //Column for the amount changed (New stock - previous stock)
+        TableColumn<StockRecordedChange, String> amountColumn = new TableColumn<>("Amount Changed");
+        amountColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(String.format("%+.2f", data.getValue().getAmountChanged())));
 
-        TableColumn<StockRecordedChange, String> dateColumn =
-                new TableColumn<>("Date/Time");
+        //Column for date
+        TableColumn<StockRecordedChange, String> dateColumn = new TableColumn<>("Date/Time");
         dateColumn.setCellValueFactory(data -> {
-            if (data.getValue().getTime() == null) {
+        	
+            if (data.getValue().getTime() == null) { //in case it fails to get the date
                 return new ReadOnlyStringWrapper("N/A");
             }
 
             String recordedTime = data.getValue().getTime().format(dateFormat);
+            
             return new ReadOnlyStringWrapper(recordedTime);
         });
+        
+        
+        //Column for the name of user who performed the stock operation
+        TableColumn<StockRecordedChange, String> userColumn = new TableColumn<>("Performed By");
+        userColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getPerformedBy()));
 
-        TableColumn<StockRecordedChange, String> userColumn =
-                new TableColumn<>("Performed By");
-        userColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getPerformedBy()));
+        //Column for the explanation/reason
+        TableColumn<StockRecordedChange, String> reasonColumn = new TableColumn<>("Explanation");
+        reasonColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getExplanation()));
 
-        TableColumn<StockRecordedChange, String> reasonColumn =
-                new TableColumn<>("Explanation");
-        reasonColumn.setCellValueFactory(data -> new ReadOnlyStringWrapper(
-                data.getValue().getExplanation()));
-
-        table.getColumns().addAll(
-                idColumn, codeColumn, typeColumn, previousColumn, newColumn,
-                amountColumn, dateColumn, userColumn, reasonColumn);
+        //adds all to the table
+        table.getColumns().addAll(idColumn, codeColumn, typeColumn, previousColumn, newColumn, amountColumn, dateColumn, userColumn, reasonColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         return table;
     }
 
-    // --------------------------------------------------
-    // Manager-only stock operations
-    // --------------------------------------------------
-
-    private boolean requireManagerPermission() {
+    
+    private boolean requireManagerPermission() { //this is a method to ensure that the stock operations can be performed ONLY by managers
         if (!canManageStock) {
-            showError("You do not have permission to modify inventory. "
-                    + "Please contact a Manager.");
+            showError("You do not have permission to modify inventory. Please contact a Manager.");
             return false;
         }
+        
         return true;
     }
-
+    
+    //a stock operation for restocking a product's stock by adding a stock to the product's current stock
     private void handleRestock() {
 
-        if (!requireManagerPermission()) return;
+        if (!requireManagerPermission()) {
+        	return;
+        }
 
-        InventoryOfProduct selected =
-                inventoryTable.getSelectionModel().getSelectedItem();
+        InventoryOfProduct selected = inventoryTable.getSelectionModel().getSelectedItem();
+        
         if (selected == null) {
             showError("Please select a product first.");
             return;
         }
 
         Double quantity = getQuantityInput();
-        if (quantity == null) return;
+        
+        if (quantity == null) {
+        	return;
+        }
 
         if (quantity <= 0) {
             showError("Restock quantity must be greater than zero.");
@@ -394,36 +397,44 @@ public class InventoryGUI {
         }
 
         double currentStock = selected.getProductStockInKG();
+        
         if (currentStock + quantity > MAX_STOCK_IN_KG) {
             showError("Restocking would exceed the maximum stock of 1000 kg.");
             return;
         }
 
         String reason = getExplanation();
-        if (reason == null) return;
-
-        inventorySystem.restockProduct(
-                selected.getProduct().getProductCode(),
-                quantity,
-                currentUsername,
-                reason);
-
+        
+        if (reason == null) {
+        	return;
+        }
+        
+        //restockProduct(product code, quantity, name of user, and explanation)
+        inventorySystem.restockProduct(selected.getProduct().getProductCode(), quantity, currentUsername, reason);
+        
         completeOperation("Stock successfully restocked.");
     }
-
+    
+    //this is a method for adjusting a stock to a specific amount for correction.
+    //Restock adds, adjustment sets the stock to a specific amount
     private void handleAdjustment() {
 
-        if (!requireManagerPermission()) return;
+        if (!requireManagerPermission()) {
+        	return;
+        }
 
-        InventoryOfProduct selected =
-                inventoryTable.getSelectionModel().getSelectedItem();
+        InventoryOfProduct selected = inventoryTable.getSelectionModel().getSelectedItem();
+        
         if (selected == null) {
             showError("Please select a product first.");
             return;
         }
 
         Double quantity = getQuantityInput();
-        if (quantity == null) return;
+        
+        if (quantity == null) {
+        	return;
+        }
 
         if (quantity < 0) {
             showError("Stock quantity cannot be negative.");
@@ -436,112 +447,123 @@ public class InventoryGUI {
         }
 
         String reason = getExplanation();
-        if (reason == null) return;
-
-        inventorySystem.editStock(
-                selected.getProduct().getProductCode(),
-                quantity,
-                currentUsername,
-                reason);
+        
+        if (reason == null) {
+        	return;
+        }
+        
+        //edit stock parameters: product code, quantity, name of user, explanation
+        inventorySystem.editStock(selected.getProduct().getProductCode(), quantity, currentUsername, reason);
 
         completeOperation("Stock successfully adjusted.");
     }
-
+    
+    //a method to handle the deductions of a stock
     private void handleDeduction() {
 
-        if (!requireManagerPermission()) return;
+        if (!requireManagerPermission()) {//stock operations are only permitted to managers
+        	return;
+        }
 
-        InventoryOfProduct selected =
-                inventoryTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
+        InventoryOfProduct selected = inventoryTable.getSelectionModel().getSelectedItem();
+        
+        if (selected == null) {//ensures there is a selected product's stock in the table view
             showError("Please select a product first.");
             return;
         }
 
         Double quantity = getQuantityInput();
-        if (quantity == null) return;
+        
+        if (quantity == null) {
+        	return;
+        }
 
-        if (quantity <= 0) {
+        if (quantity <= 0) { //validates the input. The requested amount cannot be negative
             showError("Deduction quantity must be greater than zero.");
             return;
         }
 
         double currentStock = selected.getProductStockInKG();
-        if (quantity > currentStock) {
+        
+        if (quantity > currentStock) {//ensures that there is enough stock for the deduction process
             showError("Insufficient stock for this deduction.");
             return;
         }
 
         String reason = getExplanation();
-        if (reason == null) return;
-
-        inventorySystem.reduceStock(
-                selected.getProduct().getProductCode(),
-                quantity,
-                currentUsername,
-                reason);
+        
+        if (reason == null) {
+        	return;
+        }
+        
+        //reduceStock(code, quantity, name of user, explanation)
+        inventorySystem.reduceStock(selected.getProduct().getProductCode(), quantity, currentUsername, reason);
 
         completeOperation("Stock successfully deducted.");
     }
-
-    // --------------------------------------------------
-    // Input, refresh, and messages
-    // --------------------------------------------------
-
+    
+    //a method to validate the input in the quantity text field
     private Double getQuantityInput() {
 
         String input = quantityField.getText().trim();
-        if (input.isEmpty()) {
+        
+        if (input.isEmpty()) { //ensures there is an input in the quantity text field
             showError("Please enter a quantity.");
             return null;
         }
 
         try {
             double quantity = Double.parseDouble(input);
-            if (!Double.isFinite(quantity)) {
+            
+            if (!Double.isFinite(quantity)) {//ensures the input is not infinity
                 showError("Please enter a valid finite number.");
                 return null;
             }
+            
             return quantity;
-        } catch (NumberFormatException exception) {
+            
+        } catch (NumberFormatException exception) {//ensures that is is actually a number
             showError("Invalid quantity. Please enter a number.");
             return null;
         }
     }
-
+    
+    //a method to to check if the text field for the explanation is empty or not
     private String getExplanation() {
         String reason = explanationField.getText().trim();
+        
         if (reason.isEmpty()) {
             showError("Please provide an explanation for this operation.");
             return null;
         }
+        
         return reason;
     }
-
+    
+    //when an operation is completed, it refreshes everything for a fresh input
     private void completeOperation(String message) {
         refreshTables();
         quantityField.clear();
         explanationField.clear();
         showInformation(message);
     }
-
+    
+    //method for refreshing the tables to ensure they're updated
     public void refreshTables() {
 
-        inventoryTable.setItems(FXCollections.observableArrayList(
-                inventorySystem.getAllInventory()));
-
-        historyTable.setItems(FXCollections.observableArrayList(
-                inventorySystem.getAllHistory()));
+        inventoryTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllInventory()));
+        historyTable.setItems(FXCollections.observableArrayList(inventorySystem.getAllHistory()));
 
         if (selectedProductLabel != null) {
-            selectedProductLabel.setText(
-                    "Select a product from the table above.");
+            selectedProductLabel.setText("Select a product from the table above.");   
         }
 
         inventoryTable.refresh();
         historyTable.refresh();
     }
-
+    
+    
+    //Displays an alert window to show an error
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.initOwner(stage);
@@ -550,7 +572,8 @@ public class InventoryGUI {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
+    
+    //displays an alert window to inform that a stock operation was a success
     private void showInformation(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.initOwner(stage);
@@ -561,12 +584,35 @@ public class InventoryGUI {
     }
 
     // Getters retained for tests or other GUI integrations.
-    public Button getRestockButton() { return restockButton; }
-    public Button getAdjustButton() { return adjustButton; }
-    public Button getDeductButton() { return deductButton; }
-    public Button getRefreshButton() { return refreshButton; }
-    public TableView<InventoryOfProduct> getInventoryTable() { return inventoryTable; }
-    public TableView<StockRecordedChange> getHistoryTable() { return historyTable; }
-    public Stage getStage() { return stage; }
-    public boolean canManageStock() { return canManageStock; }
+    public Button getRestockButton() { 
+    	return restockButton; 
+    }
+    
+    public Button getAdjustButton() { 
+    	return adjustButton; 
+    }
+    
+    public Button getDeductButton() { 
+    	return deductButton; 
+    }
+    
+    public Button getRefreshButton() { 
+    	return refreshButton;    	
+    }
+    
+    public TableView<InventoryOfProduct> getInventoryTable() { 
+    	return inventoryTable;   	
+    }
+    
+    public TableView<StockRecordedChange> getHistoryTable() { 
+    	return historyTable; 	
+    }
+    
+    public Stage getStage() { 
+    	return stage; 
+    }
+    
+    public boolean canManageStock() { 
+    	return canManageStock; 
+    }
 }

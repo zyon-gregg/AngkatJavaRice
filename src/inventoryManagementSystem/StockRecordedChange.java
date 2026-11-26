@@ -8,6 +8,7 @@ public class StockRecordedChange {
 	
 	//the main purpose of this is to simulate something like an audit system. Every change must be recorded.
 	
+	//these constant will be the main labels of the stock operation performed
 	public static final String RESTOCK = "RESTOCK";
 	public static final String SALE_DEDUCTION = "DEDUCTION_FROM_SALE";
 	public static final String STOCK_ADJUSTMENT = "STOCK_ADJUSTMENT";
@@ -75,7 +76,4 @@ public class StockRecordedChange {
 		return explanation;
 	}
 	
-	
-	
-
 }
