@@ -5,6 +5,9 @@ import java.util.HashMap;
 
 
 public class SourceDatabase {
+	
+	//Holds Source Code, and Sources
+	//Also used for future implementation
 	private String databaseName;
 	private HashMap<String,Source> database = new HashMap<>();
 	

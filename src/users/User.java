@@ -1,14 +1,16 @@
 package users;
 
 public class User {
-
+	//User Attributes
     private String userID;
     private String userName;
     private String name;
     private String password;
     private String userAccessLevel;
     private boolean activated;
-
+    
+    
+    //Constructor
     public User(String username, String password, String name) {
         this.setUserName(username);
         this.setPassword(password);

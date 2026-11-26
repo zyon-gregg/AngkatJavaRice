@@ -7,6 +7,9 @@ import java.util.Set;
 import Products.Product;
 
 public class Source extends User{
+	//Source hashmap with Products and Quantity 
+	//Not used in this implementation, but may be expanded since in this implementation source is just a string for simplicity sake and time constraints
+	//This class is for future use
 	
 	private HashMap<Product,Double> listOfSourceProductsAndQuantity = new HashMap<>();
 	

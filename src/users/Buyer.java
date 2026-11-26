@@ -3,12 +3,8 @@ package users;
 import transaction.Cart;
 import transaction.Receipt;
 
-/**
- * A customer who buys fish. Holds a budget and the cart of the sale in progress.
- * Minimal version: only what the sales screen needs.
- */
 public class Buyer extends User {
-
+	//Buyer has a Cart and a Budget
 	private double budget;
 	private Cart buyerCart;
 
@@ -19,11 +15,11 @@ public class Buyer extends User {
 		setBudget(budget);
 	}
 
-
+	//Return
 	public double getBudget() {
 		return budget;
 	}
-
+	//Errors if Invalid
 	public void setBudget(double budget) {
 		if (Double.isNaN(budget) || budget < 0) {
 			throw new IllegalArgumentException("Budget cannot be negative.");
