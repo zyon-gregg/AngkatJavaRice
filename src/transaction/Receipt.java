@@ -8,7 +8,7 @@ import java.util.List;
 import users.User;
 
 public class Receipt {
-
+	//Receipt attributes
     private String transactionID;
     private Cart cart;
     private List<ReceiptItem> items = Collections.emptyList();
@@ -25,7 +25,7 @@ public class Receipt {
 
     Receipt() {
     }
-
+    //getters and setters
     public String getTransactionID() { 
     	return transactionID; 	
     }

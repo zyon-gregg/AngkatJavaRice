@@ -8,7 +8,7 @@ import Products.Product;
 import users.User;
 
 public class Cart {
-
+	//Cart has product and how much they cost + other attributes
     private String saleID;
     private final HashMap<Product, Double> cart = new HashMap<>();
     private final HashMap<Product, Double> unitPrices = new HashMap<>();
