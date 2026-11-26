@@ -12,7 +12,11 @@ Angkat is a database management system aiming to digitalize the business workflo
 Project for CMSC 22: Object Oriented Programming
 <br>
 Members:
+<br>
 -> LUIGI LUALHATI 
+<br>
 -> ZYON GREGG MANLULU 
+<br>
 -> JOHN CARLO PASTOR
+<br>
 ->GAVIN JACOB PEREZ
