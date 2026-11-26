@@ -371,7 +371,7 @@ public class Main extends Application {
         }) {
             products.addProduct(product);
         }
-
+        //Somewhat depreciated code -> Rather for future use
         Source appleFarm = new Source("AppleF", "TheFarm", "AppleFarms");
 
         for (Product product : new Product[] {
@@ -383,11 +383,11 @@ public class Main extends Application {
         sources.addSourceToDatabase(appleFarm);
 
         buyers.addBuyerToDatabase(
-                new Buyer("Apple", "Apple123", "Apples", 20000));
+                new Buyer("Apple", "Apple123", "AlphaMart", 200000));
         buyers.addBuyerToDatabase(
-                new Buyer("Apple2", "Apple1234", "Apple2", 120000));
+                new Buyer("Apple2", "Apple1234", "123 Supermarket", 120000));
         buyers.addBuyerToDatabase(
-                new Buyer("Apple3", "Apple12345", "Apple3", 22130000));
+                new Buyer("Apple3", "Apple12345", "Big Mall", 1521300));
 
         syncInventoryRecords();
 
