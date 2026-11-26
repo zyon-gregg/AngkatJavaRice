@@ -616,56 +616,47 @@ public class ManagerDashboard {
 
     //creates the table view for transaction table
     private Node createTransactionHistoryTable(int maximumRows) {
-
+    	
+    	//table view
         TableView<Receipt> table = new TableView<>();
         table.getStyleClass().add("manager-activity-table");
 
+        //receipt id column
         TableColumn<Receipt, String> receiptIDColumn = new TableColumn<>("Receipt ID");
-        receiptIDColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                cell.getValue().getTransactionID()));
+        receiptIDColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getTransactionID()));
 
-        TableColumn<Receipt, String> buyerColumn =
-                new TableColumn<>("Buyer");
-        buyerColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getReceiptBuyerName(cell.getValue())));
+        //buyer column
+        TableColumn<Receipt, String> buyerColumn = new TableColumn<>("Buyer");
+        buyerColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getReceiptBuyerName(cell.getValue())));
 
-        TableColumn<Receipt, String> employeeColumn =
-                new TableColumn<>("Processed By");
+        //employee column
+        TableColumn<Receipt, String> employeeColumn = new TableColumn<>("Processed By");
         employeeColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
                 getReceiptEmployeeName(cell.getValue())));
 
-        TableColumn<Receipt, String> paymentColumn =
-                new TableColumn<>("Payment Method");
-        paymentColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getReceiptPaymentMethod(cell.getValue())));
+        //payment type column
+        TableColumn<Receipt, String> paymentColumn = new TableColumn<>("Payment Method");
+        paymentColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getReceiptPaymentMethod(cell.getValue())));
 
-        TableColumn<Receipt, String> totalColumn =
-                new TableColumn<>("Total Amount");
+        //total amount column
+        TableColumn<Receipt, String> totalColumn = new TableColumn<>("Total Amount");
         totalColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
                 formatMoney(cell.getValue().getTotalAmount())));
 
-        TableColumn<Receipt, String> dateColumn =
-                new TableColumn<>("Date and Time");
-        dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                formatDateTime(cell.getValue().getTransacTime())));
+        //date column
+        TableColumn<Receipt, String> dateColumn = new TableColumn<>("Date and Time");
+        dateColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(formatDateTime(cell.getValue().getTransacTime())));
 
-        TableColumn<Receipt, String> statusColumn =
-                new TableColumn<>("Status");
-        statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
-                getReceiptStatus(cell.getValue())));
+        //status columns
+        TableColumn<Receipt, String> statusColumn = new TableColumn<>("Status");
+        statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(getReceiptStatus(cell.getValue())));
 
-        table.getColumns().addAll(
-                receiptIDColumn,
-                buyerColumn,
-                employeeColumn,
-                paymentColumn,
-                totalColumn,
-                dateColumn,
-                statusColumn);
+        table.getColumns().addAll(receiptIDColumn, buyerColumn, employeeColumn, paymentColumn, totalColumn, dateColumn, statusColumn);
 
         // Retrieve the saved receipts and place the newest transaction first.
         List<Receipt> records = new ArrayList<>(salesSystem.getAllReceipt());
 
+        
         for (int i = 0; i < records.size(); i++) {
             for (int j = i + 1; j < records.size(); j++) {
                 LocalDateTime firstTime = records.get(i).getTransacTime();
@@ -711,7 +702,9 @@ public class ManagerDashboard {
         transactionHistory.getStyleClass().add("manager-transaction-history");
         return transactionHistory;
     }
-
+    
+    
+    //gets the name of the buyer from a receipt
     private String getReceiptBuyerName(Receipt receipt) {
         if (receipt == null) {
             return "";
@@ -725,6 +718,7 @@ public class ManagerDashboard {
         return buyerName;
     }
 
+    //gets the employee that processes that receipt
     private String getReceiptEmployeeName(Receipt receipt) {
         if (receipt == null || receipt.getEmployee() == null) {
             return "Not recorded";
@@ -742,6 +736,7 @@ public class ManagerDashboard {
         return employeeName;
     }
 
+    //gets the payment method used in the receipt
     private String getReceiptPaymentMethod(Receipt receipt) {
         if (receipt == null || receipt.getPaymentMethod() == null) {
             return "Not recorded";
@@ -749,7 +744,9 @@ public class ManagerDashboard {
 
         return receipt.getPaymentMethod();
     }
+    
 
+    //gets the status of the receipt
     private String getReceiptStatus(Receipt receipt) {
         if (receipt == null || receipt.getPurchaseStatus() == null) {
             return "Not recorded";
@@ -758,6 +755,7 @@ public class ManagerDashboard {
         return receipt.getPurchaseStatus();
     }
 
+    //formatting of money to string
     private String formatMoney(Double amount) {
         if (amount == null) {
             return "PHP 0.00";
@@ -766,7 +764,7 @@ public class ManagerDashboard {
         return String.format("PHP %,.2f", amount);
     }
 
-    /** Displays the selected receipt and its saved item details. */
+    //displays the receipt as an alert window
     private void showReceiptDetails(Receipt receipt) {
         if (receipt == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -822,14 +820,12 @@ public class ManagerDashboard {
         return dateTime.format(DATE_FORMAT);
     }
 
-    // -----------------------------------------------------------------
-    // 5. Footer, refresh, and logout
-    // -----------------------------------------------------------------
+    
 
+    //creates the footer
     private HBox createFooter() {
 
-        Label applicationName =
-                new Label("Angkat Fish Port Management System");
+        Label applicationName = new Label("Angkat Fish Port Management System");
         applicationName.getStyleClass().add("manager-footer-label");
 
         Region spacer = new Region();
@@ -846,10 +842,13 @@ public class ManagerDashboard {
         return footer;
     }
 
+    //refreshing the dashboard
     private void refreshDashboard() {
         updateSummaryCards();
         refreshActivityTable();
     }
+    
+    //logout and saves the data
 
     private void confirmLogout() {
 
